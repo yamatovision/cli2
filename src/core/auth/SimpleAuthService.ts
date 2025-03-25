@@ -947,36 +947,24 @@ export class SimpleAuthService {
         }
       }
       
-      Logger.debug('【APIキー詳細】ユーザープロフィールからAPIキーの取得を試みます...');
+      Logger.debug('【APIキー詳細】AnthropicApiKeyモデルからAPIキーの取得を試みます...');
       try {
-        // 先にユーザープロフィールからAPIキーを取得（test_api_key_retrieval.jsと同様のアプローチ）
-        const profileResponse = await axios.get(`${this.API_BASE_URL}/users/profile`, {
+        // 新しいエンドポイント：AnthropicApiKeyモデルからAPIキーを取得
+        const apiKeyResponse = await axios.get(`${this.API_BASE_URL}/user/anthropic-api-key`, {
           headers: {
             'Authorization': `Bearer ${this._accessToken}`,
             'Content-Type': 'application/json'
           }
         });
         
-        Logger.debug(`【APIキー詳細】プロフィールレスポンス: ${JSON.stringify(profileResponse.data)}`);
+        Logger.debug(`【APIキー詳細】AnthropicApiKeyレスポンス: ${JSON.stringify(apiKeyResponse.data)}`);
         
-        if (profileResponse.data?.success) {
-          // ユーザーモデルに直接保存されているAPIキー
-          if (profileResponse.data?.data?.user?.apiKeyValue) {
-            const apiKey = profileResponse.data.data.user.apiKeyValue;
+        if (apiKeyResponse.data?.success) {
+          // 新方式: AnthropicApiKeyモデルからのレスポンス
+          if (apiKeyResponse.data?.data?.apiKeyFull) {
+            const apiKey = apiKeyResponse.data.data.apiKeyFull;
             const maskedKey = apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 8);
-            Logger.info(`【APIキー詳細】ユーザーデータからAPIキーを取得しました: ${maskedKey}`);
-            
-            // APIキーをメモリとストレージに保存
-            this._apiKey = apiKey;
-            await this.secretStorage.store(this.API_KEY_DATA_KEY, apiKey);
-            return apiKey;
-          }
-          
-          // 新しいレスポンス形式
-          if (profileResponse.data?.data?.apiKey?.key) {
-            const apiKey = profileResponse.data.data.apiKey.key;
-            const maskedKey = apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 8);
-            Logger.info(`【APIキー詳細】プロフィールからAPIキーを取得しました: ${maskedKey}`);
+            Logger.info(`【APIキー詳細】AnthropicApiKeyモデルからAPIキーを取得しました: ${maskedKey}`);
             
             // APIキーをメモリとストレージに保存
             this._apiKey = apiKey;
@@ -985,87 +973,33 @@ export class SimpleAuthService {
           }
         }
         
-        Logger.debug('【APIキー詳細】ユーザープロフィールからのAPIキー取得に失敗、通常のエンドポイントを試行します');
-      } catch (profileError) {
-        Logger.debug(`【APIキー詳細】プロフィールエンドポイントエラー: ${(profileError as Error).message}`);
+        Logger.debug('【APIキー詳細】AnthropicApiKeyモデルからの取得に失敗、ユーザープロフィールを試行します');
+      } catch (apiKeyError) {
+        Logger.debug(`【APIキー詳細】AnthropicApiKeyエンドポイントエラー: ${(apiKeyError as Error).message}`);
       }
       
-      // APIキー取得エンドポイント呼び出し
-      Logger.debug('【APIキー詳細】専用のAPIキー取得エンドポイントを呼び出します...');
-      const response = await axios.get(`${this.API_BASE_URL}/user/apikey`, {
-        headers: {
-          'Authorization': `Bearer ${this._accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      Logger.debug(`【APIキー詳細】APIキー取得レスポンス: ${JSON.stringify(response.data)}`);
-      
-      if (response.data && response.data.success && response.data.data) {
-        // 応答からAPIキーを抽出（異なる応答形式に対応）
-        let apiKeyValue: string | undefined;
-        
-        if (response.data.data.key) {
-          apiKeyValue = response.data.data.key;
-          Logger.debug('【APIキー詳細】data.keyからAPIキーを抽出しました');
-        } else if (response.data.data.keyValue) {
-          apiKeyValue = response.data.data.keyValue;
-          Logger.debug('【APIキー詳細】data.keyValueからAPIキーを抽出しました');
-        } else if (response.data.data.apiKey) {
-          apiKeyValue = response.data.data.apiKey;
-          Logger.debug('【APIキー詳細】data.apiKeyからAPIキーを抽出しました');
-        } else if (typeof response.data.data === 'string') {
-          // データが直接文字列として返されるケースにも対応
-          apiKeyValue = response.data.data;
-          Logger.debug('【APIキー詳細】文字列型のdataからAPIキーを抽出しました');
-        }
-        
-        if (apiKeyValue) {
-          // APIキーをメモリとストレージに保存
-          this._apiKey = apiKeyValue;
-          await this.secretStorage.store(this.API_KEY_DATA_KEY, apiKeyValue);
-          
-          const maskedKey = apiKeyValue.substring(0, 5) + '...' + apiKeyValue.substring(apiKeyValue.length - 4);
-          Logger.info(`SimpleAuthService: サーバーからAPIキーを取得しました (${maskedKey})`);
-          return apiKeyValue;
-        } else {
-          Logger.warn('SimpleAuthService: サーバーからのレスポンスにAPIキーが含まれていません');
-          // レスポンス全体を詳細にログ出力して調査
-          Logger.debug(`SimpleAuthService: レスポンス詳細: ${JSON.stringify(response.data)}`);
-        }
-      } else {
-        Logger.warn('SimpleAuthService: APIキー取得APIの応答が正しくありません');
-        Logger.debug(`SimpleAuthService: レスポンス: ${JSON.stringify(response.data)}`);
-        
-        // データ構造が異なる場合の対応
-        if (response.data && typeof response.data === 'object') {
-          // レスポンスオブジェクトから可能性のあるAPIキーフィールドを探索
-          for (const key of ['apiKey', 'api_key', 'key', 'keyValue', 'token', 'accessKey']) {
-            if (response.data[key] && typeof response.data[key] === 'string') {
-              // API キーと思われる値を見つけた
-              const foundApiKey = response.data[key];
-              this._apiKey = foundApiKey;
-              await this.secretStorage.store(this.API_KEY_DATA_KEY, foundApiKey);
-              Logger.info(`SimpleAuthService: レスポンスから直接APIキーを抽出しました (${key}: ${foundApiKey.substring(0, 5)}...)`);
-              return foundApiKey;
-            }
-          }
-          
-          // データフィールド内を探索
-          if (response.data.data && typeof response.data.data === 'object') {
-            for (const key of ['apiKey', 'api_key', 'key', 'keyValue', 'token', 'accessKey']) {
-              if (response.data.data[key] && typeof response.data.data[key] === 'string') {
-                // データ内でAPI キーと思われる値を見つけた
-                const foundApiKey = response.data.data[key];
-                this._apiKey = foundApiKey;
-                await this.secretStorage.store(this.API_KEY_DATA_KEY, foundApiKey);
-                Logger.info(`SimpleAuthService: データフィールド内からAPIキーを抽出しました (${key}: ${foundApiKey.substring(0, 5)}...)`);
-                return foundApiKey;
-              }
-            }
-          }
-        }
-      }
+      // レガシーフォールバックがないためここで終了
+    Logger.warn(`SimpleAuthService: AnthropicApiKeyモデルからAPIキーを取得できませんでした。`);
+    Logger.warn(`SimpleAuthService: ユーザーモデルからのAPIキー取得は無効化されています。`);
+    
+    // 詳細なエラー情報
+    const errorMessage = `
+【重大エラー】AnthropicAPIキーが設定されていません
+----------------------------------------
+ユーザーにAnthropicAPIキーが設定されていないため、ClaudeCodeを起動できません。
+
+問題の解決方法:
+1. 管理者に連絡してAPIキーの設定を依頼してください
+2. AnthropicアカウントでAPIキーが正しく設定されているか確認してください
+
+エラーコード: ANTHROPIC_API_KEY_NOT_FOUND
+ユーザーID: ${this._currentState.userId || '不明'}
+認証状態: ${this._currentState.isAuthenticated ? '認証済み' : '未認証'}
+`;
+    Logger.error(errorMessage);
+    
+    // nullを返す代わりにエラーをスロー
+    throw new Error('AnthropicAPIキーが設定されていません。管理者に連絡してください。');
     } catch (error) {
       Logger.error('SimpleAuthService: サーバーからのAPIキー取得に失敗しました', error as Error);
       
@@ -1113,6 +1047,14 @@ export class SimpleAuthService {
           await this.secretStorage.store(this.API_KEY_DATA_KEY, userData.apiKey.keyValue);
           Logger.info(`SimpleAuthService: ユーザーデータのネスト構造からAPIキーを発見しました: ${userData.apiKey.keyValue.substring(0, 5)}...`);
           return userData.apiKey.keyValue;
+        }
+        
+        // さらに深くネストされた形式の場合
+        if (userData.apiKey && typeof userData.apiKey === 'object' && userData.apiKey.apiKeyFull) {
+          this._apiKey = userData.apiKey.apiKeyFull;
+          await this.secretStorage.store(this.API_KEY_DATA_KEY, userData.apiKey.apiKeyFull);
+          Logger.info(`SimpleAuthService: ユーザーデータからAnthropicApiKeyとしてAPIキーを発見しました: ${userData.apiKey.apiKeyFull.substring(0, 5)}...`);
+          return userData.apiKey.apiKeyFull;
         }
         
         // 別名でのキー

@@ -26,6 +26,9 @@ router.get('/auth/check', rateLimitMiddleware.authRateLimit, simpleAuthMiddlewar
 // ユーザーのAPIキーを取得するエンドポイント
 router.get('/user/apikey', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getUserApiKey);
 
+// ユーザーのAnthropicAPIキーを取得するエンドポイント（新方式）
+router.get('/user/anthropic-api-key', simpleAuthMiddleware.verifySimpleToken, simpleAuthController.getUserAnthropicApiKey);
+
 // デバッグエンドポイントを追加
 router.get('/auth/debug', simpleAuthMiddleware.verifySimpleToken, simpleAuthDebug.debugAuth);
 

@@ -1,259 +1,10 @@
-APIキー
-APIキーを取得
-得る
-/
-v1
-/
-組織
-/
-APIキー
-/
-{APIキーID}
-ヘッダー
-​
-x-api-キー
-弦
-必須
-認証用の一意の管理者 API キー。
-
-このキーは、アカウントを認証し、Anthropic のサービスにアクセスするために、すべての管理 API リクエストのヘッダーに必要です。コンソールから管理 API キーを取得してください。
-
-​
-人類版
-弦
-必須
-使用する Anthropic API のバージョン。
-
-バージョン管理とバージョン履歴の詳細については、こちらをご覧ください。
-
-パスパラメータ
-​
-APIキーID
-弦
-必須
-API キーの ID。
-
-応答
-200 - アプリケーション/json
-​
-作成日時
-弦
-必須
-API キーが作成された日時を示す RFC 3339 日時文字列。
-
-​
-作成者
-物体
-必須
-API キーを作成したアクターの ID とタイプ。
-
-
-子の属性を表示
-
-​
-id
-弦
-必須
-API キーの ID。
-
-​
-名前
-弦
-必須
-API キーの名前。
-
-​
-部分的なキーヒント
-文字列 | null
-必須
-API キーに関する部分的に編集されたヒント。
-
-​
-状態
-enum<文字列>
-必須
-API キーのステータス。
-
-利用可能なオプション: active、 inactive、 archived 
-​
-タイプ
-enum<文字列>
-デフォルト：
-APIキー
-必須
-オブジェクトタイプ。
-
-API キーの場合、これは常に です"api_key"。
-
-利用可能なオプション: api_key 
-​
-ワークスペースID
-文字列 | null
-必須
-API キーに関連付けられたワークスペースの ID。API キーがデフォルトのワークスペースに属している場合は null になります。
-
-このページは役に立ちましたか?
-
-
-はい
-
-いいえ
-
-curl "https://api.anthropic.com/v1/organizations/api_keys/apikey_01Rj2N8SVvo6BePZj99NhmiT" \
-  --header "anthropic-version: 2023-06-01" \
-  --header "content-type: application/json" \
-  --header "x-api-key: $ANTHROPIC_ADMIN_KEY"
-
-
-{
-  "id": "apikey_01Rj2N8SVvo6BePZj99NhmiT",
-  "type": "api_key",
-  "name": "Developer Key",
-  "workspace_id": "wrkspc_01JwQvzr7rXLA5AGx3HKfFUJ",
-  "created_at": "2024-10-30T23:58:27.427722Z",
-  "created_by": {
-    "id": "user_01WCz1FkmYMm4gnmykNKUu3Q",
-    "type": "user"
-  },
-  "partial_key_hint": "sk-ant-api03-R2D...igAA",
-  "status": "active"
-}
-
-
-APIキーの一覧
-得る
-/
-v1
-/
-組織
-/
-APIキー
-ヘッダー
-​
-x-api-キー
-弦
-必須
-認証用の一意の管理者 API キー。
-
-このキーは、アカウントを認証し、Anthropic のサービスにアクセスするために、すべての管理 API リクエストのヘッダーに必要です。コンソールから管理 API キーを取得してください。
-
-​
-人類版
-弦
-必須
-使用する Anthropic API のバージョン。
-
-バージョン管理とバージョン履歴の詳細については、こちらをご覧ください。
-
-クエリパラメータ
-​
-前のID
-弦
-ページ区切りのカーソルとして使用するオブジェクトの ID。指定すると、このオブジェクトの直前の結果ページが返されます。
-
-​
-後ID
-弦
-ページ区切りのカーソルとして使用するオブジェクトの ID。指定すると、このオブジェクトの直後の結果ページが返されます。
-
-​
-制限
-整数
-デフォルト：
-20
-ページごとに返されるアイテムの数。
-
-デフォルトは です20。範囲は から1です1000。
-
-必要な範囲:1 < x < 1000
-​
-状態
-enum<文字列> | null
-API キーのステータスでフィルタリングします。
-
-利用可能なオプション: active、 inactive、 archived 
-​
-ワークスペースID
-文字列 | null
-ワークスペース ID でフィルタリングします。
-
-​
-作成されたユーザーID
-文字列 | null
-オブジェクトを作成したユーザーの ID でフィルタリングします。
-
-応答
-200 - アプリケーション/json
-​
-データ
-物体[]
-必須
-
-子の属性を表示
-
-​
-ファーストID
-文字列 | null
-必須
-リストの最初の ID 。前のページのdataID として使用できます。before_id
-
-​
-もっと見る
-ブール値
-必須
-要求されたページの方向にさらに結果があるかどうかを示します。
-
-​
-最終ID
-文字列 | null
-必須
-リスト内の最後の ID 。次のページのdataとして使用できます。after_id
-
-このページは役に立ちましたか?
-
-
-はい
-
-いいえ
-APIキーを取得
-APIキーの更新
-x
-リンクトイン
-
-
-curl "https://api.anthropic.com/v1/organizations/api_keys" \
-  --header "anthropic-version: 2023-06-01" \
-  --header "content-type: application/json" \
-  --header "x-api-key: $ANTHROPIC_ADMIN_KEY"
-
-{
-  "data": [
-    {
-      "id": "apikey_01Rj2N8SVvo6BePZj99NhmiT",
-      "type": "api_key",
-      "name": "Developer Key",
-      "workspace_id": "wrkspc_01JwQvzr7rXLA5AGx3HKfFUJ",
-      "created_at": "2024-10-30T23:58:27.427722Z",
-      "created_by": {
-        "id": "user_01WCz1FkmYMm4gnmykNKUu3Q",
-        "type": "user"
-      },
-      "partial_key_hint": "sk-ant-api03-R2D...igAA",
-      "status": "active"
-    }
-  ],
-  "has_more": true,
-  "first_id": "<string>",
-  "last_id": "<string>"
-}
-
-           
+          
 ・最初のオンボーディングフローをしっかりとかんがえる
 ・CURRENT_STATUSTEMPLATEの更新(もしくはプロンプトとして入れる)
 ・プロンプトの更新とアクセスをしっかりいれる
 ・ダッシュボードとアカウントの発行
 ・アクセスキーの廃止
-・ポータルサイトのデプロイを完璧なものにする
+
 
 
 新規組織作成を押すと
@@ -801,3 +552,53 @@ flushWork @ scheduler.development.js:239
 performWorkUntilDeadline @ scheduler.development.js:533このエラーを分析AI
 token-refresh.js:201 [TokenRefresh] 401エラー検出、トークンリフレッシュを実行
 token-refresh.js:64 [TokenRefresh] 既存のリフレッシュ処理の完了を待機
+
+
+
+
+
+
+=scope_managerへのアクセス権限がありません
+[2025-03-25T03:54:36.421Z] [WARN] ScopeManagerPanel: scope_managerへのアクセスが拒否されました
+[2025-03-25T03:54:48.969Z] [INFO] SimpleAuthログイン処理を開始します
+[2025-03-25T03:54:50.409Z] [ERROR] SimpleAuthログイン中にエラーが発生しました
+[2025-03-25T03:54:50.410Z] [ERROR] Error details: Request failed with status code 500
+[2025-03-25T03:54:50.410Z] [ERROR] API Error: 500 POST https://geniemon-portal-backend-production.up.railway.app/api/simple/auth/login
+[2025-03-25T03:54:50.411Z] [ERROR] Response data: {
+  "success": false,
+  "message": "ログイン処理中にエラーが発生しました",
+  "error": "Cannot find module '../models/simpleApiKey.model'\nRequire stack:\n- /app/backend/controllers/simpleAuth.controller.js\n- /app/backend/routes/simple.routes.js\n- /app/backend/app.js\n- /app/server.js"
+}
+[2025-03-25T03:54:50.411Z] [ERROR] Stack trace: AxiosError: Request failed with status code 500
+	at settle (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:2556:12)
+	at IncomingMessage.handleStreamEnd (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:3673:11)
+	at IncomingMessage.emit (node:events:530:35)
+	at endReadableNT (node:internal/streams/readable:1698:12)
+	at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+	at Axios.request (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:4783:41)
+	at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+	at async AuthenticationService.login (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:17081:30)
+	at async LoginWebviewPanel._handleLogin (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34810:29)
+	at async Th.value (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34398:21)
+[2025-03-25T03:54:50.411Z] [ERROR] 認証エラー: [login_failed] ログイン処理中にエラーが発生しました
+[2025-03-25T03:54:53.906Z] [INFO] SimpleAuthログイン処理を開始します
+[2025-03-25T03:54:55.217Z] [ERROR] SimpleAuthログイン中にエラーが発生しました
+[2025-03-25T03:54:55.218Z] [ERROR] Error details: Request failed with status code 500
+[2025-03-25T03:54:55.218Z] [ERROR] API Error: 500 POST https://geniemon-portal-backend-production.up.railway.app/api/simple/auth/login
+[2025-03-25T03:54:55.218Z] [ERROR] Response data: {
+  "success": false,
+  "message": "ログイン処理中にエラーが発生しました",
+  "error": "Cannot find module '../models/simpleApiKey.model'\nRequire stack:\n- /app/backend/controllers/simpleAuth.controller.js\n- /app/backend/routes/simple.routes.js\n- /app/backend/app.js\n- /app/server.js"
+}
+[2025-03-25T03:54:55.218Z] [ERROR] Stack trace: AxiosError: Request failed with status code 500
+	at settle (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:2556:12)
+	at IncomingMessage.handleStreamEnd (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:3673:11)
+	at IncomingMessage.emit (node:events:530:35)
+	at endReadableNT (node:internal/streams/readable:1698:12)
+	at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+	at Axios.request (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:4783:41)
+	at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+	at async AuthenticationService.login (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:17081:30)
+	at async LoginWebviewPanel._handleLogin (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34810:29)
+	at async Th.value (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34398:21)
+[2025-03-25T03:54:55.218Z] [ERROR] 認証エラー: [login_failed] ログイン処理中にエラーが発生しました

@@ -78,6 +78,19 @@ export class SpecializedLaunchHandlers {
       // 認証サービスの初期化
       await this.authManager.initAuthServices();
       
+      // APIキーが利用可能か確認（エラーの場合は例外がスローされる）
+      try {
+        await this.authManager.isApiKeyAvailable();
+      } catch (apiKeyError) {
+        // ユーザーに分かりやすいエラーメッセージを表示
+        await vscode.window.showErrorMessage(
+          `ClaudeCode起動エラー: AnthropicAPIキーが見つかりません。管理者に連絡してAPIキーの設定を依頼してください。`,
+          { modal: true, detail: (apiKeyError as Error).message }
+        );
+        
+        throw new Error(`APIキーが利用できないためClaudeCodeを起動できません: ${(apiKeyError as Error).message}`);
+      }
+      
       // ターミナルの作成
       const terminal = this.terminalService.createConfiguredTerminal({
         title: 'ClaudeCode',
@@ -85,7 +98,23 @@ export class SpecializedLaunchHandlers {
       });
       
       // AppGenius専用の認証情報を保存・同期
-      await this.authManager.syncTokensToAppGeniusAuth();
+      try {
+        await this.authManager.syncTokensToAppGeniusAuth();
+      } catch (syncError) {
+        // 同期エラーの情報を詳細に表示
+        Logger.error('認証情報の同期に失敗しました', syncError as Error);
+        
+        // ターミナルを閉じる
+        terminal.dispose();
+        
+        // ユーザーに通知
+        await vscode.window.showErrorMessage(
+          `ClaudeCode起動エラー: 認証情報の同期に失敗しました`,
+          { modal: true, detail: (syncError as Error).message }
+        );
+        
+        throw new Error(`認証情報の同期に失敗しました: ${(syncError as Error).message}`);
+      }
       
       // AppGenius専用の認証ファイルパスを取得
       const appGeniusAuthFilePath = this.authManager.getAppGeniusAuthFilePath();
@@ -262,6 +291,19 @@ export class SpecializedLaunchHandlers {
       // 認証サービスの初期化
       await this.authManager.initAuthServices();
       
+      // APIキーが利用可能か確認（エラーの場合は例外がスローされる）
+      try {
+        await this.authManager.isApiKeyAvailable();
+      } catch (apiKeyError) {
+        // ユーザーに分かりやすいエラーメッセージを表示
+        await vscode.window.showErrorMessage(
+          `プロンプト実行エラー: AnthropicAPIキーが見つかりません。管理者に連絡してAPIキーの設定を依頼してください。`,
+          { modal: true, detail: (apiKeyError as Error).message }
+        );
+        
+        throw new Error(`APIキーが利用できないためプロンプトを実行できません: ${(apiKeyError as Error).message}`);
+      }
+      
       // ターミナルの作成
       const terminal = this.terminalService.createConfiguredTerminal({
         title: terminalOptions.title || 'ClaudeCode',
@@ -270,7 +312,23 @@ export class SpecializedLaunchHandlers {
       });
       
       // AppGenius専用の認証情報を保存・同期
-      await this.authManager.syncTokensToAppGeniusAuth();
+      try {
+        await this.authManager.syncTokensToAppGeniusAuth();
+      } catch (syncError) {
+        // 同期エラーの情報を詳細に表示
+        Logger.error('認証情報の同期に失敗しました', syncError as Error);
+        
+        // ターミナルを閉じる
+        terminal.dispose();
+        
+        // ユーザーに通知
+        await vscode.window.showErrorMessage(
+          `プロンプト実行エラー: 認証情報の同期に失敗しました`,
+          { modal: true, detail: (syncError as Error).message }
+        );
+        
+        throw new Error(`認証情報の同期に失敗しました: ${(syncError as Error).message}`);
+      }
       
       // AppGenius専用の認証ファイルパスを取得し、環境変数に設定
       const appGeniusAuthFilePath = this.authManager.getAppGeniusAuthFilePath();
@@ -435,6 +493,19 @@ export class SpecializedLaunchHandlers {
       // 認証サービスの初期化
       await this.authManager.initAuthServices();
       
+      // APIキーが利用可能か確認（エラーの場合は例外がスローされる）
+      try {
+        await this.authManager.isApiKeyAvailable();
+      } catch (apiKeyError) {
+        // ユーザーに分かりやすいエラーメッセージを表示
+        await vscode.window.showErrorMessage(
+          `モックアップ解析エラー: AnthropicAPIキーが見つかりません。管理者に連絡してAPIキーの設定を依頼してください。`,
+          { modal: true, detail: (apiKeyError as Error).message }
+        );
+        
+        throw new Error(`APIキーが利用できないためモックアップ解析を開始できません: ${(apiKeyError as Error).message}`);
+      }
+      
       // ターミナルの作成
       const terminal = this.terminalService.createConfiguredTerminal({
         title: `ClaudeCode - ${processInfo.mockupName}の解析`,
@@ -442,7 +513,23 @@ export class SpecializedLaunchHandlers {
       });
       
       // AppGenius専用の認証情報を保存・同期
-      await this.authManager.syncTokensToAppGeniusAuth();
+      try {
+        await this.authManager.syncTokensToAppGeniusAuth();
+      } catch (syncError) {
+        // 同期エラーの情報を詳細に表示
+        Logger.error('認証情報の同期に失敗しました', syncError as Error);
+        
+        // ターミナルを閉じる
+        terminal.dispose();
+        
+        // ユーザーに通知
+        await vscode.window.showErrorMessage(
+          `モックアップ解析エラー: 認証情報の同期に失敗しました`,
+          { modal: true, detail: (syncError as Error).message }
+        );
+        
+        throw new Error(`認証情報の同期に失敗しました: ${(syncError as Error).message}`);
+      }
       
       // AppGenius専用の認証ファイルパスを取得し、環境変数に設定
       const appGeniusAuthFilePath = this.authManager.getAppGeniusAuthFilePath();

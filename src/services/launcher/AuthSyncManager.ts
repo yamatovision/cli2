@@ -62,14 +62,40 @@ export class AuthSyncManager {
   
   /**
    * APIキーが利用可能かどうかを確認
+   * @throws {Error} APIキーが利用できない場合にエラー
    */
   public async isApiKeyAvailable(): Promise<boolean> {
     if (!this.simpleAuthService) {
-      return false;
+      throw new Error('認証サービスが初期化されていません。再ログインを試みてください。');
     }
     
-    const apiKey = await this.simpleAuthService.getApiKey();
-    return !!apiKey;
+    try {
+      const apiKey = await this.simpleAuthService.getApiKey();
+      
+      if (!apiKey) {
+        // 詳細なエラーメッセージ
+        const errorMessage = `
+【APIキーが見つかりません】
+ユーザーにAnthropicAPIキーが設定されていないためClaudeCodeを起動できません。
+
+考えられる対処法:
+1. 管理者にAPIキーの設定を依頼してください
+2. ポータル管理画面でAPIキーを確認・更新してください
+3. 一度ログアウトして再ログインを試してください
+
+詳細: AnthropicApiKeyモデルからAPIキーを取得できませんでした
+`;
+        Logger.error(errorMessage);
+        throw new Error('AnthropicAPIキーが設定されていません。管理者に連絡してAPIキーの設定を依頼してください。');
+      }
+      
+      Logger.info(`AuthSyncManager: APIキー取得成功 (${apiKey.substring(0, 5)}...)`);
+      return true;
+    } catch (error) {
+      Logger.error('AuthSyncManager: APIキー確認エラー', error as Error);
+      // エラーを再スロー
+      throw error;
+    }
   }
   
   /**
@@ -177,27 +203,24 @@ export class AuthSyncManager {
    */
   public async ensureLoggedIn(): Promise<boolean> {
     if (!this.simpleAuthService) {
-      return false;
+      throw new Error('認証サービスが初期化されていません。再ログインを試みてください。');
     }
     
     const isLoggedIn = this.isClaudeCliLoggedIn();
-    const apiKeyAvailable = await this.isApiKeyAvailable();
     
-    // APIキーが利用可能ならOK
-    if (apiKeyAvailable) {
-      return true;
-    }
+    // APIキーが利用可能か確認（例外が発生する可能性あり）
+    await this.isApiKeyAvailable();
     
     // ログインしていない場合、再ログインを要求
     if (!isLoggedIn) {
-      Logger.warn('【認証問題】Claude CLIがログイン状態ではないため、不完全な認証データになる可能性があります');
+      Logger.warn('【認証問題】Claude CLIがログイン状態ではありません');
       
       // 再ログインをユーザーに要求
       const vscode = await import('vscode');
       const askRelogin = await vscode.window.showWarningMessage(
-        'ClaudeCodeに必要なAPIキーが見つからないか、認証状態がクリアされています。再ログインしますか？',
+        'ClaudeCode CLIの認証状態が不正です。再ログインしますか？',
         { modal: true },
-        '再ログイン', 'そのまま続行'
+        '再ログイン', 'キャンセル'
       );
       
       if (askRelogin === '再ログイン') {
@@ -210,11 +233,17 @@ export class AuthSyncManager {
         // 現在の実行を中断する必要がある
         throw new Error('再ログインが必要です。ログイン後に再度実行してください。');
       } else {
-        Logger.warn('ユーザーが再ログインをスキップしました。通常の認証トークンで続行します');
+        // キャンセルが選択された場合は処理を終了
+        throw new Error('認証プロセスがキャンセルされました。ClaudeCodeの起動には正しい認証情報が必要です。');
       }
     }
     
     // トークンリフレッシュを試行
-    return await this.refreshTokens();
+    const refreshed = await this.refreshTokens();
+    if (!refreshed) {
+      throw new Error('認証トークンのリフレッシュに失敗しました。再ログインを試みてください。');
+    }
+    
+    return true;
   }
 }

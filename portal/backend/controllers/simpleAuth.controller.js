@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const simpleAuthConfig = require('../config/simple-auth.config');
 // 認証ヘルパーを追加
 const authHelper = require('../utils/simpleAuth.helper');
+// AnthropicApiKeyモデルを事前に読み込み
+const AnthropicApiKey = require('../models/anthropicApiKey.model');
 
 /**
  * ユーザーログイン
@@ -109,24 +111,27 @@ exports.login = async (req, res) => {
         status: 'active'
       };
     } 
-    // 旧方式：APIキーテーブルから取得
+    // 旧方式：AnthropicApiKeyテーブルから取得
     else if (user.apiKeyId) {
-      const SimpleApiKey = require('../models/simpleApiKey.model');
-      const apiKey = await SimpleApiKey.findOne({ id: user.apiKeyId });
-      
-      if (apiKey) {
-        apiKeyInfo = {
-          id: apiKey.id,
-          keyValue: apiKey.keyValue,
-          status: apiKey.status
-        };
+      try {
+        // AnthropicApiKeyはモジュールの先頭で読み込み済み
+        const apiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
         
-        // 移行処理：APIキー値をユーザーモデルにも保存
-        if (apiKey.keyValue) {
-          user.apiKeyValue = apiKey.keyValue;
+        if (apiKey && apiKey.apiKeyFull) {
+          apiKeyInfo = {
+            id: apiKey.apiKeyId,
+            keyValue: apiKey.apiKeyFull,
+            status: apiKey.status
+          };
+          
+          // 移行処理：APIキー値をユーザーモデルにも保存
+          user.apiKeyValue = apiKey.apiKeyFull;
           await user.save();
-          console.log(`ログイン時にユーザー ${user.name} (${user._id}) のAPIキー値をユーザーモデルに保存しました`);
+          console.log(`ログイン時にユーザー ${user.name} (${user._id}) のAPIキー値をAnthropicApiKeyモデルからユーザーモデルに保存しました`);
         }
+      } catch (err) {
+        console.error('AnthropicApiKeyモデルの読み込みエラー:', err);
+        // エラーは無視して続行
       }
     }
     
@@ -422,16 +427,38 @@ exports.checkAuth = async (req, res) => {
     // APIキー情報を取得
     let apiKeyInfo = null;
     
-    // 新方式：ユーザーに直接保存されているAPIキー値を優先
-    if (user.apiKeyValue) {
+    // 新方式：AnthropicApiKeyモデルからAPIキーを取得
+    if (user.apiKeyId) {
+      try {
+        // AnthropicApiKeyはモジュールの先頭で読み込み済み
+        
+        // APIキーIDと一致するAnthropicApiKeyを検索
+        const anthropicApiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
+        
+        if (anthropicApiKey && anthropicApiKey.apiKeyFull) {
+          apiKeyInfo = {
+            id: anthropicApiKey.apiKeyId,
+            keyValue: anthropicApiKey.apiKeyFull,
+            keyHint: anthropicApiKey.keyHint,
+            status: anthropicApiKey.status
+          };
+          console.log(`認証チェック時にユーザー ${user.name} (${user._id}) のAPIキーをAnthropicApiKeyモデルから取得しました`);
+        }
+      } catch (apiKeyError) {
+        console.error('AnthropicApiKeyモデルからの取得失敗:', apiKeyError);
+      }
+    }
+    
+    // フォールバック: ユーザーに直接保存されているAPIキー値を使用
+    if (!apiKeyInfo && user.apiKeyValue) {
       apiKeyInfo = {
         id: user.apiKeyId || 'direct_key',
         keyValue: user.apiKeyValue,  // ユーザーモデルに保存されているAPIキー値
         status: 'active'
       };
     } 
-    // 旧方式の移行：他のユーザーからAPIキー値を探す
-    else if (user.apiKeyId) {
+    // レガシー対応：他のユーザーからAPIキー値を探す
+    else if (!apiKeyInfo && user.apiKeyId) {
       // 同じAPIキーIDを持つ他のユーザーを探す
       const userWithKey = await SimpleUser.findOne({
         apiKeyId: user.apiKeyId,
@@ -445,7 +472,7 @@ exports.checkAuth = async (req, res) => {
           status: 'active'
         };
         
-        // APIキー値をこのユーザーにも保存
+        // APIキー値をこのユーザーにも保存（移行処理）
         user.apiKeyValue = userWithKey.apiKeyValue;
         await user.save();
         console.log(`認証チェック時にユーザー ${user.name} (${user._id}) のAPIキー値を他のユーザーからコピーしました`);
@@ -479,6 +506,89 @@ exports.checkAuth = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: '認証チェック中にエラーが発生しました'
+    });
+  }
+};
+
+/**
+ * ユーザーのAnthropicAPIキーを取得
+ * @route GET /api/simple/user/anthropic-api-key
+ */
+exports.getUserAnthropicApiKey = async (req, res) => {
+  try {
+    const userId = req.userId;
+    
+    // ユーザー情報を取得
+    const user = await SimpleUser.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'ユーザーが見つかりません'
+      });
+    }
+    
+    // APIキー情報を取得
+    let apiKeyData = null;
+    
+    // 新方式：AnthropicApiKeyモデルからAPIキーを取得
+    if (user.apiKeyId) {
+      try {
+        // AnthropicApiKeyはモジュールの先頭で読み込み済み
+        
+        // APIキーIDと一致するAnthropicApiKeyを検索
+        const anthropicApiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
+        
+        if (anthropicApiKey && anthropicApiKey.apiKeyFull) {
+          apiKeyData = {
+            id: anthropicApiKey.apiKeyId,
+            apiKeyFull: anthropicApiKey.apiKeyFull,
+            keyHint: anthropicApiKey.keyHint,
+            status: anthropicApiKey.status
+          };
+          console.log(`anthropic-api-key エンドポイントがユーザー ${user.name} (${user._id}) のAPIキーをAnthropicApiKeyモデルから取得しました`);
+        }
+      } catch (apiKeyError) {
+        console.error('AnthropicApiKeyモデルからの取得失敗:', apiKeyError);
+      }
+    }
+    
+    // フォールバック: ユーザーに直接保存されているAPIキー値を使用
+    if (!apiKeyData && user.apiKeyValue) {
+      apiKeyData = {
+        id: user.apiKeyId || 'direct_key',
+        apiKeyFull: user.apiKeyValue,
+        keyHint: user.apiKeyValue ? user.apiKeyValue.substring(0, 5) + '...' : '',
+        status: 'active'
+      };
+      console.log(`anthropic-api-key エンドポイントがユーザー ${user.name} (${user._id}) のAPIキーをユーザーモデルから取得しました`);
+    }
+    
+    // APIキーが見つからない場合
+    if (!apiKeyData) {
+      return res.status(404).json({
+        success: false,
+        message: 'ユーザーにAPIキーが設定されていません'
+      });
+    }
+    
+    // CORS対応ヘッダー設定
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+    
+    // 成功レスポンス
+    return res.status(200).json({
+      success: true,
+      data: apiKeyData
+    });
+  } catch (error) {
+    console.error('Anthropic APIキー取得エラー:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'APIキーの取得中にエラーが発生しました',
+      error: error.message
     });
   }
 };

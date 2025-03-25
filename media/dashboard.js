@@ -1048,19 +1048,79 @@
    * ログアウト処理
    */
   function handleLogout() {
-    // 確認ダイアログ
-    const confirmLogout = confirm('AppGeniusからログアウトしますか？');
-    if (!confirmLogout) {
-      return; // キャンセルされた場合は何もしない
+    console.log('ログアウトボタンがクリックされました');
+    
+    // カスタム確認ダイアログを作成
+    createConfirmDialog(
+      'AppGeniusからログアウトしますか？',
+      () => {
+        // OK時の処理
+        console.log('ログアウトをリクエストします');
+        // バックエンドにログアウトメッセージを送信
+        vscode.postMessage({
+          command: 'logout'
+        });
+        
+        // ローディング表示
+        updateLoadingState(true);
+      },
+      () => {
+        // キャンセル時の処理
+        console.log('ログアウトがキャンセルされました');
+      }
+    );
+  }
+  
+  /**
+   * カスタム確認ダイアログを作成
+   */
+  function createConfirmDialog(message, onConfirm, onCancel) {
+    // 既存のダイアログを削除
+    const existingDialog = document.getElementById('custom-confirm-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
     }
     
-    console.log('ログアウトをリクエストします');
-    // バックエンドにログアウトメッセージを送信
-    vscode.postMessage({
-      command: 'logout'
+    // ダイアログ要素を作成
+    const dialog = document.createElement('div');
+    dialog.id = 'custom-confirm-dialog';
+    dialog.style.position = 'fixed';
+    dialog.style.top = '0';
+    dialog.style.left = '0';
+    dialog.style.right = '0';
+    dialog.style.bottom = '0';
+    dialog.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    dialog.style.display = 'flex';
+    dialog.style.alignItems = 'center';
+    dialog.style.justifyContent = 'center';
+    dialog.style.zIndex = '10000';
+    
+    // ダイアログの内容
+    dialog.innerHTML = `
+      <div style="background-color: white; border-radius: 8px; width: 350px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+        <div style="padding: 20px; text-align: center;">
+          <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 15px;">確認</h3>
+          <p style="margin-bottom: 20px;">${message}</p>
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button id="cancel-dialog" style="padding: 8px 15px; background: #f1f1f1; border: none; border-radius: 4px; cursor: pointer;">キャンセル</button>
+            <button id="confirm-dialog" style="padding: 8px 15px; background: #4a90e2; color: white; border: none; border-radius: 4px; cursor: pointer;">OK</button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // ボディにダイアログを追加
+    document.body.appendChild(dialog);
+    
+    // ボタンのイベントリスナー
+    document.getElementById('confirm-dialog').addEventListener('click', () => {
+      dialog.remove();
+      if (onConfirm) onConfirm();
     });
     
-    // ローディング表示
-    updateLoadingState(true);
+    document.getElementById('cancel-dialog').addEventListener('click', () => {
+      dialog.remove();
+      if (onCancel) onCancel();
+    });
   }
 })();

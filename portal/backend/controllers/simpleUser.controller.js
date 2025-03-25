@@ -532,37 +532,17 @@ exports.getUserProfile = async (req, res) => {
       organization = await SimpleOrganization.findById(user.organizationId);
     }
     
-    // APIキー情報を取得（必要に応じて）
-    let apiKey = null;
-    if (user.apiKeyId) {
-      apiKey = await SimpleApiKey.findOne({ id: user.apiKeyId });
-    }
-    
-    // APIキー情報を準備
+    // Portal側では基本的にAPIキー情報は不要
+    // 必要に応じてユーザー自身のAPIキー情報のみ返す
     let apiKeyInfo = null;
     
-    // 新方式：ユーザーに直接保存されているAPIキー値を優先
+    // ユーザーに直接保存されているAPIキー値があれば、それを使用
     if (user.apiKeyValue) {
       apiKeyInfo = {
         id: user.apiKeyId || 'direct_key',
-        key: user.apiKeyValue,  // 直接保存されているAPIキー値も含める
+        key: user.apiKeyValue,  // 直接保存されているAPIキー値
         status: 'active'
       };
-    } 
-    // 旧方式：APIキーテーブルからの情報
-    else if (apiKey) {
-      apiKeyInfo = {
-        id: apiKey.id,
-        key: apiKey.keyValue,  // APIキー値も含める
-        status: apiKey.status
-      };
-      
-      // 見つかったAPIキー値をユーザーモデルにも保存（移行処理）
-      if (apiKey.keyValue) {
-        user.apiKeyValue = apiKey.keyValue;
-        await user.save();
-        console.log(`ユーザープロフィール取得中にユーザー ${user.name} (${user.id}) のAPIキー値をユーザーモデルに保存しました`);
-      }
     }
     
     return res.status(200).json({

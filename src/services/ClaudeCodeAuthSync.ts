@@ -177,35 +177,44 @@ export class ClaudeCodeAuthSync {
       // 認証情報取得の詳細ログ
       Logger.info('ClaudeCode CLI同期: 認証情報の取得を開始します');
       
-      // APIキーを優先的に取得（非同期で）
+      // AnthropicApiKeyモデルからAPIキーを取得（フォールバックなし）
       let apiKeyValue: string | undefined;
       try {
         apiKeyValue = await this._authService.getApiKey();
         if (apiKeyValue) {
-          Logger.info(`ClaudeCode CLI同期: APIキーを取得しました (${apiKeyValue.substring(0, 5)}...)`);
+          Logger.info(`ClaudeCode CLI同期: AnthropicApiKeyモデルからAPIキーを取得しました (${apiKeyValue.substring(0, 5)}...)`);
         } else {
-          Logger.warn('ClaudeCode CLI同期: APIキーが取得できませんでした');
+          // APIキーがない場合はエラーを投げる
+          throw new Error('AnthropicApiKeyモデルからAPIキーを取得できませんでした。APIキーの設定を確認してください。');
         }
       } catch (apiKeyError) {
-        Logger.error('ClaudeCode CLI同期: APIキー取得中にエラーが発生しました', apiKeyError as Error);
+        // エラーの詳細情報をログに記録
+        Logger.error('ClaudeCode CLI同期: APIキー取得エラー', apiKeyError as Error);
+        
+        // ユーザーへの詳細なデバッグ情報
+        const errorMessage = `
+【APIキー取得エラー】
+エラー: ${(apiKeyError as Error).message}
+考えられる原因:
+1. AnthropicApiKeyモデルが正しく設定されていない
+2. ユーザーにAPIキーが割り当てられていない
+3. APIキー取得エンドポイントへのアクセス失敗
+
+デバッグ手順:
+1. ポータル管理画面でAPIキーが設定されているか確認
+2. バックエンドのログを確認
+3. 管理者に連絡してAPIキーの設定を依頼
+
+詳細エラー: ${JSON.stringify(apiKeyError)}
+`;
+        Logger.error(errorMessage);
+        
+        // エラーを再スローして呼び出し元に通知
+        throw new Error(`APIキー取得中にエラーが発生しました: ${(apiKeyError as Error).message}`);
       }
       
-      // アクセストークンを取得（APIキーが取得できなかった場合のフォールバック）
-      const accessToken = this._authService.getAccessToken();
-      if (accessToken) {
-        Logger.info(`ClaudeCode CLI同期: アクセストークンを取得しました (${accessToken.substring(0, 5)}...)`);
-      } else {
-        Logger.warn('ClaudeCode CLI同期: アクセストークンが取得できませんでした');
-      }
-      
-      // 認証情報が必要
-      if (!apiKeyValue && !accessToken) {
-        Logger.error('APIキーもアクセストークンも取得できないため、ClaudeCode CLIとの同期をスキップします');
-        return;
-      }
-      
-      // APIキーがあれば使用する（優先）
-      const authToken = apiKeyValue || accessToken;
+      // APIキーのみを使用（アクセストークンのフォールバックなし）
+      const authToken = apiKeyValue;
       
       // APIキーの詳細情報をログに記録
       if (apiKeyValue) {
@@ -233,6 +242,10 @@ export class ClaudeCodeAuthSync {
           // APIキーがどのように取得されたかの履歴
           const getApiKeyMethod = typeof this._authService.getApiKey === 'function';
           Logger.debug(`getApiKeyメソッド存在: ${getApiKeyMethod}`);
+          
+          // APIキーの取得元をログ
+          Logger.debug(`APIキー取得元: ${apiKeyValue === this._apiKey ? 'メモリ/ストレージキャッシュ' : 'サーバーから新規取得'}`);
+          Logger.debug(`APIキー種別: AnthropicApiKey対応版`);
           
           // ユーザーデータがシリアライズ可能か確認
           let userDataJson = '不明';

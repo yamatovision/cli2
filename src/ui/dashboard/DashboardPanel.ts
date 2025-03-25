@@ -65,7 +65,6 @@ export class DashboardPanel extends ProtectedPanel {
         ],
         enableFindWidget: true,
         enableCommandUris: true
-        // WebViewオプションでsandboxを指定していましたが、現在のVSCode APIではサポートされていないため削除しました
       }
     );
 
@@ -201,7 +200,16 @@ export class DashboardPanel extends ProtectedPanel {
             break;
           case 'logout':
             // ログアウト処理
-            await vscode.commands.executeCommand('appgenius.simpleAuth.logout');
+            try {
+              await vscode.commands.executeCommand('appgenius.simpleAuth.logout');
+              // ログアウト完了を通知
+              this._panel.webview.postMessage({
+                command: 'logoutComplete'
+              });
+            } catch (error) {
+              Logger.error('ログアウト処理中にエラーが発生しました', error as Error);
+              this._showError(`ログアウトエラー: ${(error as Error).message}`);
+            }
             break;
           case 'showVSCodeMessage':
             await this._handleShowVSCodeMessage(message.type, message.message);
