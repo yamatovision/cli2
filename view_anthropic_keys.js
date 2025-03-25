@@ -25,7 +25,10 @@ async function viewApiKeys() {
       workspaceId: String,
       lastUsedAt: Date,
       lastSyncedAt: Date
-    }, { timestamps: true });
+    }, { 
+      timestamps: true,
+      collection: 'anthropicapikeys'
+    });
     
     // SimpleOrganizationスキーマ定義
     const SimpleOrganizationSchema = new mongoose.Schema({
@@ -47,41 +50,50 @@ async function viewApiKeys() {
     
     // モデル作成
     const AnthropicApiKey = mongoose.model('AnthropicApiKey', AnthropicApiKeySchema);
-    const SimpleOrganization = mongoose.model('SimpleOrganization', SimpleOrganizationSchema);
     
-    // APIキーを取得
+    // APIキーを取得 - 最新のものから順に
     console.log("=== AnthropicApiKey モデルから取得したAPIキー ===");
-    const apiKeys = await AnthropicApiKey.find().lean();
+    const apiKeys = await AnthropicApiKey.find().sort({ createdAt: -1 }).lean();
+    
+    console.log(`合計: ${apiKeys.length}件`);
     
     apiKeys.forEach((key, index) => {
       console.log(`[${index + 1}] Key Name: ${key.name || 'None'}`);
       console.log(`  ID: ${key.apiKeyId}`);
-      console.log(`  Hint: ${key.keyHint}`);
-      console.log(`  Full Key: ${key.apiKeyFull || 'Not stored'}`);
-      console.log(`  Status: ${key.status}`);
+      console.log(`  作成日時: ${key.createdAt}`);
+      console.log(`  Hint: ${key.keyHint || 'None'}`);
+      
+      // APIキーの完全な値が保存されているか確認
+      if (key.apiKeyFull) {
+        console.log(`  Full Key: 保存済み (長さ: ${key.apiKeyFull.length}文字)`);
+        console.log(`  先頭10文字: ${key.apiKeyFull.substring(0, 10)}...`);
+        console.log(`  末尾4文字: ...${key.apiKeyFull.substring(key.apiKeyFull.length - 4)}`);
+      } else {
+        console.log(`  Full Key: 未保存`);
+      }
+      
+      console.log(`  Status: ${key.status || 'None'}`);
       console.log('--------------------------------------');
     });
     
-    // 組織からAPIキーを取得
-    console.log("\n=== 組織モデルから取得したAPIキー ===");
-    const organizations = await SimpleOrganization.find().lean();
+    // データベースの検索結果を直接確認
+    console.log("\n=== MongoDB コレクションの直接検索 ===");
+    const db = mongoose.connection.db;
+    const collection = db.collection('anthropicapikeys');
+    const latestKeys = await collection.find().sort({ createdAt: -1 }).limit(5).toArray();
     
-    organizations.forEach((org, orgIndex) => {
-      console.log(`\n組織 [${orgIndex + 1}]: ${org.name}`);
-      
-      if (org.availableApiKeys && org.availableApiKeys.length > 0) {
-        console.log(`APIキープール (${org.availableApiKeys.length}件):`);
-        
-        org.availableApiKeys.forEach((key, keyIndex) => {
-          console.log(`  [${keyIndex + 1}] Key Name: ${key.name || 'None'}`);
-          console.log(`    ID: ${key.keyId}`);
-          console.log(`    Full Key: ${key.apiKey || 'Not stored'}`);
-          console.log(`    apiKeyFull: ${key.apiKeyFull || 'Not stored'}`);
-          console.log('    ------------------------------------');
-        });
-      } else {
-        console.log("  APIキープールは空です");
+    console.log(`最新の ${latestKeys.length} 件のAPIキー:`);
+    latestKeys.forEach((key, index) => {
+      console.log(`[${index + 1}] ID: ${key.apiKeyId || 'None'}`);
+      console.log(`  Name: ${key.name || 'None'}`);
+      console.log(`  作成日時: ${key.createdAt}`);
+      console.log(`  apiKeyFull フィールド: ${key.apiKeyFull ? '存在する' : '存在しない'}`);
+      if (key.apiKeyFull) {
+        console.log(`  apiKeyFull 長さ: ${key.apiKeyFull.length}文字`);
+        console.log(`  apiKeyFull 先頭10文字: ${key.apiKeyFull.substring(0, 10)}...`);
       }
+      console.log(`  すべてのフィールド: ${Object.keys(key).join(', ')}`);
+      console.log("--------------------------------------");
     });
     
   } catch (error) {

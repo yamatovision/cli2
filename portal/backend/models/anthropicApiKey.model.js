@@ -14,15 +14,10 @@ const AnthropicApiKeySchema = new Schema({
     index: true
   },
   
-  // APIキーの完全な値（直接保存）
-  keyHint: {
+  // APIキーの完全な値（プレーンテキストで保存）
+  apiKeyFull: {
     type: String,
     required: true
-  },
-  
-  // APIキーの完全な値（開発段階ではプレーンテキストで保存）
-  apiKeyFull: {
-    type: String
   },
   
   // APIキーの名前
@@ -63,8 +58,8 @@ const AnthropicApiKeySchema = new Schema({
 AnthropicApiKeySchema.index({ apiKeyId: 1 }, { unique: true });
 AnthropicApiKeySchema.index({ status: 1 });
 AnthropicApiKeySchema.index({ name: 1 });
-// keyHintフィールドにインデックスを追加（検索効率化のため）
-AnthropicApiKeySchema.index({ keyHint: 1 });
+// 完全なAPIキーにインデックスを追加
+AnthropicApiKeySchema.index({ apiKeyFull: 1 });
 // 複合インデックス（ステータスと名前の組み合わせ検索用）
 AnthropicApiKeySchema.index({ status: 1, name: 1 });
 
@@ -80,10 +75,10 @@ AnthropicApiKeySchema.statics.findByPartialId = function(partialId) {
   });
 };
 
-// APIキーの検索（ヒント部分一致）
-AnthropicApiKeySchema.statics.findByPartialHint = function(partialHint) {
+// APIキーの検索（APIキー部分一致）
+AnthropicApiKeySchema.statics.findByPartialKey = function(partialKey) {
   return this.find({ 
-    keyHint: { $regex: partialHint, $options: 'i' } 
+    apiKeyFull: { $regex: partialKey, $options: 'i' } 
   });
 };
 
@@ -94,7 +89,9 @@ AnthropicApiKeySchema.statics.importKey = async function(apiKeyData) {
   
   if (existingKey) {
     // 既存キーを更新
-    existingKey.keyHint = apiKeyData.hint;
+    if (apiKeyData.apiKeyFull) {
+      existingKey.apiKeyFull = apiKeyData.apiKeyFull;
+    }
     existingKey.name = apiKeyData.name;
     existingKey.lastSyncedAt = new Date();
     return await existingKey.save();
@@ -102,7 +99,7 @@ AnthropicApiKeySchema.statics.importKey = async function(apiKeyData) {
     // 新規APIキーを作成
     return await this.create({
       apiKeyId: apiKeyData.id,
-      keyHint: apiKeyData.hint,
+      apiKeyFull: apiKeyData.apiKeyFull,
       name: apiKeyData.name,
       status: 'active',
       lastSyncedAt: new Date()

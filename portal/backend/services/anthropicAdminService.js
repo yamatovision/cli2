@@ -332,82 +332,53 @@ class AnthropicAdminService {
    */
   async verifyApiKey(adminApiKey, keyToVerify) {
     try {
-      // APIキーの最後の部分を取得して、APIキー一覧から探索
-      const keyHint = keyToVerify.substring(keyToVerify.length - 4);
+      // AdminApiKeyを使ってAnthropicから現在のAPIキー一覧を取得
       const apiKeys = await this.listApiKeys(adminApiKey);
       
       if (!apiKeys || !apiKeys.data || apiKeys.data.length === 0) {
         throw new Error('APIキーの取得に失敗しました');
       }
       
-      // 部分的なヒントからAPIキーを探す方法を改善
-      // まず、デバッグ情報としてAPIキー一覧を記録
-      logger.debug('利用可能なAPIキー:', apiKeys.data.map(k => ({
-        id: k.id, 
-        hint: k.partial_key_hint
-      })));
+      // デバッグ情報としてAPIキー一覧を記録
+      logger.debug('利用可能なAPIキー数:', apiKeys.data.length);
       
-      // 部分一致で検索
-      let matchingKey = apiKeys.data.find(key => 
-        key.partial_key_hint && key.partial_key_hint.endsWith(keyHint)
-      );
-      
-      // 完全一致で見つからない場合は部分一致を試す
-      if (!matchingKey) {
-        logger.debug(`完全一致(${keyHint})が見つかりません。部分一致を試みます`);
-        matchingKey = apiKeys.data.find(key => 
-          key.partial_key_hint && 
-          (key.partial_key_hint.includes(keyHint.substring(2)) || 
-           keyToVerify.includes(key.partial_key_hint.split('...').pop()))
+      // APIキーIDで直接検索
+      let matchingKey = apiKeys.data.find(key => {
+        // Anthropic APIからの特定条件によるマッチング
+        // ここでは最終的にAPIキーIDを特定できればよい
+        return key.id && (
+          // APIキーIDでの部分一致
+          (keyToVerify.includes(key.id)) ||
+          // Anthropic APIから返される値でのマッチング
+          (key.partial_key_hint && keyToVerify.endsWith(key.partial_key_hint.substring(key.partial_key_hint.length - 4)))
         );
-      }
-      
-      if (!matchingKey) {
-        // さらに緩い条件で試す（最後の2文字だけで検索）
-        const lastChars = keyHint.substring(keyHint.length - 2);
-        logger.debug(`部分一致も見つかりません。最後の2文字(${lastChars})で検索します`);
-        matchingKey = apiKeys.data.find(key => 
-          key.partial_key_hint && key.partial_key_hint.endsWith(lastChars)
-        );
-      }
+      });
       
       // API呼び出しで見つからない場合、ローカルデータベースから検索を試みる
       if (!matchingKey) {
         try {
-          logger.debug(`APIから取得できませんでした。ローカルデータベースから検索します: ${keyHint}`);
+          logger.debug('APIから取得できませんでした。ローカルデータベースから検索します');
           
-          // データベースから検索を試みる
+          // データベースから検索を試みる - 完全なキー値で検索
           let dbKey = null;
           
           try {
-            // 複数の検索条件を並列で実行して結果を待つ
-            const searchPromises = [
-              // 終わりの文字で検索
-              AnthropicApiKey.findOne({
-                keyHint: { $regex: keyHint + '$', $options: 'i' }
-              }).exec(),
-              
-              // 部分一致で検索
-              AnthropicApiKey.findOne({
-                keyHint: { $regex: keyHint.substring(2), $options: 'i' }
-              }).exec(),
-              
-              // 最後の2文字で検索
-              AnthropicApiKey.findOne({
-                keyHint: { $regex: keyHint.substring(keyHint.length - 2) + '$', $options: 'i' }
-              }).exec()
-            ];
+            // APIキーの完全一致で検索
+            dbKey = await AnthropicApiKey.findOne({
+              apiKeyFull: keyToVerify
+            }).exec();
             
-            // 並列実行して最初に見つかった結果を使用（タイムアウトを15秒に設定）
-            const results = await Promise.race([
-              Promise.all(searchPromises),
-              new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('DB検索タイムアウト')), 15000)
-              )
-            ]);
-            
-            // 最初に見つかった有効な結果を使用
-            dbKey = results.find(result => result !== null);
+            // キーが見つからない場合はAPIキーIDからの検索も試す
+            if (!dbKey) {
+              // APIキーIDの最初の部分をキーから抽出して検索
+              const keyParts = keyToVerify.split('_');
+              if (keyParts.length > 1) {
+                const keyIdPrefix = keyParts[0] + '_' + keyParts[1];
+                dbKey = await AnthropicApiKey.findOne({
+                  apiKeyId: { $regex: `^${keyIdPrefix}`, $options: 'i' }
+                }).exec();
+              }
+            }
             
           } catch (searchError) {
             logger.error('データベース検索中にエラーまたはタイムアウトが発生:', searchError);
@@ -443,7 +414,7 @@ class AnthropicAdminService {
           await Promise.race([
             AnthropicApiKey.importKey({
               id: matchingKey.id,
-              hint: matchingKey.partial_key_hint,
+              apiKeyFull: keyToVerify, // 完全なAPIキー値を保存
               name: matchingKey.name || ''
             }),
             // 10秒でタイムアウト
@@ -576,7 +547,7 @@ class AnthropicAdminService {
           // データベースに保存または更新
           const keyData = {
             id: apiKey.id,
-            hint: apiKey.partial_key_hint,
+            apiKeyFull: null, // 実際のAPIキー値は取得できないため、nullとする
             name: apiKey.name || ''
           };
           

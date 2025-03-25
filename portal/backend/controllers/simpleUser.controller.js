@@ -6,12 +6,18 @@ const SimpleUser = require('../models/simpleUser.model');
 const SimpleOrganization = require('../models/simpleOrganization.model');
 
 /**
- * APIキー値を処理する関数 - そのまま返す（シンプル実装）
+ * APIキー値を処理する関数
  * @param {string} keyValue - オリジナルのAPIキー
- * @returns {string} - 元のAPIキー
+ * @returns {Object} - APIキー情報
  */
 function formatApiKeyHint(keyValue) {
-  return keyValue || '';
+  if (!keyValue) return { hint: '', full: '' };
+  
+  // 完全なキー値を返す
+  return {
+    hint: keyValue, // キー値をそのまま保存
+    full: keyValue  // 完全なAPIキー値を保持
+  };
 }
 const jwt = require('jsonwebtoken');
 const authConfig = require('../config/auth.config');
@@ -230,6 +236,24 @@ exports.createUser = async (req, res) => {
           message: '指定されたAPIキーが組織に見つかりません'
         });
       }
+      
+      // APIキーが指定されている場合、AnthropicApiKeyモデルから値を取得
+      if (apiKeyId) {
+        try {
+          const AnthropicApiKey = require('../models/anthropicApiKey.model');
+          const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: apiKeyId });
+          
+          if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
+            // APIキー値を変数に保存
+            var apiKeyValue = apiKeyDoc.apiKeyFull;
+            console.log(`新規ユーザー作成: APIキー値を取得しました: ${apiKeyId}`);
+          } else {
+            console.log(`警告: 新規ユーザー作成時にAPIキー ${apiKeyId} の完全な値が見つかりませんでした`);
+          }
+        } catch (apiKeyError) {
+          console.error(`新規ユーザー作成: AnthropicApiKeyモデルからの検索エラー:`, apiKeyError);
+        }
+      }
     }
     
     // 新しいユーザーを作成
@@ -240,6 +264,7 @@ exports.createUser = async (req, res) => {
       role: role || 'User',
       organizationId: organizationId || null,
       apiKeyId: apiKeyId || null,
+      apiKeyValue: apiKeyValue || null,  // 取得したAPIキー値を設定
       status: 'active'
     });
     
@@ -370,15 +395,20 @@ exports.updateUser = async (req, res) => {
         }
       }
       
-      // APIキー値の検索（他のユーザーから）
-      const userWithKey = await SimpleUser.findOne({
-        apiKeyId: apiKeyId,
-        apiKeyValue: { $ne: null }
-      });
-      
-      if (userWithKey) {
-        // APIキー値をコピー
-        req.body.apiKeyValue = userWithKey.apiKeyValue;
+      // AnthropicApiKeyモデルから直接APIキー値を取得
+      try {
+        const AnthropicApiKey = require('../models/anthropicApiKey.model');
+        const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: apiKeyId });
+        
+        if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
+          // 完全なAPIキー値を見つけた場合、ユーザーに設定
+          req.body.apiKeyValue = apiKeyDoc.apiKeyFull;
+          console.log(`APIキー値をAnthropicApiKeyモデルから取得しました: ${apiKeyId}`);
+        } else {
+          console.log(`警告: APIキー ${apiKeyId} の完全な値が見つかりませんでした`);
+        }
+      } catch (apiKeyError) {
+        console.error(`AnthropicApiKeyモデルからの検索エラー:`, apiKeyError);
       }
     }
     
@@ -581,7 +611,7 @@ exports.getUserApiKey = async (req, res) => {
       });
     }
     
-    // ユーザーからAPIキー値を返す
+    // まずユーザー自身にAPIキー値があるか確認
     if (user.apiKeyValue) {
       return res.status(200).json({
         success: true,
@@ -592,39 +622,99 @@ exports.getUserApiKey = async (req, res) => {
           organizationId: user.organizationId
         }
       });
-    } else {
-      // APIキーIDが存在するが値がない場合
-      if (user.apiKeyId) {
-        // 他のユーザーでキー値を持っている人がいないか探す
-        const userWithKey = await SimpleUser.findOne({
-          apiKeyId: user.apiKeyId,
-          apiKeyValue: { $ne: null }
-        });
+    }
+    
+    // ユーザーにAPIキーIDがある場合
+    if (user.apiKeyId) {
+      // 1. まず他のユーザーから探す
+      const userWithKey = await SimpleUser.findOne({
+        apiKeyId: user.apiKeyId,
+        apiKeyValue: { $ne: null }
+      });
+      
+      if (userWithKey && userWithKey.apiKeyValue) {
+        // 見つかったAPIキー値をこのユーザーにも保存
+        user.apiKeyValue = userWithKey.apiKeyValue;
+        await user.save();
+        console.log(`ユーザー ${user.name} (${user._id}) のAPIキー値を他のユーザーからコピーしました`);
         
-        if (userWithKey && userWithKey.apiKeyValue) {
-          // 見つかったAPIキー値をこのユーザーにも保存
-          user.apiKeyValue = userWithKey.apiKeyValue;
-          await user.save();
-          console.log(`ユーザー ${user.name} (${user._id}) のAPIキー値を他のユーザーからコピーしました`);
-          
-          return res.status(200).json({
-            success: true,
-            data: {
-              id: user.apiKeyId,
-              key: user.apiKeyValue,
-              status: 'active',
-              organizationId: user.organizationId
-            }
-          });
-        }
+        return res.status(200).json({
+          success: true,
+          data: {
+            id: user.apiKeyId,
+            key: user.apiKeyValue,
+            status: 'active',
+            organizationId: user.organizationId
+          }
+        });
       }
       
-      // APIキーが見つからない
-      return res.status(404).json({
-        success: false,
-        message: 'ユーザーにAPIキーが設定されていません'
-      });
+      // 2. AnthropicApiKeyモデルから完全なキー値を探す
+      const AnthropicApiKey = require('../models/anthropicApiKey.model');
+      const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
+      
+      if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
+        // 完全なAPIキー値を見つけた場合、ユーザーに保存して返す
+        user.apiKeyValue = apiKeyDoc.apiKeyFull;
+        await user.save();
+        console.log(`ユーザー ${user.name} (${user._id}) のAPIキー値をAnthropicApiKeyモデルから復元しました`);
+        
+        return res.status(200).json({
+          success: true,
+          data: {
+            id: user.apiKeyId,
+            key: user.apiKeyValue,
+            status: apiKeyDoc.status || 'active',
+            organizationId: user.organizationId
+          }
+        });
+      }
     }
+    
+    // APIキーが見つからない場合は、ユーザーが入力した値を直接保存して返す
+    // これにより、フロントエンドやVS Code拡張からの任意のキー値が使用可能になる
+    if (req.query.direct_key) {
+      const directKey = req.query.direct_key;
+      if (directKey.startsWith('sk-ant-')) {
+        console.log(`ユーザー ${user.name} に直接APIキー値を設定します`);
+        
+        // ユニークなIDを生成
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const newApiKeyId = `apikey_${timestamp}_${randomStr}`;
+        
+        // ユーザーに保存
+        user.apiKeyId = newApiKeyId;
+        user.apiKeyValue = directKey;
+        await user.save();
+        
+        // AnthropicApiKeyモデルにも保存
+        const AnthropicApiKey = require('../models/anthropicApiKey.model');
+        await new AnthropicApiKey({
+          apiKeyId: newApiKeyId,
+          apiKeyFull: directKey,
+          name: `Direct_${user.name}`,
+          status: 'active',
+          lastSyncedAt: new Date()
+        }).save();
+        
+        return res.status(200).json({
+          success: true,
+          data: {
+            id: newApiKeyId,
+            key: directKey,
+            status: 'active',
+            organizationId: user.organizationId
+          }
+        });
+      }
+    }
+    
+    // 最終的にAPIキーが見つからない場合
+    return res.status(404).json({
+      success: false,
+      message: 'ユーザーにAPIキーが設定されていません'
+    });
   } catch (error) {
     console.error('APIキー取得エラー:', error);
     return res.status(500).json({

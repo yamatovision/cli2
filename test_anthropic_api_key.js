@@ -18,7 +18,7 @@ const rl = readline.createInterface({
 });
 
 // 設定
-const BASE_URL = 'http://localhost:5000/api/simple';
+const BASE_URL = 'https://geniemon-portal-backend-production.up.railway.app/api/simple';
 const API_ENDPOINTS = {
   login: `${BASE_URL}/auth/login`,
   check: `${BASE_URL}/auth/check`,

@@ -7,9 +7,21 @@ const SimpleUser = require('../models/simpleUser.model');
 const axios = require('axios');
 const anthropicAdminService = require('../services/anthropicAdminService');
 
-// APIキー値をそのまま使用する単純な関数
+// APIキー値を処理する関数
 function formatApiKeyHint(keyValue) {
-  return keyValue || '';
+  if (!keyValue) return { hint: '', full: '' };
+  
+  // 完全なキー値を返す
+  return {
+    hint: keyValue, // キー値をそのまま保存
+    full: keyValue  // 完全なAPIキー値を保持
+  };
+}
+
+// デバッグ用の関数 - APIキー値のログ出力
+function debugApiKey(keyValue, apiKeyId, context) {
+  const length = keyValue ? keyValue.length : 0;
+  console.log(`[APIキーデバッグ] ${context}: API Key ID=${apiKeyId}, 値の長さ=${length}文字, 先頭=${keyValue ? keyValue.substring(0, 10) : 'なし'}...`);
 }
 
 /**
@@ -337,76 +349,181 @@ exports.addApiKey = async (req, res) => {
     // AnthropicApiKeyモデルを動的に読み込み
     const AnthropicApiKey = require('../models/anthropicApiKey.model');
 
-    // APIキーのヒントを生成
-    const keyHint = formatApiKeyHint(keyValue);
+    // 詳細なデバッグ情報を出力 - コントローラー内での処理を追跡
+    console.log(`[DEBUG-API-KEY-FLOW] 開始: APIキー追加処理を開始します`);
+    console.log(`[DEBUG-API-KEY-FLOW] 入力: APIキー長=${keyValue ? keyValue.length : 0}, 先頭=${keyValue ? keyValue.substring(0, 10) : '不明'}...`);
+    console.log(`[DEBUG-API-KEY-FLOW] ENV変数: ANTHROPIC_ADMIN_KEY=${process.env.ANTHROPIC_ADMIN_KEY ? '設定あり' : '設定なし'}`);
+    
+    // APIキーのヒントと完全なキー値を生成
+    const keyInfo = formatApiKeyHint(keyValue);
+    console.log(`[DEBUG-API-KEY-FLOW] keyInfo生成: full=${keyInfo.full ? '設定済み' : '未設定'}, hint=${keyInfo.hint ? '設定済み' : '未設定'}`);
+    
     let apiKeyId;
     let keyName = 'API Key'; // デフォルト名
 
     try {
-      // Anthropic APIを使用してAPIキー情報を検証または取得
-      const adminKey = process.env.ANTHROPIC_ADMIN_KEY;
+      // デバッグ - 入力値の確認
+      console.log(`受信したAPIキー値: 長さ=${keyValue.length}, 先頭=${keyValue.substring(0, 10)}...`);
       
-      if (adminKey) {
+      // Admin API Keyが設定されているか確認
+      const adminApiKey = process.env.ANTHROPIC_ADMIN_KEY;
+      console.log(`[DEBUG-API-KEY-FLOW] adminApiKey: ${adminApiKey ? '設定済み' : '未設定'}`);
+      
+      if (adminApiKey) {
         try {
-          // APIキーの検証を行い、IDを取得
-          const apiKeyInfoResponse = await anthropicAdminService.verifyApiKey(adminKey, keyValue);
+          // Anthropic Admin APIを使用してAPIキー情報を取得
+          console.log(`[DEBUG-API-KEY-FLOW] Anthropic API呼び出し開始: keyLength=${keyValue.length}`);
+          console.log('Anthropic Admin APIを使用してAPIキー情報を取得します');
           
-          if (apiKeyInfoResponse && apiKeyInfoResponse.id) {
-            // APIキーIDとして実際のAnthropicのIDを使用
-            apiKeyId = apiKeyInfoResponse.id;
-            
-            // APIキーの名前を取得 (Anthropicで設定されているキー名を使用)
-            keyName = apiKeyInfoResponse.name || `API Key`;
-            console.log(`Anthropicから取得したキー名: ${keyName}`);
-          }
+          // API呼び出し開始時間を記録
+          const apiStartTime = Date.now();
+          const keyInfo = await anthropicAdminService.verifyApiKey(adminApiKey, keyValue);
+          const apiEndTime = Date.now();
+          console.log(`[DEBUG-API-KEY-FLOW] API呼び出し完了: 所要時間=${apiEndTime - apiStartTime}ms`);
+          
+          // APIキーIDと名前を設定
+          apiKeyId = keyInfo.id;
+          keyName = keyInfo.name;
+          
+          console.log(`[DEBUG-API-KEY-FLOW] API結果: ID=${apiKeyId}, 名前=${keyName}`);
+          console.log(`Anthropic APIから取得: ID=${apiKeyId}, 名前=${keyName}`);
         } catch (apiError) {
-          console.error('Anthropic APIキー検証エラー:', apiError);
-          return res.status(400).json({
-            success: false,
-            message: apiError.message || 'APIキーの検証中にエラーが発生しました'
-          });
+          console.log(`[DEBUG-API-KEY-FLOW] API呼び出しエラー: ${apiError.message}`);
+          console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${apiError.stack}`);
+          console.error('Anthropic API呼び出しエラー:', apiError);
+          
+          // エラーの場合はユニークなIDを生成
+          const timestamp = Date.now();
+          const randomStr = Math.random().toString(36).substring(2, 8);
+          apiKeyId = `apikey_${timestamp}_${randomStr}`;
+          
+          // APIキー名を生成
+          keyName = `APIKey_${new Date().toISOString().slice(0, 10)}`;
+          console.log(`[DEBUG-API-KEY-FLOW] 生成されたID: ${apiKeyId}, 名前: ${keyName}`);
+          console.log(`APIキー情報の取得に失敗しました。生成されたID: ${apiKeyId}`);
+        }
+      } else {
+        // Admin API Keyが設定されていない場合はユニークなIDを生成
+        console.log('[DEBUG-API-KEY-FLOW] ANTHROPIC_ADMIN_KEYが未設定のため、スキップします');
+        console.log('ANTHROPIC_ADMIN_KEYが設定されていないため、APIキー検証をスキップします');
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        apiKeyId = `apikey_${timestamp}_${randomStr}`;
+        
+        // APIキー名に入力されたキー値の一部を使用
+        const keyParts = keyValue.split('-');
+        console.log(`[DEBUG-API-KEY-FLOW] キー分割: パート数=${keyParts.length}`);
+        if (keyParts.length > 3 && keyParts[3]) {
+          keyName = keyParts[3]; // 4番目のパート（ユーザー指定部分）を名前として使用
+          console.log(`[DEBUG-API-KEY-FLOW] パートから名前生成: ${keyName}`);
+        } else {
+          keyName = `APIKey_${new Date().toISOString().slice(0, 10)}`;
+          console.log(`[DEBUG-API-KEY-FLOW] デフォルト名前生成: ${keyName}`);
         }
       }
       
-      // Anthropic APIでの検証に失敗した場合はエラーを返す
-      if (!apiKeyId) {
-        return res.status(400).json({
-          success: false,
-          message: 'APIキーの検証に失敗しました。Anthropic API からキー情報を取得できませんでした。'
-        });
+      console.log(`生成したAPIキーID: ${apiKeyId}`);
+      console.log(`設定したキー名: ${keyName}`);
+      
+      // キー情報の確認とデバッグ
+      if (!keyInfo || !keyInfo.full) {
+        console.log(`[DEBUG-API-KEY-FLOW] 警告: keyInfo.fullが未設定`);
+        console.error('⚠️ 警告: keyInfo.fullが設定されていません');
+        // 緊急対応: keyInfoが正しく設定されていない場合は直接代入
+        keyInfo = {
+          hint: keyValue,
+          full: keyValue // 完全なAPIキー値を確実に設定
+        };
+        console.log(`[DEBUG-API-KEY-FLOW] keyInfo再設定: full=${keyInfo.full ? '設定済み' : '未設定'}, hint=${keyInfo.hint ? '設定済み' : '未設定'}`);
       }
       
+      // デバッグ - keyInfo確認
+      debugApiKey(keyInfo.full, apiKeyId, '処理前');
+      
       try {
+        console.log(`[DEBUG-API-KEY-FLOW] 組織にAPIキー追加: orgId=${organization._id}, apiKeyId=${apiKeyId}`);
         // 組織のAPIキーリストに追加 - ユニークにする
         if (!organization.apiKeyIds.includes(apiKeyId)) {
           organization.apiKeyIds.push(apiKeyId);
           await organization.save();
+          console.log(`[DEBUG-API-KEY-FLOW] 組織のAPIキーリスト更新成功`);
+        } else {
+          console.log(`[DEBUG-API-KEY-FLOW] 組織のAPIキーリストには既に含まれています`);
         }
         
         // APIキー情報をAnthropicApiKeyモデルに保存
         // keyNameはスコープ上部で宣言済み
+        console.log(`[DEBUG-API-KEY-FLOW] DB検索: apiKeyId=${apiKeyId}`);
         
         // 既存のキーを確認
         let apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId });
+        console.log(`[DEBUG-API-KEY-FLOW] DB検索結果: ${apiKeyDoc ? '既存データあり' : '新規データ'}`);
         
         if (apiKeyDoc) {
-          // 既存のキーがあれば名前だけ更新
+          // 既存のキーがあれば名前と完全なキー値を更新
+          console.log(`[DEBUG-API-KEY-FLOW] 既存キー更新: id=${apiKeyDoc._id}, name=${keyName}`);
           apiKeyDoc.name = keyName;
+          apiKeyDoc.apiKeyFull = keyInfo.full; // 完全なAPIキー値を保存
           apiKeyDoc.lastSyncedAt = new Date();
-          await apiKeyDoc.save();
+          debugApiKey(apiKeyDoc.apiKeyFull, apiKeyId, '既存キー更新');
+          
+          try {
+            const saveStart = Date.now();
+            await apiKeyDoc.save();
+            const saveEnd = Date.now();
+            console.log(`[DEBUG-API-KEY-FLOW] 既存キー保存完了: 所要時間=${saveEnd - saveStart}ms`);
+          } catch (saveError) {
+            console.log(`[DEBUG-API-KEY-FLOW] 既存キー保存エラー: ${saveError.message}`);
+            console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${saveError.stack}`);
+            throw saveError;
+          }
         } else {
           // 新規キーを作成
-          apiKeyDoc = new AnthropicApiKey({
-            apiKeyId: apiKeyId,
-            keyHint: keyHint,
-            name: keyName,
-            status: 'active',
-            lastSyncedAt: new Date()
-          });
-          await apiKeyDoc.save();
+          console.log(`[DEBUG-API-KEY-FLOW] 新規キー作成: id=${apiKeyId}, name=${keyName}, apiKeyFull長=${keyInfo.full ? keyInfo.full.length : 0}文字`);
+          
+          try {
+            apiKeyDoc = new AnthropicApiKey({
+              apiKeyId: apiKeyId,
+              apiKeyFull: keyInfo.full, // 完全なAPIキー値を保存
+              name: keyName,
+              status: 'active',
+              lastSyncedAt: new Date()
+            });
+            
+            console.log(`[DEBUG-API-KEY-FLOW] 作成したドキュメント: ${apiKeyDoc ? 'OK' : 'NULL'}, apiKeyFull=${apiKeyDoc.apiKeyFull ? '設定済み' : '未設定'}`);
+            
+            debugApiKey(apiKeyDoc.apiKeyFull, apiKeyId, '新規キー作成');
+            
+            const saveStart = Date.now();
+            await apiKeyDoc.save();
+            const saveEnd = Date.now();
+            console.log(`[DEBUG-API-KEY-FLOW] 新規キー保存完了: 所要時間=${saveEnd - saveStart}ms`);
+          } catch (saveError) {
+            console.log(`[DEBUG-API-KEY-FLOW] 新規キー保存エラー: ${saveError.message}`);
+            console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${saveError.stack}`);
+            console.log(`[DEBUG-API-KEY-FLOW] バリデーションエラー: ${JSON.stringify(saveError.errors || {})}`);
+            throw saveError;
+          }
+        }
+        
+        // 保存後の確認
+        console.log(`[DEBUG-API-KEY-FLOW] 保存確認開始: apiKeyId=${apiKeyId}`);
+        const savedKey = await AnthropicApiKey.findOne({ apiKeyId });
+        console.log(`[DEBUG-API-KEY-FLOW] 保存確認結果: ${savedKey ? 'データあり' : 'データなし'}`);
+        
+        if (savedKey) {
+          console.log(`[DEBUG-API-KEY-FLOW] 保存確認詳細: name=${savedKey.name}, apiKeyFull=${savedKey.apiKeyFull ? '設定済み' : '未設定'}, 長さ=${savedKey.apiKeyFull ? savedKey.apiKeyFull.length : 0}文字`);
+          debugApiKey(savedKey.apiKeyFull, apiKeyId, '保存後確認');
+        } else {
+          console.log(`[DEBUG-API-KEY-FLOW] 警告: 保存確認でデータが見つかりません`);
         }
         
         // 自動的にユーザーに紐づけない - 後でユーザーを作成する際に選択できるようにする
+        console.log(`[DEBUG-API-KEY-FLOW] 処理完了: 正常終了`);
+        
+        // 最終確認 - apiKeyFullがちゃんと保存されているか
+        const finalCheck = await AnthropicApiKey.findOne({ apiKeyId }).lean();
+        console.log(`[DEBUG-API-KEY-FLOW] 最終確認: apiKeyFull=${finalCheck && finalCheck.apiKeyFull ? '設定済み' : '未設定'}, 長さ=${finalCheck && finalCheck.apiKeyFull ? finalCheck.apiKeyFull.length : 0}文字`);
         
         return res.status(201).json({
           success: true,
@@ -423,6 +540,8 @@ exports.addApiKey = async (req, res) => {
         }
         });
       } catch (err) {
+        console.log(`[DEBUG-API-KEY-FLOW] データ保存エラー: ${err.message}`);
+        console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${err.stack}`);
         console.error('APIキー保存エラー:', err);
         return res.status(500).json({
           success: false,
@@ -431,6 +550,8 @@ exports.addApiKey = async (req, res) => {
         });
       }
     } catch (verifyError) {
+      console.log(`[DEBUG-API-KEY-FLOW] 処理エラー: ${verifyError.message}`);
+      console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${verifyError.stack}`);
       console.error('APIキー検証/追加エラー:', verifyError);
       return res.status(500).json({
         success: false,
@@ -438,6 +559,8 @@ exports.addApiKey = async (req, res) => {
         error: verifyError.message
       });
     }
+    
+    console.log(`[DEBUG-API-KEY-FLOW] 追加処理終了`); // 最終ログ（どのパスで終了したか確認用）
   } catch (error) {
     console.error('APIキー追加エラー:', error);
     return res.status(500).json({
