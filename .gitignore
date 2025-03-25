@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.vscode/
+
+.claude_ui_data/
+
+.claude_data/
+temp/
+.appgenius_temp/
+
+# VSCode拡張機能パッケージ（サイズが大きいため）
+*.vsix
+
+# テスト関連の一時ファイル
+test_script/auth_token.txt
+*.log
+
+# 環境変数ファイル
+.env

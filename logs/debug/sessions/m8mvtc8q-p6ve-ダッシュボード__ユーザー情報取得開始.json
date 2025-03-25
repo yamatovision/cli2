@@ -1,0 +1,9 @@
+{
+  "id": "m8mvtc8q-p6ve",
+  "errorLog": "ダッシュボード: ユーザー情報取得開始\nmain.89a9b0d7.js:152 ダッシュボード: ローカルストレージからユーザー情報を取得: {id: '67df9cacb7cb4aa4f6ad9e1a', name: '達也さん', email: 'metavicer@gmail.com', role: 'SuperAdmin', organizationId: '67e0038f4b47eea54012f96f', …}apiKeyId: nullapiKeyValue: nullemail: \"metavicer@gmail.com\"id: \"67df9cacb7cb4aa4f6ad9e1a\"name: \"達也さん\"organizationId: \"67e0038f4b47eea54012f96f\"role: \"SuperAdmin\"[[Prototype]]: Object\nmain.89a9b0d7.js:152 Dashboardコンポーネントがレンダリングされました\nmain.89a9b0d7.js:152 ダッシュボード: サーバーからユーザー情報を取得: {success: true, data: {…}}\nmain.89a9b0d7.js:152 DEBUG [2025-03-24T09:45:13.476Z] USER_DATA_FETCHED {userData: {…}}\nmain.89a9b0d7.js:152 DEBUG [2025-03-24T09:45:13.476Z] USER_SET_FROM_DIRECT_RESPONSE {user: {…}}\nmain.89a9b0d7.js:152 Dashboardコンポーネントがレンダリングされました\nmain.89a9b0d7.js:152 simpleAuth.getCurrentUser: ユーザー情報取得開始\nmain.89a9b0d7.js:152 simpleAuth.getCurrentUser: 認証ヘッダー {Content-Type: 'application/json'}Content-Type: \"application/json\"[[Prototype]]: Object\nmain.89a9b0d7.js:152 simpleAuth.getCurrentUser: エラー発生",
+  "status": "investigating",
+  "createdAt": "2025-03-24T09:46:01.658Z",
+  "errorType": "HTTPエラー",
+  "relatedFiles": [],
+  "investigationStartTime": "2025-03-24T09:46:01.683Z"
+}
