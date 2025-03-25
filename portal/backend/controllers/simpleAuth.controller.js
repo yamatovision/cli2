@@ -95,11 +95,6 @@ exports.login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
     
-    console.log("============ シンプル認証コントローラー: ログイン成功 ============");
-    console.log(`ログイン成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}, ID=${user._id}`);
-    console.log("APIキー情報:", apiKeyInfo ? `ID=${apiKeyInfo.id}, 状態=${apiKeyInfo.status}` : "なし");
-    console.log("==================================================================");
-    
     // CORS対応ヘッダー設定
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -140,6 +135,12 @@ exports.login = async (req, res) => {
         // エラーは無視して続行
       }
     }
+    
+    // APIキー取得後のログ記録
+    console.log("============ シンプル認証コントローラー: ログイン成功 ============");
+    console.log(`ログイン成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}, ID=${user._id}`);
+    console.log("APIキー情報:", apiKeyInfo ? `ID=${apiKeyInfo.id}, 状態=${apiKeyInfo.status}` : "なし");
+    console.log("==================================================================");
     
     // レスポンス
     return res.status(200).json({

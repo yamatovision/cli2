@@ -557,27 +557,71 @@ token-refresh.js:64 [TokenRefresh] 既存のリフレッシュ処理の完了を
 
 
 
-
-[2025-03-25T04:00:59.691Z] [INFO] スコープセクションから "コードリファクタリング" に 8 個のファイルを追加しました
-[2025-03-25T04:00:59.692Z] [INFO] スコープ "シンプル組織・APIキー管理システム" の専用セクションが見つかりました
-[2025-03-25T04:00:59.692Z] [INFO] スコープセクションから "シンプル組織・APIキー管理システム" に 20 個のファイルを追加しました
-[2025-03-25T04:00:59.692Z] [INFO] 22個のスコープを読み込みました
-[2025-03-25T04:00:59.692Z] [INFO] WebViewに状態更新を送信します - スコープ数: 22, 実装フェーズ: true
-[2025-03-25T04:00:59.692Z] [INFO] WebView更新メッセージ送信: {"command":"updateState","scopes":"[省略]","selectedScopeIndex":-1,"selectedScope":"[省略]","directoryStructure":"[省略]","projectPath":"/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius","isPreparationMode":false,"totalProgress":83,"projectStats":{"totalFiles":35,"completedFiles":29,"totalProgress":83}}
-[2025-03-25T04:00:59.692Z] [INFO] CURRENT_STATUS.mdファイルの強制更新が完了しました
-[2025-03-25T04:00:59.870Z] [INFO] CURRENT_STATUS.mdファイル変更のデバウンス処理を実行します
-[2025-03-25T04:00:59.875Z] [DEBUG] Event emitted: current-status-updated from DashboardPanel for project project_1742164692026
-[2025-03-25T04:00:59.875Z] [INFO] CURRENT_STATUS更新イベントを受信しました - ダッシュボードの更新を開始
-[2025-03-25T04:00:59.876Z] [INFO] アクティブプロジェクトのCURRENT_STATUSが更新されたため、ウェブビューを強制更新します
-[2025-03-25T04:00:59.877Z] [INFO] CURRENT_STATUS更新に伴うダッシュボード更新完了
-[2025-03-25T04:01:00.556Z] [ERROR] SimpleAuthService: トークンリフレッシュエラー
-[2025-03-25T04:01:00.556Z] [ERROR] Error details: Request failed with status code 401
-[2025-03-25T04:01:00.556Z] [ERROR] API Error: 401 POST https://geniemon-portal-backend-production.up.railway.app/api/simple/auth/refresh-token
-[2025-03-25T04:01:00.557Z] [ERROR] Response data: {
+[2025-03-25T04:08:19.975Z] [INFO] ログファイル: /Users/tatsuya/.appgenius-ai/logs/appgenius-ai-2025-03-25T04-08-19.log
+[2025-03-25T04:08:19.975Z] [INFO] AppGenius AI が起動しました
+[2025-03-25T04:08:19.976Z] [DEBUG] 設定からAPI キーを読み込みました
+[2025-03-25T04:08:19.976Z] [INFO] PlatformManager initialized successfully
+[2025-03-25T04:08:19.976Z] [DEBUG] ScopeExporter initialized with directory: /var/folders/p8/n69m34cn4f58xb02tx3226y80000gn/T/appgenius/scopes
+[2025-03-25T04:08:19.976Z] [INFO] ScopeExporter initialized successfully
+[2025-03-25T04:08:19.976Z] [INFO] AuthStorageManager: 初期化完了
+[2025-03-25T04:08:19.976Z] [INFO] AuthStorageManager initialized successfully
+[2025-03-25T04:08:19.976Z] [INFO] ScopeManager command registered successfully
+[2025-03-25T04:08:19.976Z] [INFO] DebugDetective command registered successfully
+[2025-03-25T04:08:19.976Z] [INFO] SimpleAuthService: 初期化開始
+[2025-03-25T04:08:19.976Z] [INFO] SimpleAuthService: トークンロード開始
+[2025-03-25T04:08:19.977Z] [INFO] SimpleAuthManager: 初期化完了
+[2025-03-25T04:08:19.977Z] [INFO] SimpleAuthManager initialized successfully
+[2025-03-25T04:08:19.977Z] [INFO] SimpleAuthService accessed and stored in global variable successfully
+[2025-03-25T04:08:19.977Z] [INFO] TokenManager: 初期化完了
+[2025-03-25T04:08:19.977Z] [INFO] Legacy TokenManager initialized successfully
+[2025-03-25T04:08:19.977Z] [INFO] 認証サービスの初期化を開始
+[2025-03-25T04:08:19.977Z] [INFO] Legacy AuthenticationService initialized successfully
+[2025-03-25T04:08:19.977Z] [INFO] PermissionManager: 初期化完了 (SimpleAuth: true)
+[2025-03-25T04:08:19.977Z] [INFO] PermissionManager initialized with SimpleAuthService
+[2025-03-25T04:08:19.977Z] [ERROR] Authentication services initialization failed
+[2025-03-25T04:08:19.977Z] [ERROR] Error details: command 'appgenius.simpleAuth.showMenu' already exists
+[2025-03-25T04:08:19.978Z] [ERROR] Stack trace: Error: command 'appgenius.simpleAuth.showMenu' already exists
+	at Sw.registerCommand (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:40253)
+	at Object.registerCommand (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:172:36620)
+	at registerSimpleAuthCommands (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34277:21)
+	at registerAuthCommands (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34238:5)
+	at activate (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:249:49)
+	at Ww.kb (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:116:15216)
+	at Ww.jb (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:116:14923)
+	at file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:116:13081
+	at async pw.n (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:13415)
+	at async pw.m (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:13378)
+	at async pw.l (file:///Applications/Visual%20Studio%20Code.app/Contents/Resources/app/out/vs/workbench/api/node/extensionHostProcess.js:112:12834)
+[2025-03-25T04:08:19.979Z] [DEBUG] 保存されたAPI キーを読み込みました
+[2025-03-25T04:08:19.983Z] [DEBUG] SimpleAuthService: アクセストークン取得 - キー=appgenius.simple.accessToken, 結果=なし
+[2025-03-25T04:08:19.985Z] [DEBUG] TokenManager: アクセストークン取得 成功
+[2025-03-25T04:08:19.985Z] [INFO] 保存されたトークンを確認しています
+[2025-03-25T04:08:19.992Z] [WARN] SimpleAuthService: 古いキー形式でトークンが見つかりました。移行を実施します
+[2025-03-25T04:08:20.010Z] [DEBUG] AuthStorageManager: SecretStorageからトークン有効期限を取得 (2025/3/26 13:02:30まで)
+[2025-03-25T04:08:20.011Z] [DEBUG] TokenManager: トークンは有効です (残り約23時間54分)
+[2025-03-25T04:08:20.011Z] [INFO] ユーザー情報を取得します
+[2025-03-25T04:08:20.012Z] [INFO] SimpleAuth ユーザー情報の取得を開始します
+[2025-03-25T04:08:20.012Z] [INFO] SimpleAuthService: トークンを新しいキー形式に移行しました
+[2025-03-25T04:08:20.018Z] [DEBUG] TokenManager: アクセストークン取得 成功
+[2025-03-25T04:08:20.025Z] [DEBUG] SimpleAuthService: リフレッシュトークン取得 - キー=appgenius.simple.refreshToken, 結果=なし
+[2025-03-25T04:08:20.026Z] [WARN] SimpleAuthService: 古いキー形式でリフレッシュトークンが見つかりました。移行を実施します
+[2025-03-25T04:08:20.028Z] [INFO] SimpleAuthService: リフレッシュトークンを新しいキー形式に移行しました
+[2025-03-25T04:08:20.028Z] [DEBUG] SimpleAuthService: トークン有効期限取得 - キー=appgenius.simple.tokenExpiry, 結果=なし
+[2025-03-25T04:08:20.029Z] [WARN] SimpleAuthService: 古いキー形式でトークン有効期限が見つかりました。移行を実施します
+[2025-03-25T04:08:20.030Z] [INFO] SimpleAuthService: トークン有効期限を新しいキー形式に移行しました
+[2025-03-25T04:08:20.031Z] [DEBUG] SimpleAuthService: APIキー取得 - キー=appgenius.simple.apiKey, 結果=なし
+[2025-03-25T04:08:20.031Z] [INFO] SimpleAuthService: トークンロード成功
+[2025-03-25T04:08:20.031Z] [INFO] SimpleAuthService: セッション復元開始
+[2025-03-25T04:08:20.031Z] [INFO] SimpleAuthService: トークン期限切れ、リフレッシュ試行
+[2025-03-25T04:08:20.031Z] [INFO] SimpleAuthService: トークンリフレッシュ開始
+[2025-03-25T04:08:21.751Z] [ERROR] SimpleAuthService: トークンリフレッシュエラー
+[2025-03-25T04:08:21.751Z] [ERROR] Error details: Request failed with status code 401
+[2025-03-25T04:08:21.751Z] [ERROR] API Error: 401 POST https://geniemon-portal-backend-production.up.railway.app/api/simple/auth/refresh-token
+[2025-03-25T04:08:21.752Z] [ERROR] Response data: {
   "success": false,
   "message": "無効なリフレッシュトークンです"
 }
-[2025-03-25T04:01:00.557Z] [ERROR] Stack trace: AxiosError: Request failed with status code 401
+[2025-03-25T04:08:21.752Z] [ERROR] Stack trace: AxiosError: Request failed with status code 401
 	at settle (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:2556:12)
 	at IncomingMessage.handleStreamEnd (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:3673:11)
 	at IncomingMessage.emit (node:events:530:35)
@@ -586,84 +630,30 @@ token-refresh.js:64 [TokenRefresh] 既存のリフレッシュ処理の完了を
 	at Axios.request (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:4783:41)
 	at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
 	at async SimpleAuthService._refreshAccessToken (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:29683:30)
-	at async SimpleAuthService._fetchUserInfo (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:29662:35)
-	at async SimpleAuthService._verifyAndRestoreSession (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:29486:30)
+	at async SimpleAuthService._verifyAndRestoreSession (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:29477:35)
 	at async SimpleAuthService._initialize (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:29244:34)
-[2025-03-25T04:01:00.558Z] [INFO] SimpleAuthService: ユーザー情報取得失敗
-[2025-03-25T04:01:00.558Z] [INFO] SimpleAuthService: トークンクリア開始
-[2025-03-25T04:01:00.565Z] [INFO] SimpleAuthService: トークンクリア完了
-[2025-03-25T04:01:00.565Z] [INFO] SimpleAuthService: 認証状態更新 [true => false]
-[2025-03-25T04:01:00.565Z] [INFO] 【デバッグ】SimpleAuthManager: 認証状態通知を直接実行 - isAuthenticated=false
-[2025-03-25T04:01:00.565Z] [INFO] 認証状態変更イベント: 未認証
-[2025-03-25T04:01:00.565Z] [INFO] 【デバッグ】appgenius.onAuthStateChangedコマンドが実行されました
-[2025-03-25T04:01:00.565Z] [INFO] 【デバッグ】ダッシュボード表示スキップ: 認証されていません
-[2025-03-25T04:01:00.565Z] [DEBUG] AuthGuard: dashboardへのアクセス権限をチェックします
-[2025-03-25T04:01:00.565Z] [INFO] PermissionManager: 権限チェック - 機能=dashboard, 認証状態=false, ユーザー=なし, ロール=guest, ユーザーID=なし
-[2025-03-25T04:01:00.565Z] [INFO] PermissionManager: ユーザー権限一覧=[]
-[2025-03-25T04:01:00.565Z] [INFO] PermissionManager: ロール=guestのアクセス可能な機能=["dashboard"]
-[2025-03-25T04:01:00.566Z] [INFO] PermissionManager: ロール=guestは機能=dashboardへのアクセス権限があります
-[2025-03-25T04:01:00.566Z] [INFO] SimpleAuthManager: 認証状態通知完了
-[2025-03-25T04:01:00.566Z] [INFO] 認証状態が変更されました: 未認証
-[2025-03-25T04:01:00.566Z] [DEBUG] ProtectedPanel: 権限変更を検知しました。UIの更新が必要かもしれません。
-[2025-03-25T04:01:00.566Z] [DEBUG] PermissionManager: 権限変更イベントを発行しました
-[2025-03-25T04:01:00.566Z] [INFO] SimpleAuthService: 初期化完了 - 認証状態: 未認証, ユーザー: なし, ID: なし, ロール: なし
-[2025-03-25T04:01:01.303Z] [DEBUG] 【APIキー詳細】AnthropicApiKeyエンドポイントエラー: Request failed with status code 401
-[2025-03-25T04:01:01.304Z] [WARN] SimpleAuthService: AnthropicApiKeyモデルからAPIキーを取得できませんでした。
-[2025-03-25T04:01:01.304Z] [WARN] SimpleAuthService: ユーザーモデルからのAPIキー取得は無効化されています。
-[2025-03-25T04:01:01.304Z] [ERROR] 
-【重大エラー】AnthropicAPIキーが設定されていません
-----------------------------------------
-ユーザーにAnthropicAPIキーが設定されていないため、ClaudeCodeを起動できません。
-
-問題の解決方法:
-1. 管理者に連絡してAPIキーの設定を依頼してください
-2. AnthropicアカウントでAPIキーが正しく設定されているか確認してください
-
-エラーコード: ANTHROPIC_API_KEY_NOT_FOUND
-ユーザーID: 不明
-認証状態: 未認証
-
-[2025-03-25T04:01:01.304Z] [ERROR] SimpleAuthService: サーバーからのAPIキー取得に失敗しました
-[2025-03-25T04:01:01.304Z] [ERROR] Error details: AnthropicAPIキーが設定されていません。管理者に連絡してください。
-[2025-03-25T04:01:01.304Z] [ERROR] Stack trace: Error: AnthropicAPIキーが設定されていません。管理者に連絡してください。
-	at SimpleAuthService.getApiKey (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:30041:19)
-	at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-[2025-03-25T04:01:01.304Z] [INFO] 【APIキー診断】APIキーが見つからない問題を診断します...
-[2025-03-25T04:01:01.304Z] [WARN] 【APIキー診断】ユーザーデータが存在しません
-[2025-03-25T04:02:12.159Z] [INFO] デバッグ探偵を開くコマンドが実行されました: /Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius
-[2025-03-25T04:02:12.161Z] [DEBUG] DebugDetectivePanel: 権限チェックを実行します (debug_detective)
-[2025-03-25T04:02:12.161Z] [DEBUG] AuthGuard: debug_detectiveへのアクセス権限をチェックします
-[2025-03-25T04:02:12.161Z] [INFO] PermissionManager: 権限チェック - 機能=debug_detective, 認証状態=false, ユーザー=なし, ロール=guest, ユーザーID=なし
-[2025-03-25T04:02:12.161Z] [INFO] PermissionManager: ユーザー権限一覧=[]
-[2025-03-25T04:02:12.161Z] [INFO] PermissionManager: ロール=guestのアクセス可能な機能=["dashboard"]
-[2025-03-25T04:02:12.161Z] [WARN] PermissionManager: ロール=guestは機能=debug_detectiveへのアクセス権限がありません
-[2025-03-25T04:02:12.161Z] [WARN] DebugDetectivePanel: debug_detectiveへのアクセスが拒否されました
-[2025-03-25T04:02:12.162Z] [INFO] デバッグ探偵を開きました
-[2025-03-25T04:02:28.972Z] [INFO] SimpleAuthログイン処理を開始します
-[2025-03-25T04:02:30.492Z] [DEBUG] TokenManager: アクセストークンを保存 (有効期限: 86400秒)
-[2025-03-25T04:02:30.497Z] [DEBUG] AuthStorageManager: データを保存しました (キー: appgenius.accessToken)
-[2025-03-25T04:02:30.507Z] [DEBUG] AuthStorageManager: データを保存しました (キー: appgenius.tokenExpiry)
-[2025-03-25T04:02:30.617Z] [DEBUG] グローバルスコープに有効期限を保存しました
-[2025-03-25T04:02:30.629Z] [INFO] AuthStorageManager: アクセストークンを保存しました (有効期限: 2025/3/26 13:02:30)
-[2025-03-25T04:02:30.687Z] [INFO] TokenManager: アクセストークン保存完了 (長さ: 279文字, 有効期限: 86400秒)
-[2025-03-25T04:02:30.688Z] [DEBUG] TokenManager: リフレッシュトークンを保存
-[2025-03-25T04:02:30.691Z] [DEBUG] AuthStorageManager: データを保存しました (キー: appgenius.refreshToken)
-[2025-03-25T04:02:30.726Z] [DEBUG] AuthStorageManager: リフレッシュトークンを保存しました
-[2025-03-25T04:02:30.754Z] [INFO] TokenManager: リフレッシュトークン保存完了 (長さ: 252文字)
-[2025-03-25T04:02:30.757Z] [DEBUG] AuthStorageManager: データを保存しました (キー: appgenius.userData)
-[2025-03-25T04:02:30.792Z] [DEBUG] AuthStorageManager: ユーザーデータを保存しました
-[2025-03-25T04:02:30.792Z] [DEBUG] ロールマッピング: 元の値="SuperAdmin", 変換後="superadmin"
-[2025-03-25T04:02:30.792Z] [INFO] 認証状態が変更されました: isAuthenticated, userId, username, role, expiresAt
-[2025-03-25T04:02:30.793Z] [INFO] トークン有効期限の予測: 2025/3/26 13:02:30
-[2025-03-25T04:02:30.793Z] [INFO] 認証チェックインターバルを開始しました（1800秒間隔）
-[2025-03-25T04:02:30.793Z] [INFO] SimpleAuthログインに成功しました: Tatsuya
-[2025-03-25T04:02:31.797Z] [DEBUG] 【APIキー詳細】getApiKey()呼び出し: 	at LoginWebviewPanel._showApiKeyAfterLogin (/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/dist/extension.js:34897:46)
-[2025-03-25T04:02:31.797Z] [DEBUG] 【APIキー詳細】認証状態: 未認証, ユーザー: なし, ID: なし
-[2025-03-25T04:02:31.798Z] [DEBUG] 【APIキー詳細】アクセストークン存在: なし, 長さ: 0文字, APIキー存在: なし
-[2025-03-25T04:02:31.798Z] [INFO] SimpleAuthService: APIキーが見つからないため、サーバーから取得を試みます
-[2025-03-25T04:02:31.798Z] [WARN] SimpleAuthService: アクセストークンがないためAPIキーを取得できません
-[2025-03-25T04:02:31.798Z] [DEBUG] 【APIキー詳細】現在の認証状態: 未認証
-[2025-03-25T04:02:31.798Z] [DEBUG] 【APIキー詳細】アクセストークン変数: undefined
-[2025-03-25T04:02:31.799Z] [WARN] ログイン後のAPIキー表示: APIキーが見つかりません
-[2025-03-25T04:02:32.315Z] [INFO] WebViewに状態更新を送信します - スコープ数: 22, 実装フェーズ: true
-[2025-03-25T04:02:32.315Z] [INFO] WebView更新メッセージ送信: {"command":"updateState","scopes":"[省略]","selectedScopeIndex":-1,"selectedScope":"[省略]","directoryStructure":"[省略]","projectPath":"/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius","isPreparationMode":false,"totalProgress":83,"projectStats":{"totalFiles":35,"completedFiles":29,"totalProgress":83}}
+[2025-03-25T04:08:21.752Z] [INFO] SimpleAuthService: リフレッシュ失敗
+[2025-03-25T04:08:21.752Z] [INFO] SimpleAuthService: トークンクリア開始
+[2025-03-25T04:08:21.763Z] [INFO] SimpleAuthService: トークンクリア完了
+[2025-03-25T04:08:21.763Z] [INFO] SimpleAuthService: 認証状態更新 [false => false]
+[2025-03-25T04:08:21.763Z] [INFO] 【デバッグ】SimpleAuthManager: 認証状態通知を直接実行 - isAuthenticated=false
+[2025-03-25T04:08:21.763Z] [INFO] 認証状態変更イベント: 未認証
+[2025-03-25T04:08:21.764Z] [INFO] 【デバッグ】appgenius.onAuthStateChangedコマンドが実行されました
+[2025-03-25T04:08:21.764Z] [INFO] 【デバッグ】ダッシュボード表示スキップ: 認証されていません
+[2025-03-25T04:08:21.764Z] [DEBUG] AuthGuard: dashboardへのアクセス権限をチェックします
+[2025-03-25T04:08:21.764Z] [INFO] PermissionManager: 権限チェック - 機能=dashboard, 認証状態=false, ユーザー=なし, ロール=guest, ユーザーID=なし
+[2025-03-25T04:08:21.764Z] [INFO] PermissionManager: ユーザー権限一覧=[]
+[2025-03-25T04:08:21.764Z] [INFO] PermissionManager: ロール=guestのアクセス可能な機能=["dashboard"]
+[2025-03-25T04:08:21.764Z] [INFO] PermissionManager: ロール=guestは機能=dashboardへのアクセス権限があります
+[2025-03-25T04:08:21.764Z] [INFO] SimpleAuthManager: 認証状態通知完了
+[2025-03-25T04:08:21.764Z] [INFO] 認証状態が変更されました: 未認証
+[2025-03-25T04:08:21.765Z] [DEBUG] PermissionManager: 権限変更イベントを発行しました
+[2025-03-25T04:08:21.766Z] [INFO] SimpleAuthService: 初期化完了 - 認証状態: 未認証, ユーザー: なし, ID: なし, ロール: なし
+[2025-03-25T04:08:21.777Z] [DEBUG] AuthStorageManager: データを保存しました (キー: appgenius.userData)
+[2025-03-25T04:08:21.876Z] [DEBUG] AuthStorageManager: ユーザーデータを保存しました
+[2025-03-25T04:08:21.876Z] [DEBUG] ロールマッピング: 元の値="SuperAdmin", 変換後="superadmin"
+[2025-03-25T04:08:21.876Z] [INFO] 認証状態が変更されました: isAuthenticated, userId, username, role
+[2025-03-25T04:08:21.876Z] [INFO] SimpleAuth ユーザー情報を取得しました: Tatsuya
+[2025-03-25T04:08:21.876Z] [INFO] 認証チェックインターバルを開始しました（1800秒間隔）
+[2025-03-25T04:08:21.876Z] [INFO] 認証サービスの初期化が完了しました
+[2025-03-25T04:08:21.977Z] [INFO] AppGenius AIダッシュボードを自動起動しました（オンボーディング非表示）

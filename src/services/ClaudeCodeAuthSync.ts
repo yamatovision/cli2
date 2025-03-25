@@ -243,8 +243,8 @@ export class ClaudeCodeAuthSync {
           const getApiKeyMethod = typeof this._authService.getApiKey === 'function';
           Logger.debug(`getApiKeyメソッド存在: ${getApiKeyMethod}`);
           
-          // APIキーの取得元をログ
-          Logger.debug(`APIキー取得元: ${apiKeyValue === this._apiKey ? 'メモリ/ストレージキャッシュ' : 'サーバーから新規取得'}`);
+          // APIキーの取得元をログ (取得元は判別できないためシンプル化)
+          Logger.debug(`APIキー取得: 成功 (${apiKeyValue ? apiKeyValue.substring(0, 5) + '...' : 'なし'})`);
           Logger.debug(`APIキー種別: AnthropicApiKey対応版`);
           
           // ユーザーデータがシリアライズ可能か確認
