@@ -17,14 +17,17 @@ const AnthropicApiKey = require('../models/anthropicApiKey.model');
  */
 exports.login = async (req, res) => {
   try {
+    console.log("=============================================================");
     console.log("シンプル認証コントローラー: ログインリクエスト受信");
     console.log("リクエストボディ:", req.body);
+    console.log(`ログイン試行: ユーザー=${req.body.email || '未指定'}`);
     console.log("リクエストヘッダー:", {
       contentType: req.headers['content-type'],
       accept: req.headers['accept'],
       origin: req.headers['origin'],
       referer: req.headers['referer']
     });
+    console.log("=============================================================");
     
     const { email, password } = req.body;
     
@@ -92,7 +95,10 @@ exports.login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
     
-    console.log("シンプル認証コントローラー: ログイン成功");
+    console.log("============ シンプル認証コントローラー: ログイン成功 ============");
+    console.log(`ログイン成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}, ID=${user._id}`);
+    console.log("APIキー情報:", apiKeyInfo ? `ID=${apiKeyInfo.id}, 状態=${apiKeyInfo.status}` : "なし");
+    console.log("==================================================================");
     
     // CORS対応ヘッダー設定
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');

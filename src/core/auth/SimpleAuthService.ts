@@ -753,6 +753,8 @@ export class SimpleAuthService {
         // ログイン成功後の認証状態を再確認（デバッグ用）
         const isAuth = this._currentState.isAuthenticated;
         const userName = this._currentState.userData?.name || 'なし';
+        const userRole = this._currentState.userData?.role || 'なし';
+        const userId = this._currentState.userData?.id || 'なし';
         
         // APIキーの取得状況をログに出力（セキュリティのためマスキング）
         if (this._apiKey) {
@@ -762,7 +764,10 @@ export class SimpleAuthService {
           Logger.warn(`【認証情報】APIキー取得失敗: APIキーが見つかりませんでした`);
         }
         
-        Logger.info(`SimpleAuthService: ログイン完了後の認証状態: ${isAuth ? '認証済み' : '未認証'}, ユーザー: ${userName}`);
+        Logger.info(`============================================================`);
+        Logger.info(`SimpleAuthServiceログイン成功: ユーザー=${userName}, ID=${userId}, ロール=${userRole}`);
+        Logger.info(`認証状態: ${isAuth ? '認証済み' : '未認証'}`);
+        Logger.info(`============================================================`);
         
         // ログイン成功イベント
         this._onLoginSuccess.fire();
