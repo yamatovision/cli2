@@ -2,7 +2,7 @@
   "name": "appgenius-ai",
   "displayName": "AppGenius AI",
   "description": "AI駆動の完全自動開発環境をVSCodeで提供",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "publisher": "mikoto",
   "repository": {
     "type": "git",
@@ -28,22 +28,15 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:appgenius-dashboard",
-    "onView:appgenius-tools",
-    "onCommand:appgenius.claudeCode.launchFromUrl",
-    "onCommand:appgenius-ai.executeCommand",
-    "onCommand:appgenius-ai.showTerminal",
-    "onCommand:appgenius-ai.openSimpleChat",
-    "onCommand:appgenius-ai.openMockupDesigner",
-    "onCommand:appgenius-ai.openImplementationSelector",
-    "onCommand:appgenius-ai.openDevelopmentAssistant",
-    "onCommand:appgenius-ai.openClaudeMdEditor",
-    "onCommand:appgenius-ai.openToolkitDashboard",
     "onUri"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "appgenius.ai.openEnvironmentVariablesAssistant",
+        "title": "AppGenius AI: 環境変数アシスタントを開く"
+      },
       {
         "command": "appgenius.claudeCode.launchFromUrl",
         "title": "AppGenius AI: 公開URLからClaudeCodeを起動"
@@ -131,6 +124,14 @@
       {
         "command": "appgenius-ai.validateToolkit",
         "title": "AppGenius AI: ツールキットの整合性を検証"
+      },
+      {
+        "command": "appgenius-ai.openEnvironmentVariablesAssistant",
+        "title": "AppGenius AI: 環境変数アシスタントを開く"
+      },
+      {
+        "command": "appgenius.ai.openEnvironmentVariablesAssistant",
+        "title": "AppGenius AI: 環境変数アシスタントを開く (エイリアス)"
       }
     ],
     "keybindings": [

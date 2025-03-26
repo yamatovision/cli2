@@ -106,6 +106,8 @@
         state.firstVisit = false;
         saveState();
         console.log('オンボーディング表示をスキップしました');
+        // 状態更新後にUIを再レンダリング
+        renderActiveProject();
         break;
     }
   });

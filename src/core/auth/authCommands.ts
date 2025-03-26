@@ -17,12 +17,8 @@ import { LogoutNotification } from '../../ui/auth/LogoutNotification';
 export function registerAuthCommands(context: vscode.ExtensionContext): void {
   const authService = AuthenticationService.getInstance();
   
-  // 従来のログインコマンド
-  context.subscriptions.push(
-    vscode.commands.registerCommand('appgenius.login', () => {
-      LoginWebviewPanel.createOrShow(context.extensionUri);
-    })
-  );
+  // 従来のログインコマンドは削除 - 新認証システムで登録済み
+  // ログインコマンドは AuthModule で登録されるため、ここでは登録しない
   
   // 従来のログアウトコマンド
   context.subscriptions.push(

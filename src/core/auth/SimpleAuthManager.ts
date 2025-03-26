@@ -15,6 +15,10 @@ export class SimpleAuthManager {
   private _statusBar: vscode.StatusBarItem;
   private _disposables: vscode.Disposable[] = [];
   
+  // トークン検証のスロットリング用
+  private _lastVerificationTime: number = 0;
+  private readonly _VERIFICATION_THROTTLE_MS = 5000; // 5秒以内の再検証を防止
+  
   /**
    * コンストラクタ
    */
@@ -260,6 +264,17 @@ export class SimpleAuthManager {
    */
   private async _verifyAuthState(): Promise<void> {
     try {
+      // スロットリング: 直近の検証から5秒以内なら実行しない
+      const now = Date.now();
+      if (now - this._lastVerificationTime < this._VERIFICATION_THROTTLE_MS) {
+        Logger.info(`SimpleAuthManager: 直近${this._VERIFICATION_THROTTLE_MS/1000}秒以内に検証済みのため、スキップします`);
+        vscode.window.showInformationMessage('認証状態は直近に確認済みです');
+        return;
+      }
+      
+      // 今回の検証時刻を記録
+      this._lastVerificationTime = now;
+      
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
@@ -294,8 +309,8 @@ export class SimpleAuthManager {
   /**
    * 認証ヘッダー取得
    */
-  public getAuthHeader(): Record<string, string> {
-    return this._authService.getAuthHeader();
+  public async getAuthHeader(): Promise<Record<string, string>> {
+    return await this._authService.getAuthHeader();
   }
   
   /**

@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>キャリアコンパス - 陰陽五行AIケアコンパニオン</title>
+  
+  <!-- Material Design Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap">
+  
+  <!-- Material UI -->
+  <link rel="stylesheet" href="https://unpkg.com/@mui/material@5.14.7/dist/css/material-ui.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <style>
+    :root {
+      /* 陰陽五行カラーパレット */
+      --wood-color: #81c784;
+      --fire-color: #ef5350;
+      --earth-color: #ffd54f;
+      --metal-color: #b0bec5;
+      --water-color: #64b5f6;
+      
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --background-light: #ffffff;
+      --background-dark: #f5f5f5;
+      --border-light: #e0e0e0;
+    }
+    
+    body {
+      font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-light);
+      color: var(--text-primary);
+    }
+    
+    .app-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding-bottom: 70px; /* ボトムナビゲーション分の余白 */
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background-color: white;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+    }
+    
+    .header-title .material-icons {
+      margin-right: 8px;
+      color: var(--water-color);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .page-content {
+      padding: 16px;
+    }
+    
+    .section {
+      margin-bottom: 24px;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    
+    .section-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .section-title .material-icons {
+      margin-right: 8px;
+      font-size: 1.2rem;
+    }
+    
+    .section-content {
+      padding: 16px;
+    }
+    
+    .career-ladder {
+      position: relative;
+      padding: 12px 0;
+    }
+    
+    .ladder-track {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 26px;
+      width: 3px;
+      background-color: var(--border-light);
+      z-index: 1;
+    }
+    
+    .ladder-step {
+      display: flex;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .step-marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+      flex-shrink: 0;
+      color: white;
+      font-weight: 500;
+    }
+    
+    .step-content {
+      flex-grow: 1;
+      padding-top: 6px;
+    }
+    
+    .step-title {
+      font-weight: 500;
+      margin: 0 0 4px 0;
+    }
+    
+    .step-description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0 0 8px 0;
+    }
+    
+    .step-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .skill-chip {
+      background-color: #f1f1f1;
+      padding: 4px 10px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    
+    .current-step {
+      background-color: rgba(100, 181, 246, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 16px;
+    }
+    
+    .current-step-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .current-step-title {
+      font-weight: 500;
+      margin: 0;
+    }
+    
+    .progress-section {
+      margin-top: 8px;
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      margin-bottom: 4px;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background-color: #eeeeee;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-value {
+      height: 100%;
+      background-color: var(--water-color);
+      border-radius: 4px;
+    }
+    
+    .goals-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0 0;
+    }
+    
+    .goal-item {
+      padding: 12px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .goal-item:last-child {
+      border-bottom: none;
+    }
+    
+    .goal-check {
+      margin-right: 12px;
+    }
+    
+    .goal-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .goal-checkbox.checked {
+      background-color: var(--water-color);
+      border-color: var(--water-color);
+      color: white;
+    }
+    
+    .goal-details {
+      flex-grow: 1;
+    }
+    
+    .goal-title {
+      font-weight: 500;
+      margin: 0 0 4px 0;
+    }
+    
+    .goal-deadline {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+    }
+    
+    .goal-deadline .material-icons {
+      font-size: 0.9rem;
+      margin-right: 4px;
+    }
+    
+    .goal-priority {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    
+    .priority-high {
+      background-color: rgba(239, 83, 80, 0.1);
+      color: #d32f2f;
+    }
+    
+    .priority-medium {
+      background-color: rgba(255, 213, 79, 0.2);
+      color: #f57c00;
+    }
+    
+    .priority-low {
+      background-color: rgba(129, 199, 132, 0.1);
+      color: #388e3c;
+    }
+    
+    .calendar-section {
+      margin-top: 24px;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    
+    .calendar-header {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    
+    .calendar-day-name {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1/1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    
+    .calendar-day.past {
+      color: var(--text-secondary);
+    }
+    
+    .calendar-day.today {
+      background-color: var(--water-color);
+      color: white;
+      font-weight: 500;
+    }
+    
+    .calendar-day.future {
+      color: var(--text-primary);
+    }
+    
+    .calendar-day-marker {
+      position: absolute;
+      bottom: 2px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+    }
+    
+    .marker-wood {
+      background-color: var(--wood-color);
+      right: calc(50% + 6px);
+    }
+    
+    .marker-fire {
+      background-color: var(--fire-color);
+      right: calc(50% + 2px);
+    }
+    
+    .marker-earth {
+      background-color: var(--earth-color);
+      right: calc(50% - 2px);
+    }
+    
+    .marker-metal {
+      background-color: var(--metal-color);
+      right: calc(50% - 6px);
+    }
+    
+    .marker-water {
+      background-color: var(--water-color);
+      right: calc(50% - 10px);
+    }
+    
+    .opportunity-day {
+      position: relative;
+    }
+    
+    .opportunity-day::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      border: 2px solid var(--water-color);
+      box-sizing: border-box;
+    }
+    
+    .calendar-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 0 8px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+    
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    
+    .chart-container {
+      height: 240px;
+      margin-top: 16px;
+    }
+    
+    .skill-radar-chart {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      background-color: white;
+      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+    }
+    
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.7rem;
+    }
+    
+    .nav-item.active {
+      color: var(--water-color);
+    }
+    
+    .nav-item .material-icons {
+      font-size: 1.5rem;
+      margin-bottom: 2px;
+    }
+    
+    .add-goal-button {
+      position: fixed;
+      right: 16px;
+      bottom: 76px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: var(--water-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-title">
+        <i class="material-icons">route</i>
+        キャリアコンパス
+      </div>
+      <div class="header-actions">
+        <i class="material-icons">notifications_none</i>
+      </div>
+    </header>
+    
+    <!-- メインコンテンツ -->
+    <main class="page-content">
+      <!-- キャリアラダー セクション -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="material-icons" style="color: var(--earth-color);">stairs</i>
+            サロン内キャリアパス
+          </h2>
+          <i class="material-icons">info_outline</i>
+        </div>
+        
+        <div class="section-content">
+          <div class="career-ladder">
+            <div class="ladder-track"></div>
+            
+            <!-- キャリアステップ 4: マネージャー -->
+            <div class="ladder-step">
+              <div class="step-marker" style="background-color: var(--earth-color);">4</div>
+              <div class="step-content">
+                <h3 class="step-title">サロンマネージャー</h3>
+                <p class="step-description">サロン全体の管理運営、スタッフ育成、業績向上を担当</p>
+                <div class="step-skills">
+                  <span class="skill-chip">スタッフ管理</span>
+                  <span class="skill-chip">採用</span>
+                  <span class="skill-chip">業績分析</span>
+                  <span class="skill-chip">顧客管理</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- キャリアステップ 3: チーフスタイリスト -->
+            <div class="ladder-step">
+              <div class="step-marker" style="background-color: var(--fire-color);">3</div>
+              <div class="step-content">
+                <h3 class="step-title">チーフスタイリスト</h3>
+                <p class="step-description">技術指導やフロア管理を行い、若手の育成も担当</p>
+                <div class="step-skills">
+                  <span class="skill-chip">技術指導</span>
+                  <span class="skill-chip">フロア管理</span>
+                  <span class="skill-chip">メニュー開発</span>
+                  <span class="skill-chip">トレンド提案</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- キャリアステップ 2: スタイリスト（現在地） -->
+            <div class="ladder-step">
+              <div class="step-marker" style="background-color: var(--wood-color);">2</div>
+              <div class="step-content">
+                <h3 class="step-title">スタイリスト</h3>
+                <p class="step-description">独立して施術を行い、自分の顧客を持つポジション</p>
+                <div class="step-skills">
+                  <span class="skill-chip">カット</span>
+                  <span class="skill-chip">カラー</span>
+                  <span class="skill-chip">パーマ</span>
+                  <span class="skill-chip">接客</span>
+                  <span class="skill-chip">提案力</span>
+                </div>
+                
+                <!-- 現在地情報 -->
+                <div class="current-step">
+                  <div class="current-step-header">
+                    <i class="material-icons" style="color: var(--wood-color); margin-right: 8px;">location_on</i>
+                    <h4 class="current-step-title">あなたの現在地</h4>
+                  </div>
+                  
+                  <div class="progress-section">
+                    <div class="progress-label">
+                      <span>スタイリストとしての成長度</span>
+                      <span>68%</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-value" style="width: 68%;"></div>
+                    </div>
+                  </div>
+                  
+                  <div class="progress-section">
+                    <div class="progress-label">
+                      <span>次のステップまで</span>
+                      <span>スキル 3/5 完了</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-value" style="width: 60%;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- キャリアステップ 1: アシスタント -->
+            <div class="ladder-step">
+              <div class="step-marker" style="background-color: var(--water-color);">1</div>
+              <div class="step-content">
+                <h3 class="step-title">アシスタント</h3>
+                <p class="step-description">基礎技術の習得と先輩スタイリストのサポート</p>
+                <div class="step-skills">
+                  <span class="skill-chip">シャンプー</span>
+                  <span class="skill-chip">ブロー</span>
+                  <span class="skill-chip">カラー補助</span>
+                  <span class="skill-chip">受付</span>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+      
+      <!-- 目標設定セクション -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="material-icons" style="color: var(--wood-color);">track_changes</i>
+            目標設定と進捗
+          </h2>
+          <i class="material-icons">add_circle_outline</i>
+        </div>
+        
+        <div class="section-content">
+          <ul class="goals-list">
+            <!-- 目標1 -->
+            <li class="goal-item">
+              <div class="goal-check">
+                <div class="goal-checkbox checked">
+                  <i class="material-icons" style="font-size: 16px;">check</i>
+                </div>
+              </div>
+              <div class="goal-details">
+                <div class="goal-title">パーマ技術の応用スキル習得</div>
+                <div class="goal-deadline">
+                  <i class="material-icons">event</i>
+                  2025/3/15 完了
+                  <span class="goal-priority priority-medium">中</span>
+                </div>
+              </div>
+            </li>
+            
+            <!-- 目標2 -->
+            <li class="goal-item">
+              <div class="goal-check">
+                <div class="goal-checkbox">
+                </div>
+              </div>
+              <div class="goal-details">
+                <div class="goal-title">カラー診断士資格取得</div>
+                <div class="goal-deadline">
+                  <i class="material-icons">event</i>
+                  2025/5/20まで
+                  <span class="goal-priority priority-high">高</span>
+                </div>
+              </div>
+            </li>
+            
+            <!-- 目標3 -->
+            <li class="goal-item">
+              <div class="goal-check">
+                <div class="goal-checkbox">
+                </div>
+              </div>
+              <div class="goal-details">
+                <div class="goal-title">ヘアカタログ撮影モデル5人担当</div>
+                <div class="goal-deadline">
+                  <i class="material-icons">event</i>
+                  2025/7/30まで
+                  <span class="goal-priority priority-low">低</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+      
+      <!-- スキルレーダーチャート -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="material-icons" style="color: var(--metal-color);">insights</i>
+            スキル分析
+          </h2>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">今月</span>
+        </div>
+        
+        <div class="section-content">
+          <div class="chart-container">
+            <canvas id="skillRadarChart" class="skill-radar-chart"></canvas>
+          </div>
+        </div>
+      </section>
+      
+      <!-- 成長好機カレンダー -->
+      <section class="section calendar-section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="material-icons" style="color: var(--fire-color);">calendar_month</i>
+            成長好機カレンダー
+          </h2>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">2025年3月</span>
+        </div>
+        
+        <div class="section-content">
+          <div class="calendar-header">
+            <div class="calendar-day-name">日</div>
+            <div class="calendar-day-name">月</div>
+            <div class="calendar-day-name">火</div>
+            <div class="calendar-day-name">水</div>
+            <div class="calendar-day-name">木</div>
+            <div class="calendar-day-name">金</div>
+            <div class="calendar-day-name">土</div>
+          </div>
+          
+          <div class="calendar-grid">
+            <!-- 1週目 -->
+            <div class="calendar-day past">24</div>
+            <div class="calendar-day past">25</div>
+            <div class="calendar-day past">26</div>
+            <div class="calendar-day past opportunity-day">
+              27
+              <span class="calendar-day-marker marker-fire"></span>
+            </div>
+            <div class="calendar-day past">28</div>
+            <div class="calendar-day past">1</div>
+            <div class="calendar-day past">2</div>
+            
+            <!-- 2週目 -->
+            <div class="calendar-day past">3</div>
+            <div class="calendar-day past">4</div>
+            <div class="calendar-day past opportunity-day">
+              5
+              <span class="calendar-day-marker marker-wood"></span>
+            </div>
+            <div class="calendar-day past">6</div>
+            <div class="calendar-day past">7</div>
+            <div class="calendar-day past">8</div>
+            <div class="calendar-day past">9</div>
+            
+            <!-- 3週目 -->
+            <div class="calendar-day past">10</div>
+            <div class="calendar-day past">11</div>
+            <div class="calendar-day past">12</div>
+            <div class="calendar-day past">13</div>
+            <div class="calendar-day past">14</div>
+            <div class="calendar-day past">15</div>
+            <div class="calendar-day past">16</div>
+            
+            <!-- 4週目 -->
+            <div class="calendar-day past">17</div>
+            <div class="calendar-day past">18</div>
+            <div class="calendar-day past">19</div>
+            <div class="calendar-day past">20</div>
+            <div class="calendar-day past">21</div>
+            <div class="calendar-day past">22</div>
+            <div class="calendar-day past">23</div>
+            
+            <!-- 5週目 -->
+            <div class="calendar-day past">24</div>
+            <div class="calendar-day past">25</div>
+            <div class="calendar-day today opportunity-day">
+              26
+              <span class="calendar-day-marker marker-water"></span>
+            </div>
+            <div class="calendar-day future">27</div>
+            <div class="calendar-day future opportunity-day">
+              28
+              <span class="calendar-day-marker marker-earth"></span>
+            </div>
+            <div class="calendar-day future">29</div>
+            <div class="calendar-day future">30</div>
+            
+            <!-- 6週目 -->
+            <div class="calendar-day future">31</div>
+            <div class="calendar-day future">1</div>
+            <div class="calendar-day future">2</div>
+            <div class="calendar-day future opportunity-day">
+              3
+              <span class="calendar-day-marker marker-metal"></span>
+            </div>
+            <div class="calendar-day future">4</div>
+            <div class="calendar-day future">5</div>
+            <div class="calendar-day future">6</div>
+          </div>
+          
+          <div class="calendar-legend">
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--wood-color);"></div>
+              <span>木の日</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--fire-color);"></div>
+              <span>火の日</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--earth-color);"></div>
+              <span>土の日</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--metal-color);"></div>
+              <span>金の日</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-color" style="background-color: var(--water-color);"></div>
+              <span>水の日</span>
+            </div>
+            <div class="legend-item">
+              <div style="width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--water-color); margin-right: 6px;"></div>
+              <span>好機の日</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- 目標追加ボタン -->
+    <div class="add-goal-button">
+      <i class="material-icons">add</i>
+    </div>
+    
+    <!-- ボトムナビゲーション -->
+    <nav class="bottom-nav">
+      <a href="#" class="nav-item">
+        <i class="material-icons">auto_awesome</i>
+        <span>運勢</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="material-icons">chat</i>
+        <span>対話</span>
+      </a>
+      <a href="#" class="nav-item active">
+        <i class="material-icons">route</i>
+        <span>キャリア</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="material-icons">groups</i>
+        <span>チーム</span>
+      </a>
+      <a href="#" class="nav-item">
+        <i class="material-icons">person</i>
+        <span>プロフィール</span>
+      </a>
+    </nav>
+  </div>
+  
+  <script>
+    // スキルレーダーチャートの描画
+    document.addEventListener('DOMContentLoaded', function() {
+      const ctx = document.getElementById('skillRadarChart').getContext('2d');
+      
+      const skillChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['カット技術', 'カラー技術', 'パーマ技術', '接客', 'スタイル提案', '商品知識'],
+          datasets: [{
+            label: 'あなたのスキル',
+            data: [85, 70, 65, 90, 75, 60],
+            backgroundColor: 'rgba(100, 181, 246, 0.2)',
+            borderColor: 'rgba(100, 181, 246, 1)',
+            pointBackgroundColor: 'rgba(100, 181, 246, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(100, 181, 246, 1)'
+          }, {
+            label: 'スタイリスト平均',
+            data: [75, 65, 70, 80, 60, 55],
+            backgroundColor: 'rgba(176, 190, 197, 0.2)',
+            borderColor: 'rgba(176, 190, 197, 1)',
+            pointBackgroundColor: 'rgba(176, 190, 197, 1)',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: 'rgba(176, 190, 197, 1)'
+          }]
+        },
+        options: {
+          scales: {
+            r: {
+              angleLines: {
+                display: true
+              },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                boxWidth: 12,
+                padding: 15,
+                font: {
+                  size: 11
+                }
+              }
+            }
+          },
+          maintainAspectRatio: false
+        }
+      });
+      
+      // チェックボックスのトグル機能
+      const checkboxes = document.querySelectorAll('.goal-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('click', function() {
+          this.classList.toggle('checked');
+          if (this.classList.contains('checked')) {
+            this.innerHTML = '<i class="material-icons" style="font-size: 16px;">check</i>';
+          } else {
+            this.innerHTML = '';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

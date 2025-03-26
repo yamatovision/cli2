@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { EnvVariablesPanel } from '../ui/environmentVariables/EnvVariablesPanel';
+import { EnvironmentVariablesAssistantPanel } from '../ui/environmentVariablesAssistant/EnvironmentVariablesAssistantPanel';
 import { Logger } from '../utils/logger';
 
 /**
@@ -117,11 +118,41 @@ export function registerEnvironmentCommands(context: vscode.ExtensionContext): v
     }
   });
   
+  // 環境変数アシスタントを開くコマンド
+  const openEnvironmentVariablesAssistantCommand = vscode.commands.registerCommand('appgenius-ai.openEnvironmentVariablesAssistant', async () => {
+    Logger.info('環境変数アシスタントを開きます');
+    
+    try {
+      // アクティブなワークスペースを取得
+      let projectPath: string | undefined;
+      
+      if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+        projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+      }
+      
+      // パネルを表示
+      EnvironmentVariablesAssistantPanel.createOrShow(context.extensionUri, projectPath);
+    } catch (error) {
+      Logger.error('環境変数アシスタントのオープンに失敗しました', error as Error);
+      vscode.window.showErrorMessage(`環境変数アシスタントの表示に失敗しました: ${(error as Error).message}`);
+    }
+  });
+
+  // コマンドIDが一致していることを確認(appgenius-ai.openEnvironmentVariablesAssistant)
+  context.subscriptions.push(
+    vscode.commands.registerCommand('appgenius.ai.openEnvironmentVariablesAssistant', async () => {
+      // エイリアスコマンド - 正しいコマンドにリダイレクト
+      Logger.info('エイリアスコマンドからリダイレクトします: appgenius.ai.openEnvironmentVariablesAssistant -> appgenius-ai.openEnvironmentVariablesAssistant');
+      await vscode.commands.executeCommand('appgenius-ai.openEnvironmentVariablesAssistant');
+    })
+  );
+
   // コマンドを登録
   context.subscriptions.push(openEnvVariablesPanelCommand);
   context.subscriptions.push(createEnvFileCommand);
   context.subscriptions.push(validateEnvVariablesCommand);
   context.subscriptions.push(updateEnvMdCommand);
+  context.subscriptions.push(openEnvironmentVariablesAssistantCommand);
   
   Logger.info('環境変数管理コマンドの登録が完了しました');
 }

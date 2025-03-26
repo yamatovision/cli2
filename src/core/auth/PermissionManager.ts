@@ -4,6 +4,9 @@ import { SimpleAuthService } from './SimpleAuthService';
 import { Role, Feature, RoleFeatureMap, FeatureDisplayNames } from './roles';
 import { Logger } from '../../utils/logger';
 
+// 新認証システムのインポート
+import { PermissionService } from './new/PermissionService';
+
 /**
  * アクセス拒否時のアクション情報
  */
@@ -16,15 +19,16 @@ export interface AccessDeniedAction {
 /**
  * PermissionManager - 機能へのアクセス権限をチェックするクラス
  * 
- * 認証サービスの状態に基づいて、
- * ユーザーが特定の機能にアクセスできるかどうかをチェックします。
- * SimpleAuthServiceとAuthenticationServiceの両方に対応しています。
+ * 新認証システムのラッパー。後方互換性のために提供されるが、内部的には
+ * PermissionServiceを使用する。
  */
 export class PermissionManager {
   private static instance: PermissionManager;
   private _authService: AuthenticationService | SimpleAuthService;
-  private _isSimpleAuth: boolean;
   private _onPermissionsChanged = new vscode.EventEmitter<void>();
+  
+  // 新認証システムへの参照
+  private _permissionService: PermissionService | undefined;
   
   // 公開イベント
   public readonly onPermissionsChanged = this._onPermissionsChanged.event;
@@ -35,13 +39,25 @@ export class PermissionManager {
   private constructor(authService: AuthenticationService | SimpleAuthService) {
     this._authService = authService;
     
-    // SimpleAuthServiceかどうかを判定
-    this._isSimpleAuth = 'getAccessToken' in authService;
-    
     // 認証状態変更イベントをリッスン
-    this._authService.onStateChanged(this._handleAuthStateChanged.bind(this));
+    this._authService.onStateChanged(() => {
+      this._onPermissionsChanged.fire();
+    });
     
-    Logger.info(`PermissionManager: 初期化完了 (SimpleAuth: ${this._isSimpleAuth})`);
+    // 新認証システムの初期化
+    try {
+      this._permissionService = (global._appgenius_auth_module?.getPermissionService) ? 
+                                global._appgenius_auth_module.getPermissionService() : undefined;
+                               
+      if (this._permissionService) {
+        // 権限変更イベントを購読して既存システムと同期
+        this._permissionService.onPermissionsChanged(() => {
+          this._onPermissionsChanged.fire();
+        });
+      }
+    } catch (error) {
+      Logger.warn('PermissionManager: 新認証システムの初期化に失敗しました', error as Error);
+    }
   }
   
   /**
@@ -58,52 +74,27 @@ export class PermissionManager {
   }
   
   /**
-   * 認証状態変更ハンドラー
-   */
-  private _handleAuthStateChanged(): void {
-    // 権限変更イベントを発行
-    this._onPermissionsChanged.fire();
-    Logger.debug('PermissionManager: 権限変更イベントを発行しました');
-  }
-  
-  /**
    * 特定機能へのアクセス権限を確認
    */
   public canAccess(feature: Feature): boolean {
     try {
-      // 現在の認証状態を取得
-      const state = this._authService.getCurrentState();
-      
-      // 詳細なログ出力
-      Logger.info(`PermissionManager: 権限チェック - 機能=${feature}, 認証状態=${state.isAuthenticated}, ユーザー=${state.username || 'なし'}, ロール=${state.role}, ユーザーID=${state.userId || 'なし'}`);
-      
-      // すべての権限情報を出力
-      if (state.permissions) {
-        Logger.info(`PermissionManager: ユーザー権限一覧=${JSON.stringify(state.permissions)}`);
+      // 新認証システムが利用可能な場合はそちらを使用
+      if (this._permissionService) {
+        return this._permissionService.canAccess(feature);
       }
       
-      // 認証されていない場合はゲストロールとして扱う
+      // 認証状態を取得
+      const state = this._authService.getCurrentState();
       const role = state.isAuthenticated ? state.role : Role.GUEST;
       
       // 管理者は常にアクセス可能
       if (role === Role.ADMIN || role === Role.SUPER_ADMIN) {
-        Logger.info(`PermissionManager: 管理者権限があるため${feature}へのアクセスを許可します`);
         return true;
       }
       
-      // 現在のロールでアクセス可能な機能リストをチェック
+      // 権限チェック
       const allowedFeatures = RoleFeatureMap[role] || [];
-      Logger.info(`PermissionManager: ロール=${role}のアクセス可能な機能=${JSON.stringify(allowedFeatures)}`);
-      
-      const hasAccess = allowedFeatures.includes(feature);
-      
-      if (!hasAccess) {
-        Logger.warn(`PermissionManager: ロール=${role}は機能=${feature}へのアクセス権限がありません`);
-      } else {
-        Logger.info(`PermissionManager: ロール=${role}は機能=${feature}へのアクセス権限があります`);
-      }
-      
-      return hasAccess;
+      return allowedFeatures.includes(feature);
     } catch (error) {
       Logger.error(`PermissionManager: 権限チェック中にエラーが発生しました`, error as Error);
       return false;
@@ -115,6 +106,12 @@ export class PermissionManager {
    * 権限がなければエラーメッセージを表示
    */
   public checkAccessWithFeedback(feature: Feature): boolean {
+    // 新認証システムが利用可能な場合はそちらを使用
+    if (this._permissionService) {
+      return this._permissionService.checkAccessWithFeedback(feature);
+    }
+    
+    // 以下は従来の処理
     const hasAccess = this.canAccess(feature);
     
     if (!hasAccess) {
@@ -163,14 +160,25 @@ export class PermissionManager {
    * 現在のユーザーが管理者かどうかを確認
    */
   public isAdmin(): boolean {
+    // 新認証システムが利用可能な場合はそちらを使用
+    if (this._permissionService) {
+      return this._permissionService.isAdmin();
+    }
+    
+    // 認証状態を取得
     const state = this._authService.getCurrentState();
-    return state.isAuthenticated && state.role === Role.ADMIN;
+    return state.isAuthenticated && (state.role === Role.ADMIN || state.role === Role.SUPER_ADMIN);
   }
   
   /**
    * 現在ログイン中かどうかを確認
    */
   public isLoggedIn(): boolean {
+    // 新認証システムが利用可能な場合はそちらを使用
+    if (this._permissionService) {
+      return this._permissionService.isLoggedIn();
+    }
+    
     return this._authService.isAuthenticated();
   }
   
@@ -178,6 +186,11 @@ export class PermissionManager {
    * 現在のロールを取得
    */
   public getCurrentRole(): Role {
+    // 新認証システムが利用可能な場合はそちらを使用
+    if (this._permissionService) {
+      return this._permissionService.getCurrentRole();
+    }
+    
     const state = this._authService.getCurrentState();
     return state.role;
   }

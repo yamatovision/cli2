@@ -80,6 +80,13 @@ export class AuthStateBuilder {
   }
   
   /**
+   * 新しいビルダーインスタンスを作成（create メソッドを追加）
+   */
+  public static create(): AuthStateBuilder {
+    return new AuthStateBuilder();
+  }
+  
+  /**
    * ゲスト状態のビルダーを作成
    */
   public static guest(): AuthStateBuilder {

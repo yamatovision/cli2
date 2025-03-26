@@ -670,6 +670,10 @@ const vscode = acquireVsCodeApi();
     const requirementsButtons = document.querySelectorAll('#requirements-button, .requirements-edit-button');
     if (requirementsButtons.length > 0) {
       requirementsButtons.forEach(button => {
+        // ボタンテキストを「要件定義エディター」に変更
+        if (button.textContent.includes('要件定義')) {
+          button.textContent = button.textContent.replace('要件定義ビジュアライザー', '要件定義エディター');
+        }
         button.addEventListener('click', () => {
           // 要件定義エディタコマンドを実行
           vscode.postMessage({ command: 'openRequirementsVisualizer' });

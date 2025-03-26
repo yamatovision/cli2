@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 
 // APIエンドポイント
-const API_BASE_URL = 'https://geniemon-portal-backend-production.up.railway.app/api';
+const API_BASE_URL = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api';
 
 // 設定 (auth.config.jsから)
 const JWT_SECRET = 'appgenius-jwt-secret-key';

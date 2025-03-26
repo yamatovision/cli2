@@ -15,9 +15,12 @@ const authHelper = require('../utils/simpleAuth.helper');
  * JWTトークンを検証するミドルウェア
  * リクエストヘッダーからトークンを取得し、有効性を確認します
  */
+// 検証結果のキャッシュ（トークン→{result, timestamp}のマップ）
+const tokenVerificationCache = new Map();
+// キャッシュの有効期間（5秒）
+const CACHE_TTL = 5000;
+
 exports.verifySimpleToken = (req, res, next) => {
-  console.log('verifySimpleToken: ミドルウェア開始');
-  
   // Authorizationヘッダーからトークンを取得
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -30,37 +33,44 @@ exports.verifySimpleToken = (req, res, next) => {
 
   // Bearer プレフィックスを削除してトークンを取得
   const token = authHeader.split(' ')[1];
-  console.log('verifySimpleToken: トークン抽出', token.substring(0, 10) + '...');
+  
+  // キャッシュを確認
+  const now = Date.now();
+  const cachedVerification = tokenVerificationCache.get(token);
+  
+  if (cachedVerification && (now - cachedVerification.timestamp < CACHE_TTL)) {
+    // キャッシュが有効期間内なら、結果を再利用
+    req.userId = cachedVerification.userId;
+    req.userRole = cachedVerification.userRole;
+    return next();
+  }
   
   // デバッグ: トークンの内容をデコード（署名検証なし）
   try {
     const decoded = jwt.decode(token);
-    console.log('verifySimpleToken: トークン内容', {
-      id: decoded.id,
-      role: decoded.role,
-      iss: decoded.iss,
-      aud: decoded.aud
-    });
+    if (decoded) {
+      // ログ出力を削減
+      console.log('verifySimpleToken: トークン検証');
+    }
   } catch (decodeErr) {
     console.error('verifySimpleToken: トークンデコードエラー', decodeErr);
   }
 
   try {
-    console.log('verifySimpleToken: トークン検証開始', { 
-      secret: simpleAuthConfig.jwtSecret.substring(0, 5) + '...',
-      issuer: simpleAuthConfig.jwtOptions.issuer,
-      audience: simpleAuthConfig.jwtOptions.audience
-    });
-    
     // ヘルパー関数を使用して検証（既存トークンとの互換性を持たせない、完全に独立した検証）
     const decoded = authHelper.verifyAccessToken(token);
-    
-    console.log('verifySimpleToken: トークン検証成功', decoded);
     
     // デコードされたユーザーIDをリクエストオブジェクトに追加
     req.userId = decoded.id;
     req.userRole = decoded.role || 'User';
-    console.log('verifySimpleToken: 検証データ設定完了', { userId: req.userId, userRole: req.userRole });
+    
+    // 検証結果をキャッシュに保存
+    tokenVerificationCache.set(token, {
+      userId: decoded.id,
+      userRole: decoded.role || 'User',
+      timestamp: now
+    });
+    
     next();
   } catch (error) {
     console.error('verifySimpleToken: トークン検証失敗', error);

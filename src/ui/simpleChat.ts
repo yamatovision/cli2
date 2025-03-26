@@ -666,9 +666,8 @@ export class SimpleChatPanel extends ProtectedPanel implements vscode.Disposable
     <body>
       <div class="chat-container">
         <div class="chat-header">
-          <h2>要件定義ビジュアライザー</h2>
+          <h2>要件定義アシスタント</h2>
           <div class="header-actions">
-            <button id="export-requirements-button" class="export-btn" title="要件定義をプロジェクトに保存">プロジェクトに保存</button>
             <button id="clear-chat-button" class="clear-chat-btn" title="チャット履歴をクリア">クリア</button>
           </div>
         </div>
@@ -707,14 +706,11 @@ export class SimpleChatPanel extends ProtectedPanel implements vscode.Disposable
             <div class="file-preview-header">
               <h3>要件定義</h3>
               <div class="actions">
-                <button id="edit-requirements" class="action-button">編集</button>
-                <button id="save-requirements" class="action-button" disabled>保存</button>
                 <button id="claudecode-requirements" class="claudecode-button">AIと相談・編集</button>
               </div>
             </div>
             <div class="file-preview-content">
               <div id="requirements-preview" class="preview-mode"></div>
-              <textarea id="requirements-editor" class="edit-mode hidden"></textarea>
             </div>
           </div>
         </div>
@@ -1907,19 +1903,25 @@ project/
   }
 
   /**
-   * 「モックアップ作成プロンプトを起動」ボタンのハンドラ
+   * 「システムアーキテクチャー設計プロンプトを起動」ボタンのハンドラ
    */
   private async _handleLaunchMockupCreator(): Promise<void> {
     try {
-      // 確認ダイアログを表示
+      // システムアーキテクチャー設計プロンプトの起動前に確認（ロード中にする）
+      this._panel?.webview.postMessage({
+        command: 'showLoading',
+        message: 'システムアーキテクチャー設計プロンプトを起動しています...'
+      });
+      
+      // 確認ダイアログを表示（より目立つタイトルと説明）
       const result = await vscode.window.showInformationMessage(
-        'モックアップ作成プロンプトを起動しますか？',
+        '✨ システムアーキテクチャー設計プロンプトを起動しますか？',
         { modal: true },
-        '起動する'
+        '✅ 起動する'
       );
-
+      
       // キャンセルされた場合
-      if (result !== '起動する') {
+      if (result !== '✅ 起動する') {
         this._panel?.webview.postMessage({
           command: 'hideLoading'
         });
@@ -1932,36 +1934,36 @@ project/
       // ClaudeCodeIntegrationServiceのインスタンスを取得
       const integrationService = ClaudeCodeIntegrationService.getInstance();
 
-      // モックアップクリエイター用のプロンプトURL
-      const mockupCreatorUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/247df2890160a2fa8f6cc0f895413aed';
+      // システムアーキテクチャー設計プロンプトURL
+      const architecturePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/247df2890160a2fa8f6cc0f895413aed';
 
-      // 単一プロンプトでモックアップ作成を起動
+      // 単一プロンプトでシステムアーキテクチャー設計を起動
       const success = await integrationService.launchWithPublicUrl(
-        mockupCreatorUrl,
+        architecturePromptUrl,
         projectPath
       );
 
       // WebViewに通知
       if (success) {
         // 成功メッセージを表示
-        vscode.window.showInformationMessage('モックアップ作成プロンプトを起動しました');
+        vscode.window.showInformationMessage('✅ システムアーキテクチャー設計プロンプトを起動しました');
         
         this._panel?.webview.postMessage({
           command: 'showSuccess',
-          message: 'モックアップ作成プロンプトを起動しました'
+          message: '✅ システムアーキテクチャー設計プロンプトを起動しました'
         });
       } else {
-        throw new Error('モックアップ作成プロンプトの起動に失敗しました');
+        throw new Error('システムアーキテクチャー設計プロンプトの起動に失敗しました');
       }
 
     } catch (error) {
-      Logger.error('モックアップ作成プロンプトの起動に失敗しました', error as Error);
-      vscode.window.showErrorMessage(`モックアップ作成プロンプトの起動に失敗しました: ${(error as Error).message}`);
+      Logger.error('システムアーキテクチャー設計プロンプトの起動に失敗しました', error as Error);
+      vscode.window.showErrorMessage(`システムアーキテクチャー設計プロンプトの起動に失敗しました: ${(error as Error).message}`);
 
       // WebViewに通知
       this._panel?.webview.postMessage({
         command: 'showError',
-        message: `モックアップ作成プロンプトの起動に失敗しました: ${(error as Error).message}`
+        message: `システムアーキテクチャー設計プロンプトの起動に失敗しました: ${(error as Error).message}`
       });
     }
   }
@@ -2067,7 +2069,7 @@ project/
       const integrationService = ClaudeCodeIntegrationService.getInstance();
       
       // 要件定義アドバイザーのプロンプトURL（セキュリティプロンプトなしで直接使用）
-      const featurePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/cdc2b284c05ebaae2bc9eb1f3047aa39';
+      const featurePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/cdc2b284c05ebaae2bc9eb1f3047aa39';
       
       Logger.info(`要件定義アドバイザープロンプトを直接使用してClaudeCodeを起動: ${featurePromptUrl}`);
       

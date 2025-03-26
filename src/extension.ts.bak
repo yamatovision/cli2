@@ -78,8 +78,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	(global as any).extensionContext = context;
 	
-	// ロガーの初期化（自動表示をオンにする）
-	Logger.initialize('AppGenius AI', LogLevel.DEBUG, true);
+	// ロガーの初期化（自動表示をオフにする）
+	Logger.initialize('AppGenius AI', LogLevel.DEBUG, false);
 	Logger.info('AppGenius AI が起動しました');
 	
 	// AppGenius AI クイックアクセスステータスバーアイテムを追加
@@ -98,60 +98,6 @@ export function activate(context: vscode.ExtensionContext) {
 	// 自動起動設定の確認
 	const config = vscode.workspace.getConfiguration('appgeniusAI');
 	const autoStartDashboard = config.get('autoStartTerminal', true);
-	
-	// openDevelopmentAssistantコマンドを登録
-	context.subscriptions.push(
-		vscode.commands.registerCommand('appgenius-ai.openDevelopmentAssistant', (params?: any) => {
-			try {
-				Logger.info('開発アシスタントを開くコマンドが実行されました');
-				
-				// DashboardPanelが実装されていることを確認
-				const { DashboardPanel } = require('./ui/dashboard/DashboardPanel');
-				DashboardPanel.createOrShow(context.extensionUri, aiService, params);
-				
-				Logger.info('DashboardPanelを表示しました');
-			} catch (error) {
-				Logger.error('開発アシスタントを開く際にエラーが発生しました', error as Error);
-				vscode.window.showErrorMessage(`開発アシスタントを開けませんでした: ${(error as Error).message}`);
-			}
-		})
-	);
-	
-	// ログインコマンドを登録
-	context.subscriptions.push(
-		vscode.commands.registerCommand('appgenius-ai.login', async () => {
-			try {
-				Logger.info('ログインコマンドが実行されました');
-				// 認証サーバーのヘルスチェック
-				vscode.window.showInformationMessage('認証サーバーへの接続をチェック中...');
-				
-				// 既存のログインコマンドを内部的に実行
-				await vscode.commands.executeCommand('appgenius.simpleAuth.login');
-			} catch (error) {
-				Logger.error('ログイン処理中にエラーが発生しました', error as Error);
-				vscode.window.showErrorMessage(`ログインエラー: ${(error as Error).message}`);
-			}
-		})
-	);
-	
-	// 認証デバッグコマンドを登録
-	context.subscriptions.push(
-		vscode.commands.registerCommand('appgenius-ai.authDebug', async () => {
-			try {
-				Logger.info('認証デバッグコマンドが実行されました');
-				
-				vscode.window.showInformationMessage('認証サーバーを診断中...');
-				
-				// SimpleAuthManagerのテストコマンドを実行
-				await vscode.commands.executeCommand('appgenius.simpleAuth.test');
-				
-				vscode.window.showInformationMessage('認証サーバーの診断が完了しました。詳細はログを確認してください。');
-			} catch (error) {
-				Logger.error('認証デバッグ中にエラーが発生しました', error as Error);
-				vscode.window.showErrorMessage(`認証デバッグエラー: ${(error as Error).message}`);
-			}
-		})
-	);
 	
 	// 初回インストール時または自動起動が有効な場合にダッシュボードを表示
 	if (autoStartDashboard) {
@@ -223,33 +169,6 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			})
 		);
-		
-		// 環境変数アシスタントを開くコマンドの登録
-		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius-ai.openEnvironmentVariablesAssistant', (projectPath?: string) => {
-				try {
-					Logger.info(`環境変数アシスタントを開くコマンドが実行されました: ${projectPath || 'プロジェクトパスなし'}`);
-					EnvironmentVariablesAssistantPanel.createOrShow(context.extensionUri, projectPath);
-				} catch (error) {
-					Logger.error('環境変数アシスタントを開く際にエラーが発生しました', error as Error, undefined, true);
-					vscode.window.showErrorMessage(`環境変数アシスタントを開けませんでした: ${(error as Error).message}`);
-				}
-			})
-		);
-		
-		// 環境変数アシスタントを開くエイリアスコマンドの登録
-		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius.ai.openEnvironmentVariablesAssistant', (projectPath?: string) => {
-				try {
-					Logger.info(`環境変数アシスタントエイリアスコマンドからリダイレクトします`);
-					// 元のコマンドにリダイレクト
-					vscode.commands.executeCommand('appgenius-ai.openEnvironmentVariablesAssistant', projectPath);
-				} catch (error) {
-					Logger.error('環境変数アシスタントエイリアスのリダイレクトに失敗しました', error as Error, undefined, true);
-					vscode.window.showErrorMessage(`環境変数アシスタントを開けませんでした: ${(error as Error).message}`);
-				}
-			})
-		);
 		Logger.info('ScopeManager command registered successfully');
 		
 		// デバッグ探偵を開くコマンドの登録
@@ -282,46 +201,25 @@ export function activate(context: vscode.ExtensionContext) {
 			})
 		);
 		Logger.info('DebugDetective command registered successfully');
-		
-		// モックアップギャラリーを開くコマンドの登録
-		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius-ai.openMockupGallery', (projectPath: string) => {
-				try {
-					Logger.info(`モックアップギャラリーを開くコマンドが実行されました: ${projectPath}`);
-					const globalAiService = (global as any)._appgenius_ai_service;
-					if (globalAiService) {
-						MockupGalleryPanel.createOrShow(context.extensionUri, globalAiService, projectPath);
-						Logger.info('モックアップギャラリーを正常に開きました');
-					} else {
-						throw new Error('AIサービスが初期化されていません');
-					}
-				} catch (error) {
-					Logger.error('モックアップギャラリーを開く際にエラーが発生しました', error as Error);
-					vscode.window.showErrorMessage(`モックアップギャラリーを開けませんでした: ${(error as Error).message}`);
-				}
-			})
-		);
-		Logger.info('MockupGallery command registered successfully');
-		
-		// 要件定義ビジュアライザー（SimpleChatPanel）を開くコマンドの登録
-		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius-ai.openSimpleChat', (projectPath?: string) => {
-				try {
-					Logger.info(`要件定義ビジュアライザーを開くコマンドが実行されました: ${projectPath || 'プロジェクトパスなし'}`);
-					const globalAiService = (global as any)._appgenius_ai_service;
-					if (globalAiService) {
-						SimpleChatPanel.createOrShow(context.extensionUri, globalAiService, projectPath);
-						Logger.info('要件定義ビジュアライザーを正常に開きました');
-					} else {
-						throw new Error('AIサービスが初期化されていません');
-					}
-				} catch (error) {
-					Logger.error('要件定義ビジュアライザーを開く際にエラーが発生しました', error as Error);
-					vscode.window.showErrorMessage(`要件定義ビジュアライザーを開けませんでした: ${(error as Error).message}`);
-				}
-			})
-		);
-		Logger.info('SimpleChat command registered successfully');
+ttt// モックアップギャラリーを開くコマンドの登録
+tttcontext.subscriptions.push(
+ttttvscode.commands.registerCommand("appgenius-ai.openMockupGallery", (projectPath: string) => {
+ttttttry {
+ttttttLogger.info(`モックアップギャラリーを開くコマンドが実行されました: ${projectPath}`);
+ttttttconst globalAiService = (global as any)._appgenius_ai_service;
+ttttttif (globalAiService) {
+tttttttMockupGalleryPanel.createOrShow(context.extensionUri, globalAiService, projectPath);
+tttttttLogger.info("モックアップギャラリーを正常に開きました");
+tttttt} else {
+tttttttthrow new Error("AIサービスが初期化されていません");
+tttttt}
+ttttt} catch (error) {
+ttttttLogger.error("モックアップギャラリーを開く際にエラーが発生しました", error as Error);
+ttttttvscode.window.showErrorMessage(`モックアップギャラリーを開けませんでした: ${(error as Error).message}`);
+ttttt}
+tttt})
+ttt);
+tttLogger.info("MockupGallery command registered successfully");
 		
 		// 新しいシンプル認証マネージャーの初期化（優先使用）
 		const simpleAuthManager = SimpleAuthManager.getInstance(context);
@@ -408,39 +306,6 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		// 環境変数管理コマンドの登録
 		registerEnvironmentCommands(context);
-		
-		// コマンドの直接登録を確認
-		vscode.commands.getCommands().then(commands => {
-			const hasCommand = commands.includes('appgenius-ai.openEnvironmentVariablesAssistant');
-			Logger.info(`環境変数アシスタントコマンド登録状態: ${hasCommand ? '登録済み' : '未登録'}`);
-			
-			// コマンドが登録されていなければ直接登録
-			if (!hasCommand) {
-				// 環境変数アシスタントコマンドを直接登録
-				context.subscriptions.push(
-					vscode.commands.registerCommand('appgenius-ai.openEnvironmentVariablesAssistant', async () => {
-						Logger.info('環境変数アシスタントを開きます（直接登録されたコマンド）');
-						
-						try {
-							// アクティブなワークスペースを取得
-							let projectPath: string | undefined;
-							
-							if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
-								projectPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-							}
-							
-							// パネルを表示
-							EnvironmentVariablesAssistantPanel.createOrShow(context.extensionUri, projectPath);
-						} catch (error) {
-							Logger.error('環境変数アシスタントのオープンに失敗しました', error as Error);
-							vscode.window.showErrorMessage(`環境変数アシスタントの表示に失敗しました: ${(error as Error).message}`);
-						}
-					})
-				);
-				Logger.info('環境変数アシスタントコマンドを直接登録しました');
-			}
-		});
-		
 		Logger.info('Environment commands registered successfully');
 		
 		// ClaudeCode連携コマンドの登録

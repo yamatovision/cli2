@@ -247,7 +247,7 @@ export class DebugDetectivePanel extends ProtectedPanel {
       }
       
       // 中央サーバーのデバッグ探偵プロンプトURLをチェック
-      Logger.info(`中央サーバーのデバッグ探偵プロンプトURLを使用します: http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/942ec5f5b316b3fb11e2fd2b597bfb09`);
+      Logger.info(`中央サーバーのデバッグ探偵プロンプトURLを使用します: https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/942ec5f5b316b3fb11e2fd2b597bfb09`);
       
       
       Logger.info(`デバッグ探偵を初期化しました。プロジェクトパス: ${this._projectPath}`);
@@ -349,28 +349,20 @@ export class DebugDetectivePanel extends ProtectedPanel {
       // エラーの種類を検出
       const errorType = await this._detectErrorType(errorLog);
       
-      // 関連ファイルを自動検出
-      const detectedFiles = await this._detectRelatedFiles(errorLog);
-      
       // エラーセッション情報を更新
       await this._errorSessionManager.updateSession(sessionId, {
         errorType,
-        relatedFiles: detectedFiles,
         status: 'investigating',
         investigationStartTime: new Date().toISOString()
       });
       
       // 現在のセッションを更新
       this._currentErrorSession = await this._errorSessionManager.getSession(sessionId);
-      this._relatedFiles = detectedFiles;
       this._detectedErrorType = errorType;
       
       Logger.info(`エラーセッションを作成しました: ${sessionId}`);
       
-      // 実際のファイル内容を読み込み
-      const relatedFilesContent = await this._loadRelatedFilesContent(detectedFiles);
-      
-      // エラー情報とファイル内容を結合したプロンプトを作成
+      // エラー情報のみのプロンプトを作成
       const tempDir = path.join(this._projectPath, 'temp');
       if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
@@ -382,22 +374,14 @@ export class DebugDetectivePanel extends ProtectedPanel {
       );
       
       // プロンプトURL
-      const debugDetectivePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/942ec5f5b316b3fb11e2fd2b597bfb09';
+      const debugDetectivePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/942ec5f5b316b3fb11e2fd2b597bfb09';
       
       // ClaudeCodeIntegrationServiceを使用して公開URL経由で起動
       try {
-        // エラー情報と関連ファイル内容を一時ファイルに保存
+        // エラー情報のみを一時ファイルに保存
         let analysisContent = '# エラー情報\n\n```\n';
         analysisContent += errorLog;
         analysisContent += '\n```\n\n';
-        
-        analysisContent += '# 関連ファイル\n\n';
-        for (const [filePath, content] of Object.entries(relatedFilesContent)) {
-          analysisContent += `## ${filePath}\n\n`;
-          analysisContent += '```\n';
-          analysisContent += content;
-          analysisContent += '\n```\n\n';
-        }
         
         // 一時ファイルに保存（デバッグ用・参照用）
         const analysisFilePath = path.join(tempDir, `error_analysis_${Date.now()}.md`);
@@ -442,14 +426,6 @@ export class DebugDetectivePanel extends ProtectedPanel {
         combinedContent += errorLog;
         combinedContent += '\n```\n\n';
         
-        combinedContent += '# 関連ファイル\n\n';
-        for (const [filePath, content] of Object.entries(relatedFilesContent)) {
-          combinedContent += `## ${filePath}\n\n`;
-          combinedContent += '```\n';
-          combinedContent += content;
-          combinedContent += '\n```\n\n';
-        }
-        
         Logger.info(`調査用プロンプトを作成します: ${combinedPromptPath}`);
         fs.writeFileSync(combinedPromptPath, combinedContent, 'utf8');
         
@@ -474,8 +450,7 @@ export class DebugDetectivePanel extends ProtectedPanel {
       await this._panel.webview.postMessage({
         command: 'errorSessionCreated',
         sessionId,
-        errorType,
-        relatedFiles: detectedFiles
+        errorType
       });
       
       Logger.info(`調査を開始しました: ${sessionId}`);
@@ -586,155 +561,8 @@ export class DebugDetectivePanel extends ProtectedPanel {
   }
 
   /**
-   * エラーに関連するファイルを検出
+   * 関連ファイル検出と読み込み機能は削除
    */
-  private async _detectRelatedFiles(errorLog: string): Promise<string[]> {
-    try {
-      const relatedFiles: string[] = [];
-      
-      // ファイルパスのパターンを検出
-      const filePathPatterns = [
-        /(?:at |from |in |file |path:)([^()\n:]+\.(?:js|ts|jsx|tsx|vue|html|css|scss|json))/gi,
-        /([a-zA-Z0-9_\-/.]+\.(?:js|ts|jsx|tsx|vue|html|css|scss|json))(?::(\d+))?(?::(\d+))?/gi,
-        /(?:import|require|from) ['"]([^'"]+)['"]/gi,
-        /(?:load|open|read|write|access) ['"]([^'"]+)['"]/gi
-      ];
-      
-      // パターンごとに検出
-      for (const pattern of filePathPatterns) {
-        let match;
-        while ((match = pattern.exec(errorLog)) !== null) {
-          const filePath = match[1].trim();
-          
-          // 絶対パスかどうかをチェック
-          const fullPath = path.isAbsolute(filePath)
-            ? filePath
-            : path.join(this._projectPath, filePath);
-            
-          // ファイルが存在するか確認
-          try {
-            if (fs.existsSync(fullPath)) {
-              // 重複を避けて追加
-              if (!relatedFiles.includes(fullPath)) {
-                relatedFiles.push(fullPath);
-              }
-            } else {
-              // プロジェクト内を検索
-              const foundFile = await this._searchFileInProject(filePath);
-              if (foundFile && !relatedFiles.includes(foundFile)) {
-                relatedFiles.push(foundFile);
-              }
-            }
-          } catch (e) {
-            // エラー処理は行わない
-          }
-        }
-      }
-      
-      // パッケージ.jsonを検索（モジュールエラーの場合）
-      if (errorLog.includes('Cannot find module') || errorLog.includes('Module not found')) {
-        const packageJsonPath = path.join(this._projectPath, 'package.json');
-        if (fs.existsSync(packageJsonPath) && !relatedFiles.includes(packageJsonPath)) {
-          relatedFiles.push(packageJsonPath);
-        }
-      }
-      
-      // 環境変数を検索（環境変数エラーの場合）
-      if (errorLog.includes('process.env') || errorLog.includes('環境変数')) {
-        const envPaths = [
-          path.join(this._projectPath, '.env'),
-          path.join(this._projectPath, '.env.local'),
-          path.join(this._projectPath, '.env.development'),
-          path.join(this._projectPath, '.env.production')
-        ];
-        
-        for (const envPath of envPaths) {
-          if (fs.existsSync(envPath) && !relatedFiles.includes(envPath)) {
-            relatedFiles.push(envPath);
-          }
-        }
-      }
-      
-      return relatedFiles;
-    } catch (error) {
-      Logger.error('関連ファイル検出エラー', error as Error);
-      return [];
-    }
-  }
-
-  /**
-   * プロジェクト内のファイルを検索
-   */
-  private async _searchFileInProject(fileName: string): Promise<string | null> {
-    try {
-      // ファイル名のみを取得
-      const baseFileName = path.basename(fileName);
-      
-      // ファイル名に拡張子が含まれていない場合は一般的な拡張子を追加
-      const searchPatterns = baseFileName.includes('.')
-        ? [baseFileName]
-        : [
-            `${baseFileName}.js`,
-            `${baseFileName}.ts`,
-            `${baseFileName}.jsx`,
-            `${baseFileName}.tsx`,
-            `${baseFileName}.vue`,
-            `${baseFileName}.html`,
-            `${baseFileName}.css`,
-            `${baseFileName}.scss`,
-            `${baseFileName}.json`
-          ];
-          
-      // VS Codeの検索APIを使用
-      for (const pattern of searchPatterns) {
-        const uris = await vscode.workspace.findFiles(
-          `**/${pattern}`,
-          '**/node_modules/**',
-          10
-        );
-        
-        if (uris.length > 0) {
-          return uris[0].fsPath;
-        }
-      }
-      
-      return null;
-    } catch (error) {
-      Logger.error('ファイル検索エラー', error as Error);
-      return null;
-    }
-  }
-
-  /**
-   * 関連ファイルの内容を読み込む
-   */
-  private async _loadRelatedFilesContent(filePaths: string[]): Promise<Record<string, string>> {
-    const contents: Record<string, string> = {};
-    
-    for (const filePath of filePaths) {
-      try {
-        // ファイルが存在するか確認
-        if (!fs.existsSync(filePath)) {
-          continue;
-        }
-        
-        // ファイルの内容を読み込む
-        const content = fs.readFileSync(filePath, 'utf8');
-        
-        // ファイルサイズが大きすぎる場合は最初の1000行だけ読み込む
-        const lines = content.split('\n');
-        const truncatedContent = lines.length > 1000
-          ? lines.slice(0, 1000).join('\n') + '\n... (truncated)'
-          : content;
-          
-        contents[filePath] = truncatedContent;
-      } catch (error) {
-        Logger.error(`ファイル読み込みエラー: ${filePath}`, error as Error);
-      }
-    }
-    
-    return contents;
-  }
 
   /**
    * エラーメッセージの表示
@@ -854,110 +682,36 @@ export class DebugDetectivePanel extends ProtectedPanel {
     
     <!-- メインコンテンツ -->
     <main id="main-content" class="content" role="main">
-      <!-- タブナビゲーション -->
-      <div class="tabs" role="tablist">
-        <button class="tab-button active" role="tab" id="tab-error-input" aria-selected="true" aria-controls="error-input-panel">
-          エラー入力
-        </button>
-        <button class="tab-button" role="tab" id="tab-sessions" aria-selected="false" aria-controls="sessions-panel">
-          過去のセッション
-        </button>
-        <button class="tab-button" role="tab" id="tab-knowledge" aria-selected="false" aria-controls="knowledge-panel">
-          知見ベース
-        </button>
-        <button class="tab-button" role="tab" id="tab-test" aria-selected="false" aria-controls="test-panel">
-          テスト実行
-        </button>
-      </div>
+      <!-- シンプル化されたUI -->
+      <div class="content">
+        <section class="error-input-section">
+          <h2 id="error-input-heading">エラーログ入力</h2>
+          <div class="error-input">
+            <label for="error-log" class="sr-only">エラーログを入力してください</label>
+            <textarea 
+              id="error-log" 
+              placeholder="エラーログをここに貼り付けてください..." 
+              aria-labelledby="error-input-heading"
+              aria-describedby="error-log-description"
+              style="width: 100%; min-height: 200px; border: 1px solid #aaa; border-radius: 4px; padding: 12px; font-family: monospace; font-size: 14px; line-height: 1.5; resize: vertical; background-color: white; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);"
+            ></textarea>
+            <p id="error-log-description" class="sr-only">エラーログをここに貼り付けて、デバッグ探偵に調査を依頼できます。</p>
+            
+            <button 
+              id="investigate-error-btn" 
+              style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; background-color: #2c6fca; color: white;"
+              aria-label="入力したエラーの調査を依頼する"
+            >
+              <span style="font-size: 20px;" aria-hidden="true">🕵️</span>
+              <span>このエラーの調査を依頼する</span>
+            </button>
+          </div>
+        </section>
 
-      <!-- タブコンテンツ -->
-      <div class="tab-content">
-        <!-- エラー入力パネル -->
-        <div id="error-input-panel" class="tab-pane active" role="tabpanel" aria-labelledby="tab-error-input">
-          <section class="error-input-section">
-            <h2 id="error-input-heading">エラーログ入力</h2>
-            <div class="error-input">
-              <label for="error-log" class="sr-only">エラーログを入力してください</label>
-              <textarea 
-                id="error-log" 
-                placeholder="エラーログをここに貼り付けてください..." 
-                aria-labelledby="error-input-heading"
-                aria-describedby="error-log-description"
-              ></textarea>
-              <p id="error-log-description" class="sr-only">エラーログをここに貼り付けて、デバッグ探偵に調査を依頼できます。</p>
-              
-              <button 
-                id="investigate-error-btn" 
-                class="app-button app-button-primary"
-                aria-label="入力したエラーの調査を依頼する"
-              >
-                <span class="icon" aria-hidden="true">🕵️</span>
-                <span>このエラーの調査を依頼する</span>
-              </button>
-            </div>
-          </section>
-
-          <section id="current-session-section" class="current-session-section" style="display: none;">
-            <h2>現在の調査セッション</h2>
-            <div id="current-session-container" class="current-session-container"></div>
-          </section>
-
-          <section id="related-files-section" class="related-files-section" style="display: none;">
-            <h2>関連ファイル</h2>
-            <div id="related-files-container" class="related-files-container"></div>
-          </section>
-        </div>
-
-        <!-- 過去のセッションパネル -->
-        <div id="sessions-panel" class="tab-pane" role="tabpanel" aria-labelledby="tab-sessions">
-          <section class="error-sessions-section">
-            <h2>過去のエラーセッション</h2>
-            <div id="error-sessions-container" class="error-sessions-container" role="list"></div>
-          </section>
-        </div>
-
-        <!-- 知見ベースパネル -->
-        <div id="knowledge-panel" class="tab-pane" role="tabpanel" aria-labelledby="tab-knowledge">
-          <section class="knowledge-filter-section">
-            <h2>知見ベース検索</h2>
-            <div class="filter-controls">
-              <div class="search-box">
-                <label for="knowledge-search" class="sr-only">検索キーワード</label>
-                <input 
-                  type="text" 
-                  id="knowledge-search" 
-                  placeholder="キーワードで検索..."
-                  aria-label="知見ベースを検索するキーワードを入力"
-                >
-                <button id="knowledge-search-btn" class="app-button app-button-secondary" aria-label="検索を実行">検索</button>
-              </div>
-              <div class="filter-group">
-                <label for="error-type-filter" class="sr-only">エラータイプ</label>
-                <select id="error-type-filter" aria-label="エラータイプでフィルター">
-                  <option value="">すべてのタイプ</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <section class="knowledge-list-section">
-            <h2>知見一覧</h2>
-            <div id="knowledge-list-container" class="knowledge-list-container" role="list"></div>
-          </section>
-
-          <section id="knowledge-detail-section" class="knowledge-detail-section" style="display: none;">
-            <h2>知見詳細</h2>
-            <div id="knowledge-detail-container" class="knowledge-detail-container"></div>
-          </section>
-        </div>
-
-        <!-- テスト実行パネル -->
-        <div id="test-panel" class="tab-pane" role="tabpanel" aria-labelledby="tab-test">
-          <section class="test-section">
-            <h2>テスト実行</h2>
-            <div id="test-container" class="test-container"></div>
-          </section>
-        </div>
+        <section id="current-session-section" class="current-session-section" style="display: none;">
+          <h2>現在の調査セッション</h2>
+          <div id="current-session-container" class="current-session-container"></div>
+        </section>
       </div>
     </main>
   </div>

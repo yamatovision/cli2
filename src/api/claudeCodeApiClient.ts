@@ -36,7 +36,7 @@ export class ClaudeCodeApiClient {
     
     this._errorHandler = ErrorHandler.getInstance();
     // API URLを環境変数から取得、またはデフォルト値を使用
-    this._baseUrl = process.env.PORTAL_API_URL || 'https://geniemon-portal-backend-production.up.railway.app/api';
+    this._baseUrl = process.env.PORTAL_API_URL || 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api';
     Logger.info('ClaudeCodeApiClient initialized with baseUrl: ' + this._baseUrl);
   }
 
@@ -397,8 +397,9 @@ export class ClaudeCodeApiClient {
   
         // トークンを使用して公開APIからプロンプト情報を取得
         // 認証不要のため、通常のaxiosインスタンスを使用
-        const baseUrl = new URL(url).origin + '/api';
-        Logger.info(`【API連携】公開プロンプトの取得を開始: ${baseUrl}/prompts/public/${token}`);
+        // URLからベースURLを抽出せず、代わりにデフォルトのAPIエンドポイントを使用する
+        const baseUrl = this._baseUrl;
+        Logger.info(`【API連携】公開プロンプトの取得を開始: ${baseUrl}/prompts/public/${token} (元URL: ${url})`);
         const response = await axios.get(`${baseUrl}/prompts/public/${token}`);
   
         if (response.status === 200 && response.data) {

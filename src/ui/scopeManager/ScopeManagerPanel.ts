@@ -111,30 +111,8 @@ export class ScopeManagerPanel extends ProtectedPanel {
     // 権限があれば表示
     const panel = this._createOrShowPanel(extensionUri, projectPath);
     
-    // API接続テスト（認証状態確認）
-    const isAPIConnected = await panel._testAPIConnection();
-    if (!isAPIConnected) {
-      Logger.warn('API接続テストに失敗しました。スコープマネージャーは表示できません');
-      vscode.window.showErrorMessage('サーバー接続に問題があります。再ログインしてください。');
-      
-      // 再ログイン用コマンドを提案
-      const action = await vscode.window.showInformationMessage(
-        'API接続に失敗しました。再ログインしますか？',
-        '再ログイン'
-      );
-      
-      if (action === '再ログイン') {
-        // ログアウトしてから再ログイン画面を表示
-        vscode.commands.executeCommand('appgenius-ai.logout').then(() => {
-          setTimeout(() => {
-            vscode.commands.executeCommand('appgenius-ai.login');
-          }, 500);
-        });
-      }
-      
-      return panel; // APIチェックに失敗してもパネルは表示する（後から再認証できるようにするため）
-    }
-    
+    // API連携チェックは緩和：常に成功とみなす
+    // API連携の成否に関わらずパネルを表示する
     return panel;
   }
 
@@ -1770,8 +1748,8 @@ project-root/
         
         // セキュリティガイドライン付きで起動
         Logger.info(`セキュリティガイドライン付きでClaudeCodeを起動します`);
-        const guidancePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/6640b55f692b15f4f4e3d6f5b1a5da6c';
-        const featurePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/b168dcd63cc12e15c2e57bce02caf704';
+        const guidancePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/6640b55f692b15f4f4e3d6f5b1a5da6c';
+        const featurePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/b168dcd63cc12e15c2e57bce02caf704';
         
         // プロンプトファイルの内容を追加コンテンツとして渡す
         scopeAdditionalContent = promptContent;
@@ -1805,7 +1783,7 @@ project-root/
       }
       
       // 中央ポータルURL - プロジェクト分析アシスタント
-      const portalUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/8c09f971e4a3d020497eec099a53e0a6';
+      const portalUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/8c09f971e4a3d020497eec099a53e0a6';
       
       // ステータスファイルの内容を追加コンテンツとして渡す
       let additionalContent = '';
@@ -1898,8 +1876,8 @@ project-root/
         
         // セキュリティガイドライン付きで起動
         Logger.info(`セキュリティガイドライン付きでClaudeCodeを起動します`);
-        const guidancePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/6640b55f692b15f4f4e3d6f5b1a5da6c';
-        const featurePromptUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/868ba99fc6e40d643a02e0e02c5e980a';
+        const guidancePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/6640b55f692b15f4f4e3d6f5b1a5da6c';
+        const featurePromptUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/868ba99fc6e40d643a02e0e02c5e980a';
         
         // プロンプトファイルの内容を追加コンテンツとして渡す
         const implementerAdditionalContent = promptContent;
@@ -2201,7 +2179,7 @@ project-root/
       const statusContent = fs.readFileSync(statusFilePath, 'utf8');
       
       // 中央ポータルURL
-      const portalUrl = 'http://geniemon-portal-backend-production.up.railway.app/api/prompts/public/868ba99fc6e40d643a02e0e02c5e980a';
+      const portalUrl = 'https://appgenius-portal-backend-235426778039.asia-northeast1.run.app/api/prompts/public/868ba99fc6e40d643a02e0e02c5e980a';
       
       // 追加情報（現在の実装状況など）
       const additionalContent = `# 追加情報\n\n## CURRENT_STATUS.md\n\n\`\`\`markdown\n${statusContent}\n\`\`\`\n\n## 選択されたスコープ\n\n現在選択されているスコープ: **${this._currentScope.name}**\n\n説明: ${this._currentScope.description || '説明が設定されていません'}\n\n進捗: ${this._currentScope.progress || 0}%`;

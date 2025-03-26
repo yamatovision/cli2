@@ -1,6 +1,5 @@
 node_modules
 npm-debug.log
-frontend/
-.env
 .git
-*.md
+.env.local
+frontend

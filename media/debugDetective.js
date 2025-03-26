@@ -17,8 +17,6 @@
   // DOM要素の取得
   const errorLogTextarea = document.getElementById('error-log');
   const investigateErrorBtn = document.getElementById('investigate-error-btn');
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabPanes = document.querySelectorAll('.tab-pane');
   const notificationArea = document.getElementById('notification-area');
   
   // テーマの適用
@@ -57,9 +55,6 @@
     // イベントリスナーの登録
     investigateErrorBtn.addEventListener('click', investigateError);
     
-    // タブ切り替えリスナー
-    setupTabNavigation();
-    
     // キーボードアクセシビリティ対応
     setupKeyboardAccessibility();
     
@@ -91,90 +86,14 @@
   function updateUI() {
     // 現在の調査セッションの表示
     updateCurrentSession();
-    
-    // 関連ファイルの表示
-    updateRelatedFiles();
-    
-    // エラーセッション一覧の表示
-    updateErrorSessions();
-    
-    // 知見ベースの表示
-    updateKnowledgeBase();
   }
   
-  // タブナビゲーションの設定
-  function setupTabNavigation() {
-    tabButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        // タブの切り替え
-        const targetId = button.getAttribute('aria-controls');
-        const targetPane = document.getElementById(targetId);
-        
-        if (targetPane) {
-          // アクティブなタブを更新
-          tabButtons.forEach(btn => {
-            btn.classList.remove('active');
-            btn.setAttribute('aria-selected', 'false');
-          });
-          
-          tabPanes.forEach(pane => {
-            pane.classList.remove('active');
-          });
-          
-          button.classList.add('active');
-          button.setAttribute('aria-selected', 'true');
-          targetPane.classList.add('active');
-          
-          // アクセシビリティ通知
-          announceTabChange(button.textContent.trim());
-        }
-      });
-    });
-  }
+  // 削除：タブナビゲーション機能は不要
   
   // キーボードアクセシビリティの設定
   function setupKeyboardAccessibility() {
-    // タブリストのキーボードナビゲーション
-    const tabList = document.querySelector('[role="tablist"]');
-    if (tabList) {
-      tabList.addEventListener('keydown', handleTabListKeyDown);
-    }
-    
     // フォーカス可視性の向上
     document.addEventListener('keydown', handleGlobalKeyDown);
-  }
-  
-  // タブリストのキーボードナビゲーション
-  function handleTabListKeyDown(event) {
-    const tabs = Array.from(tabButtons);
-    const currentIndex = tabs.findIndex(tab => tab === document.activeElement);
-    
-    if (currentIndex === -1) return;
-    
-    let nextIndex = currentIndex;
-    
-    switch (event.key) {
-      case 'ArrowRight':
-        event.preventDefault();
-        nextIndex = (currentIndex + 1) % tabs.length;
-        break;
-      case 'ArrowLeft':
-        event.preventDefault();
-        nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
-        break;
-      case 'Home':
-        event.preventDefault();
-        nextIndex = 0;
-        break;
-      case 'End':
-        event.preventDefault();
-        nextIndex = tabs.length - 1;
-        break;
-      default:
-        return;
-    }
-    
-    tabs[nextIndex].focus();
   }
   
   // グローバルキーボードイベント
@@ -278,7 +197,6 @@
       errorType: message.errorType,
       status: 'investigating'
     };
-    state.relatedFiles = message.relatedFiles || [];
     state.detectedErrorType = message.errorType;
     
     saveState();
@@ -323,9 +241,6 @@
     // 現在のセッションを表示
     updateCurrentSession();
     
-    // 関連ファイルを表示
-    updateRelatedFiles();
-    
     // 3秒後にメッセージを消す
     setTimeout(() => {
       const message = document.querySelector('.success-message');
@@ -367,175 +282,12 @@
     
     if (!filesSection || !filesContainer) return;
     
-    if (state.relatedFiles && state.relatedFiles.length > 0) {
-      filesSection.style.display = 'block';
-      
-      // 関連ファイルのリストを構築
-      let filesList = '<ul class="related-files-list" role="list">';
-      
-      state.relatedFiles.forEach(file => {
-        const fileName = file.split('/').pop();
-        filesList += `
-          <li class="file-item" role="listitem">
-            <div class="file-path" title="${file}">
-              <span class="file-icon" aria-hidden="true">📄</span>
-              <span>${fileName}</span>
-            </div>
-          </li>
-        `;
-      });
-      
-      filesList += '</ul>';
-      filesContainer.innerHTML = filesList;
-    } else {
-      filesSection.style.display = 'none';
-      filesContainer.innerHTML = '';
-    }
+    // 関連ファイルセクションを非表示にする
+    filesSection.style.display = 'none';
+    filesContainer.innerHTML = '';
   }
   
-  // エラーセッション一覧の表示を更新
-  function updateErrorSessions() {
-    const sessionsContainer = document.getElementById('error-sessions-container');
-    
-    if (!sessionsContainer) return;
-    
-    if (state.sessions && state.sessions.length > 0) {
-      let sessionsList = '';
-      
-      state.sessions.forEach(session => {
-        const sessionDate = new Date(session.createdAt).toLocaleString();
-        sessionsList += `
-          <div class="error-session-card" role="listitem" tabindex="0" data-session-id="${session.id}">
-            <div class="error-session-header">
-              <div class="error-session-title">${session.errorType || '不明なエラー'}</div>
-              <div class="error-session-date">${sessionDate}</div>
-            </div>
-            <div class="error-session-summary">${session.summary || '説明なし'}</div>
-            <div class="error-session-footer">
-              <div class="error-session-type ${session.errorType ? 'error-type-' + session.errorType.replace(/\s+/g, '-').toLowerCase() : ''}">${session.errorType || '不明'}</div>
-              <div class="error-session-status status-${session.status || 'new'}">${getStatusText(session.status)}</div>
-            </div>
-          </div>
-        `;
-      });
-      
-      sessionsContainer.innerHTML = sessionsList;
-      
-      // セッションカードにイベントリスナーを追加
-      document.querySelectorAll('.error-session-card').forEach(card => {
-        card.addEventListener('click', () => selectErrorSession(card.dataset.sessionId));
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            selectErrorSession(card.dataset.sessionId);
-          }
-        });
-      });
-    } else {
-      sessionsContainer.innerHTML = `
-        <div class="empty-state" role="status">
-          <div class="icon large" aria-hidden="true">📋</div>
-          <p>過去のエラーセッションがありません</p>
-        </div>
-      `;
-    }
-  }
-  
-  // 知見ベースの表示を更新
-  function updateKnowledgeBase() {
-    const knowledgeListContainer = document.getElementById('knowledge-list-container');
-    
-    if (!knowledgeListContainer) return;
-    
-    if (state.knowledgeBase && state.knowledgeBase.length > 0) {
-      let knowledgeList = '';
-      
-      state.knowledgeBase.forEach(knowledge => {
-        const createdDate = new Date(knowledge.createdAt).toLocaleString();
-        knowledgeList += `
-          <div class="knowledge-card" role="listitem" tabindex="0" data-knowledge-id="${knowledge.id}">
-            <div class="knowledge-header">
-              <div class="knowledge-title">${knowledge.title}</div>
-              <div class="knowledge-date">${createdDate}</div>
-            </div>
-            <div class="knowledge-summary">${knowledge.summary || '説明なし'}</div>
-            <div class="knowledge-footer">
-              <div class="knowledge-type">${knowledge.errorType || '一般'}</div>
-              <div class="knowledge-tags">
-                ${(knowledge.tags || []).map(tag => `<div class="knowledge-tag">${tag}</div>`).join('')}
-              </div>
-            </div>
-          </div>
-        `;
-      });
-      
-      knowledgeListContainer.innerHTML = knowledgeList;
-      
-      // 知見カードにイベントリスナーを追加
-      document.querySelectorAll('.knowledge-card').forEach(card => {
-        card.addEventListener('click', () => selectKnowledge(card.dataset.knowledgeId));
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            selectKnowledge(card.dataset.knowledgeId);
-          }
-        });
-      });
-    } else {
-      knowledgeListContainer.innerHTML = `
-        <div class="empty-state" role="status">
-          <div class="icon large" aria-hidden="true">📚</div>
-          <p>知見ベースが空です</p>
-        </div>
-      `;
-    }
-  }
-  
-  // エラーセッションを選択
-  function selectErrorSession(sessionId) {
-    const session = state.sessions.find(s => s.id === sessionId);
-    if (!session) return;
-    
-    // 選択状態を視覚的に示す
-    document.querySelectorAll('.error-session-card').forEach(card => {
-      if (card.dataset.sessionId === sessionId) {
-        card.classList.add('active');
-        card.setAttribute('aria-selected', 'true');
-      } else {
-        card.classList.remove('active');
-        card.setAttribute('aria-selected', 'false');
-      }
-    });
-    
-    // アクセシビリティ通知
-    announce(`エラーセッション「${session.errorType || '不明なエラー'}」を選択しました`);
-    
-    // 詳細表示などの処理
-    // ...
-  }
-  
-  // 知見を選択
-  function selectKnowledge(knowledgeId) {
-    const knowledge = state.knowledgeBase.find(k => k.id === knowledgeId);
-    if (!knowledge) return;
-    
-    // 選択状態を視覚的に示す
-    document.querySelectorAll('.knowledge-card').forEach(card => {
-      if (card.dataset.knowledgeId === knowledgeId) {
-        card.classList.add('active');
-        card.setAttribute('aria-selected', 'true');
-      } else {
-        card.classList.remove('active');
-        card.setAttribute('aria-selected', 'false');
-      }
-    });
-    
-    // アクセシビリティ通知
-    announce(`知見「${knowledge.title}」を選択しました`);
-    
-    // 詳細表示などの処理
-    // ...
-  }
+  // 不要な機能を削除（過去のセッション、知見ベース）
   
   // エラーメッセージの表示
   function showError(message) {
@@ -556,11 +308,6 @@
       notificationArea.setAttribute('aria-live', importance);
       notificationArea.textContent = message;
     }
-  }
-  
-  // タブ切り替えを通知
-  function announceTabChange(tabName) {
-    announce(`${tabName}タブに切り替えました`);
   }
   
   // ステータスのテキスト表現を取得

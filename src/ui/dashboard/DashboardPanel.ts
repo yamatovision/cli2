@@ -87,12 +87,19 @@ export class DashboardPanel extends ProtectedPanel {
     
     // オンボーディングをスキップするオプションが指定されている場合
     if (options?.skipOnboarding && panel) {
-      // WebViewにメッセージを送信
-      panel._panel.webview.postMessage({
-        command: 'skipOnboarding',
-        skipOnboarding: true
-      });
-      Logger.info('オンボーディング表示をスキップするように指示しました');
+      // タイマーを使ってWebView初期化後にメッセージを送信
+      setTimeout(() => {
+        try {
+          // WebViewにメッセージを送信
+          panel._panel.webview.postMessage({
+            command: 'skipOnboarding',
+            skipOnboarding: true
+          });
+          Logger.info('オンボーディング表示をスキップするように指示しました');
+        } catch (error) {
+          Logger.error('オンボーディングスキップ通知エラー', error as Error);
+        }
+      }, 500);
     }
     
     return panel;

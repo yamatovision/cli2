@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スタッフ状態管理 - 陰陽五行AIケアコンパニオン</title>
+  
+  <!-- Material Design Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap">
+  
+  <!-- Material UI -->
+  <link rel="stylesheet" href="https://unpkg.com/@mui/material@5.14.7/dist/css/material-ui.min.css">
+  
+  <style>
+    :root {
+      /* 陰陽五行カラーパレット */
+      --wood-color: #81c784;
+      --fire-color: #ef5350;
+      --earth-color: #ffd54f;
+      --metal-color: #b0bec5;
+      --water-color: #64b5f6;
+      
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --background-light: #f9f9f9;
+      --background-dark: #f5f5f5;
+      --border-light: #e0e0e0;
+    }
+    
+    body {
+      font-family: 'Roboto', 'Noto Sans JP', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--background-light);
+      color: var(--text-primary);
+    }
+    
+    .app-container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding-bottom: 20px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background-color: white;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+    }
+    
+    .header-title .material-icons {
+      margin-right: 12px;
+      color: var(--earth-color);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+    
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--metal-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 500;
+    }
+    
+    .page-content {
+      padding: 20px;
+    }
+    
+    .section {
+      background-color: white;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    
+    .section-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .section-title .material-icons {
+      margin-right: 10px;
+      font-size: 1.3rem;
+    }
+    
+    .section-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .filter-button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+    
+    .filter-button:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .section-content {
+      padding: 20px;
+    }
+    
+    .followup-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .followup-item {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      align-items: center;
+    }
+    
+    .followup-item:last-child {
+      border-bottom: none;
+    }
+    
+    .followup-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--metal-color);
+      margin-right: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    
+    .followup-content {
+      flex-grow: 1;
+    }
+    
+    .followup-name {
+      font-weight: 500;
+      margin: 0 0 4px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .urgency-tag {
+      margin-left: 8px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+    
+    .urgency-high {
+      background-color: rgba(239, 83, 80, 0.1);
+      color: #d32f2f;
+    }
+    
+    .urgency-medium {
+      background-color: rgba(255, 213, 79, 0.2);
+      color: #f57c00;
+    }
+    
+    .urgency-low {
+      background-color: rgba(129, 199, 132, 0.1);
+      color: #388e3c;
+    }
+    
+    .followup-reason {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin: 0 0 6px 0;
+    }
+    
+    .followup-approach {
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      margin: 0;
+      padding: 8px;
+      background-color: #f5f5f5;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- ヘッダー -->
+    <header class="header">
+      <div class="header-title">
+        <i class="material-icons">people</i>
+        スタッフ状態管理
+      </div>
+      <div class="header-actions">
+        <i class="material-icons">notifications_none</i>
+        <i class="material-icons">settings</i>
+        <div class="user-avatar">M</div>
+      </div>
+    </header>
+    
+    <!-- メインコンテンツ -->
+    <main class="page-content">
+      <!-- スタッフ状態管理 -->
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <i class="material-icons" style="color: var(--fire-color);">people</i>
+            スタッフ状態管理
+          </h2>
+          <div class="section-actions">
+            <button class="filter-button">
+              <i class="material-icons">sort</i>
+              優先度順
+            </button>
+            <button class="filter-button">
+              <i class="material-icons">filter_list</i>
+              フィルター
+            </button>
+          </div>
+        </div>
+        
+        <div class="section-content">
+          <!-- タブナビゲーション -->
+          <div style="display: flex; border-bottom: 1px solid var(--border-light); margin-bottom: 16px;">
+            <div style="padding: 12px 20px; border-bottom: 3px solid var(--fire-color); font-weight: 500; color: var(--fire-color);" id="tab-followup">要フォロー (3)</div>
+            <div style="padding: 12px 20px; color: var(--text-secondary); cursor: pointer;" id="tab-stable">順調 (4)</div>
+            <div style="padding: 12px 20px; color: var(--text-secondary); cursor: pointer;" id="tab-watch">要注目 (2)</div>
+            <div style="padding: 12px 20px; color: var(--text-secondary); cursor: pointer;" id="tab-all">全員 (10)</div>
+          </div>
+          
+          <!-- 重点フォロー対象者リスト -->
+          <div id="panel-followup">
+            <h3 style="font-size: 1rem; margin: 0 0 16px 0; color: var(--text-primary); display: flex; align-items: center;">
+              <i class="material-icons" style="font-size: 1.2rem; margin-right: 8px; color: var(--fire-color);">priority_high</i>
+              重点フォロー対象者
+            </h3>
+            
+            <ul class="followup-list">
+              <li class="followup-item">
+                <div class="followup-avatar" style="background-color: var(--water-color);">TK</div>
+                <div class="followup-content">
+                  <h3 class="followup-name">
+                    田中 健太 <span class="urgency-tag urgency-high">優先度：高</span>
+                  </h3>
+                  <p class="followup-reason">過去2週間で急激な満足度低下。技術習得と待遇について複数回の否定的発言あり。</p>
+                  <p class="followup-approach">提案：新しい技術トレーニングの機会について1対1でのミーティングを実施し、キャリアビジョンと待遇についての対話を行う。</p>
+                </div>
+              </li>
+              
+              <li class="followup-item">
+                <div class="followup-avatar" style="background-color: var(--fire-color);">MY</div>
+                <div class="followup-content">
+                  <h3 class="followup-name">
+                    松本 優子 <span class="urgency-tag urgency-medium">優先度：中</span>
+                  </h3>
+                  <p class="followup-reason">運勢確認頻度が低下中。対話内容からチーム内人間関係の悩みが検出されている。</p>
+                  <p class="followup-approach">提案：間接的にチーム活動への参加を促し、コミュニケーションの機会を増やす。必要に応じてメンター制度の活用を検討。</p>
+                </div>
+              </li>
+              
+              <li class="followup-item">
+                <div class="followup-avatar" style="background-color: var(--earth-color);">SS</div>
+                <div class="followup-content">
+                  <h3 class="followup-name">
+                    佐藤 早紀 <span class="urgency-tag urgency-low">優先度：低</span>
+                  </h3>
+                  <p class="followup-reason">スキル成長に関する不安の兆候。自己評価が低く、キャリアパスの明確さを求めている。</p>
+                  <p class="followup-approach">提案：具体的なスキル向上計画を一緒に設定し、成功体験を増やす機会を提供。組織内での将来的なポジションについて対話を行う。</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- 他のスタッフの状態（デフォルトは非表示、タブクリックで表示） -->
+          <div style="display: none;" id="panel-stable">
+            <h3 style="font-size: 1rem; margin: 0 0 16px 0; color: var(--text-primary); display: flex; align-items: center;">
+              <i class="material-icons" style="font-size: 1.2rem; margin-right: 8px; color: var(--wood-color);">thumb_up</i>
+              順調スタッフ
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--wood-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--metal-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">KS</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">鈴木 健司</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">スタイリスト</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  エンゲージメント良好。継続的な高評価と創造性を発揮中。メンターとしての活動に意欲的。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--wood-color);">
+                  <span>エンゲージメント: 92</span>
+                  <span>満足度: 88</span>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--wood-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--earth-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">YY</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">山本 裕子</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">アシスタント</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  成長意欲が高く、技術習得に積極的。チームワークに長け、お客様からの評判も良好。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--wood-color);">
+                  <span>エンゲージメント: 85</span>
+                  <span>満足度: 82</span>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--wood-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--water-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">KA</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">加藤 恵</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">チーフスタイリスト</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  リーダーシップを発揮し、若手の育成に注力。自身の技術向上と組織貢献のバランスが取れている。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--wood-color);">
+                  <span>エンゲージメント: 88</span>
+                  <span>満足度: 85</span>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--wood-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--fire-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">DI</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">伊藤 大輔</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">スタイリスト</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  当初は不安定だったが、最近急速に改善。メンタリングの効果が顕著で、新しい技術習得に意欲的。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--wood-color);">
+                  <span>エンゲージメント: 92</span>
+                  <span>満足度: 85</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: none;" id="panel-watch">
+            <h3 style="font-size: 1rem; margin: 0 0 16px 0; color: var(--text-primary); display: flex; align-items: center;">
+              <i class="material-icons" style="font-size: 1.2rem; margin-right: 8px; color: var(--earth-color);">visibility</i>
+              要注目スタッフ
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--earth-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--metal-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">SM</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">中村 美咲</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">アシスタント</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  安定しているが成長曲線が緩やか。モチベーション向上のための新たな刺激や目標設定が必要かもしれない。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--earth-color);">
+                  <span>エンゲージメント: 75</span>
+                  <span>満足度: 73</span>
+                </div>
+              </div>
+              
+              <div style="padding: 16px; border-radius: 8px; background-color: #f9f9f9; border-left: 4px solid var(--earth-color);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                  <div style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--water-color); color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px;">TW</div>
+                  <div>
+                    <div style="font-weight: 500; margin-bottom: 2px;">渡辺 隆</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">スタイリスト</div>
+                  </div>
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-primary); line-height: 1.4;">
+                  エンゲージメントの波が大きく、安定性に欠ける。個人的な状況の変化や外部要因の影響の可能性あり。
+                </div>
+                <div style="font-size: 0.8rem; display: flex; gap: 10px; color: var(--earth-color);">
+                  <span>エンゲージメント: 75</span>
+                  <span>満足度: 70</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: none;" id="panel-all">
+            <h3 style="font-size: 1rem; margin: 0 0 16px 0; color: var(--text-primary); display: flex; align-items: center;">
+              <i class="material-icons" style="font-size: 1.2rem; margin-right: 8px; color: var(--metal-color);">people_alt</i>
+              全スタッフ
+            </h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              <!-- ここに全スタッフのカードが表示される（省略） -->
+              <div style="padding: 16px; text-align: center; color: var(--text-secondary);">
+                全スタッフ表示は開発中です...
+              </div>
+            </div>
+          </div>
+          
+          <!-- さらに表示ボタン -->
+          <div style="margin-top: 20px; text-align: center;">
+            <button style="padding: 8px 20px; background-color: white; border: 1px solid var(--border-light); border-radius: 20px; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+              <i class="material-icons" style="font-size: 1.1rem;">expand_more</i>
+              さらに表示
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // スタッフ状態管理タブ切り替え
+      const tabs = document.querySelectorAll('[id^="tab-"]');
+      const panels = document.querySelectorAll('[id^="panel-"]');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // タブIDからパネルIDを取得
+          const panelId = this.id.replace('tab', 'panel');
+          
+          // タブのスタイル変更
+          tabs.forEach(t => {
+            t.style.borderBottom = 'none';
+            t.style.fontWeight = '400';
+            t.style.color = 'var(--text-secondary)';
+          });
+          this.style.borderBottom = '3px solid var(--fire-color)';
+          this.style.fontWeight = '500';
+          this.style.color = 'var(--fire-color)';
+          
+          // パネルの表示/非表示
+          panels.forEach(panel => {
+            if (panel.id === panelId) {
+              panel.style.display = 'block';
+            } else {
+              panel.style.display = 'none';
+            }
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

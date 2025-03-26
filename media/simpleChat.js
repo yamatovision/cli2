@@ -40,9 +40,9 @@
       });
     }
     
-    // 要件定義エクスポートボタンの設定
+    // 要件定義エクスポートボタン設定は無効にする
     if (exportRequirementsButton) {
-      exportRequirementsButton.addEventListener('click', exportRequirements);
+      exportRequirementsButton.style.display = 'none';
     }
 
     // Tab functionality
@@ -114,70 +114,11 @@
     console.log('タブ要素が見つかりません。これは通常は起きないはずです。');
   }
 
-  // File editor functionality
+  // File viewer functionality
   function addFileEditorFunctionality() {
-    // State for editing
-    let isEditingRequirements = false;
-    
-    // Requirements editor
+    // Requirements viewer
     const requirementsPreview = document.getElementById('requirements-preview');
-    const requirementsEditor = document.getElementById('requirements-editor');
-    const editRequirementsBtn = document.getElementById('edit-requirements');
-    const saveRequirementsBtn = document.getElementById('save-requirements');
     const claudecodeRequirementsBtn = document.getElementById('claudecode-requirements');
-    
-    if (editRequirementsBtn) {
-      editRequirementsBtn.addEventListener('click', () => {
-        if (isEditingRequirements) {
-          // Switch to preview mode
-          requirementsPreview.classList.remove('hidden');
-          requirementsEditor.classList.add('hidden');
-          editRequirementsBtn.textContent = '編集';
-          isEditingRequirements = false;
-          saveRequirementsBtn.disabled = true;
-        } else {
-          // Switch to edit mode
-          requirementsPreview.classList.add('hidden');
-          requirementsEditor.classList.remove('hidden');
-          requirementsEditor.value = requirementsContent || requirementsPreview.innerHTML;
-          editRequirementsBtn.textContent = 'プレビュー';
-          isEditingRequirements = true;
-          saveRequirementsBtn.disabled = false;
-        }
-      });
-    }
-    
-    if (saveRequirementsBtn) {
-      saveRequirementsBtn.addEventListener('click', () => {
-        // Get content from editor
-        requirementsContent = requirementsEditor.value;
-        
-        // Update the preview with HTML
-        requirementsPreview.innerHTML = formatMarkdown(requirementsContent);
-        
-        // Switch to preview mode
-        requirementsPreview.classList.remove('hidden');
-        requirementsEditor.classList.add('hidden');
-        editRequirementsBtn.textContent = '編集';
-        isEditingRequirements = false;
-        saveRequirementsBtn.disabled = true;
-        
-        // Send to extension
-        vscode.postMessage({
-          command: 'updateFile',
-          filePath: 'docs/requirements.md',
-          content: requirementsContent
-        });
-        
-        // Update status message
-        document.getElementById('status-message').textContent = '要件定義を保存しました';
-        
-        // Reset after 3 seconds
-        setTimeout(() => {
-          document.getElementById('status-message').textContent = '準備完了';
-        }, 3000);
-      });
-    }
 
     // ClaudeCode起動ボタン
     if (claudecodeRequirementsBtn) {
@@ -193,10 +134,10 @@
       });
     }
     
-    // 「モックアップ作成プロンプトを起動」ボタンを追加
+    // 「システムアーキテクチャー設計プロンプトを起動」ボタンを追加
     const launchMockupBtn = document.createElement('button');
-    launchMockupBtn.textContent = 'モックアップ作成プロンプトを起動';
-    launchMockupBtn.className = 'action-button';
+    launchMockupBtn.textContent = '✨ システムアーキテクチャー設計を起動';
+    launchMockupBtn.className = 'action-button system-architecture-btn';
     launchMockupBtn.addEventListener('click', () => {
       // VSCodeにモックアップ作成プロンプトの起動を要求
       vscode.postMessage({
@@ -204,7 +145,7 @@
       });
 
       // 処理中表示
-      showLoading('モックアップ作成プロンプトを起動中...');
+      showLoading('システムアーキテクチャー設計プロンプトを起動中...');
     });
 
 
