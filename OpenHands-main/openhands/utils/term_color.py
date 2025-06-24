@@ -7,9 +7,9 @@ class TermColor(Enum):
     """Terminal color codes."""
 
     WARNING = 'yellow'
-    SUCCESS = 'green'
+    SUCCESS = 'cyan'
     ERROR = 'red'
-    INFO = 'blue'
+    INFO = 'cyan'
 
 
 def colorize(text: str, color: TermColor = TermColor.WARNING) -> str:

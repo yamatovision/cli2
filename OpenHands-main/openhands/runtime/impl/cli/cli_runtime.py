@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from binaryornot.check import is_binary
-from openhands_aci.editor.editor import OHEditor
-from openhands_aci.editor.exceptions import ToolError
-from openhands_aci.editor.results import ToolResult
-from openhands_aci.utils.diff import get_diff
+from bluelamp_aci.editor.editor import OHEditor
+from bluelamp_aci.editor.exceptions import ToolError
+from bluelamp_aci.editor.results import ToolResult
+from bluelamp_aci.utils.diff import get_diff
 from pydantic import SecretStr
 
 from openhands.core.config import OpenHandsConfig
@@ -135,17 +135,17 @@ class CLIRuntime(Runtime):
         # Set up workspace
         if self.config.workspace_base is not None:
             logger.warning(
-                f'Workspace base path is set to {self.config.workspace_base}. '
-                'It will be used as the path for the agent to run in. '
-                'Be careful, the agent can EDIT files in this directory!'
+                f'ワークスペースのベースパスが {self.config.workspace_base} に設定されています。'
+                'これはエージェントが実行されるパスとして使用されます。'
+                '注意: エージェントはこのディレクトリ内のファイルを編集できます！'
             )
             self._workspace_path = self.config.workspace_base
         else:
             # Create a temporary directory for the workspace
             self._workspace_path = tempfile.mkdtemp(
-                prefix=f'openhands_workspace_{sid}_'
+                prefix=f'bluelamp_workspace_{sid}_'
             )
-            logger.info(f'Created temporary workspace at {self._workspace_path}')
+            logger.info(f'一時ワークスペースを作成しました: {self._workspace_path}')
 
         # Runtime tests rely on this being set correctly.
         self.config.workspace_mount_path_in_sandbox = self._workspace_path
@@ -160,9 +160,9 @@ class CLIRuntime(Runtime):
         self._powershell_session: WindowsPowershellSession | None = None
 
         logger.warning(
-            'Initializing CLIRuntime. WARNING: NO SANDBOX IS USED. '
-            'This runtime executes commands directly on the local system. '
-            'Use with caution in untrusted environments.'
+            'CLIRuntimeを初期化しています。警告: サンドボックスは使用されません。'
+            'このランタイムはローカルシステム上で直接コマンドを実行します。'
+            '信頼できない環境では注意して使用してください。'
         )
 
     async def connect(self) -> None:
@@ -189,7 +189,7 @@ class CLIRuntime(Runtime):
 
         self._runtime_initialized = True
         self.set_runtime_status(RuntimeStatus.RUNTIME_STARTED)
-        logger.info(f'CLIRuntime initialized with workspace at {self._workspace_path}')
+        logger.info(f'CLIRuntimeが初期化されました。ワークスペース: {self._workspace_path}')
 
     def add_env_vars(self, env_vars: dict[str, Any]) -> None:
         """
@@ -204,7 +204,7 @@ class CLIRuntime(Runtime):
 
         # We log only keys to avoid leaking sensitive values like tokens into logs.
         logger.info(
-            f'[CLIRuntime] Setting environment variables for this session: {list(env_vars.keys())}'
+            f'[CLIRuntime] このセッションの環境変数を設定しています: {list(env_vars.keys())}'
         )
 
         for key, value in env_vars.items():
@@ -437,7 +437,7 @@ class CLIRuntime(Runtime):
         """Run a command using subprocess."""
         if not self._runtime_initialized:
             return ErrorObservation(
-                f'Runtime not initialized for command: {action.command}'
+                f'ランタイムが初期化されていません。コマンド: {action.command}'
             )
 
         if action.is_input:
@@ -529,7 +529,7 @@ class CLIRuntime(Runtime):
     def read(self, action: FileReadAction) -> Observation:
         """Read a file using Python's standard library or OHEditor."""
         if not self._runtime_initialized:
-            return ErrorObservation('Runtime not initialized')
+            return ErrorObservation('ランタイムが初期化されていません')
 
         file_path = self._sanitize_filename(action.path)
 
@@ -572,7 +572,7 @@ class CLIRuntime(Runtime):
     def write(self, action: FileWriteAction) -> Observation:
         """Write to a file using Python's standard library."""
         if not self._runtime_initialized:
-            return ErrorObservation('Runtime not initialized')
+            return ErrorObservation('ランタイムが初期化されていません')
 
         file_path = self._sanitize_filename(action.path)
 
@@ -654,7 +654,7 @@ class CLIRuntime(Runtime):
     def edit(self, action: FileEditAction) -> Observation:
         """Edit a file using the OHEditor."""
         if not self._runtime_initialized:
-            return ErrorObservation('Runtime not initialized')
+            return ErrorObservation('ランタイムが初期化されていません')
 
         # Ensure the path is within the workspace
         file_path = self._sanitize_filename(action.path)
@@ -700,7 +700,7 @@ class CLIRuntime(Runtime):
     def copy_to(self, host_src: str, sandbox_dest: str, recursive: bool = False):
         """Copy a file or directory from the host to the sandbox."""
         if not self._runtime_initialized:
-            raise RuntimeError('Runtime not initialized')
+            raise RuntimeError('ランタイムが初期化されていません')
         if not os.path.exists(host_src):  # Source must exist on host
             raise FileNotFoundError(f"Source path '{host_src}' does not exist.")
 
@@ -774,7 +774,7 @@ class CLIRuntime(Runtime):
     def list_files(self, path: str | None = None) -> list[str]:
         """List files in the sandbox."""
         if not self._runtime_initialized:
-            raise RuntimeError('Runtime not initialized')
+            raise RuntimeError('ランタイムが初期化されていません')
 
         if path is None:
             dir_path = self._workspace_path
@@ -797,7 +797,7 @@ class CLIRuntime(Runtime):
     def copy_from(self, path: str) -> Path:
         """Zip all files in the sandbox and return a path in the local filesystem."""
         if not self._runtime_initialized:
-            raise RuntimeError('Runtime not initialized')
+            raise RuntimeError('ランタイムが初期化されていません')
 
         source_path = self._sanitize_filename(path)
 
@@ -845,7 +845,7 @@ class CLIRuntime(Runtime):
         """Delete any resources associated with a conversation."""
         # Look for temporary directories that might be associated with this conversation
         temp_dir = tempfile.gettempdir()
-        prefix = f'openhands_workspace_{conversation_id}_'
+        prefix = f'bluelamp_workspace_{conversation_id}_'
 
         for item in os.listdir(temp_dir):
             if item.startswith(prefix):

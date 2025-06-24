@@ -91,7 +91,7 @@ class CustomDiffLexer(Lexer):
         def get_line(lineno: int) -> StyleAndTextTuples:
             line = lines[lineno]
             if line.startswith('+'):
-                return [('ansigreen', line)]
+                return [('ansicyan', line)]
             elif line.startswith('-'):
                 return [('ansired', line)]
             elif line.startswith('[') or line.startswith('('):
@@ -244,7 +244,7 @@ def display_command(event: CmdRunAction) -> None:
             wrap_lines=True,
         ),
         title='Command',
-        style='ansiblue',
+        style='ansicyan',
     )
     print_formatted_text('')
     print_container(container)
@@ -471,7 +471,7 @@ def display_status(usage_metrics: UsageMetrics, session_id: str) -> None:
 def display_agent_running_message() -> None:
     print_formatted_text('')
     print_formatted_text(
-        HTML('<cyan>エージェント実行中...</cyan> <grey>(Ctrl-P で一時停止)</grey>')
+        HTML('<cyan>BlueLamp実行中...</cyan> <grey>(Ctrl-P で一時停止)</grey>')
     )
 
 

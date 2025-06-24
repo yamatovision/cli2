@@ -159,7 +159,7 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
             setattr(cfg, key, value)
         else:
             logger.openhands_logger.warning(
-                f'Unknown config key "{key}" in [core] section'
+                f'不明な設定キー "{key}" が [core] セクションで見つかりました'
             )
 
     # Process agent section if present
@@ -304,7 +304,7 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
     }
     for key in toml_config:
         if key.lower() not in known_sections:
-            logger.openhands_logger.warning(f'Unknown section [{key}] in {toml_file}')
+            logger.openhands_logger.warning(f'不明なセクション [{key}] が {toml_file} で見つかりました')
 
 
 def get_or_create_jwt_secret(file_store: FileStore) -> str:
@@ -322,8 +322,8 @@ def finalize_config(cfg: OpenHandsConfig) -> None:
     # Handle the sandbox.volumes parameter
     if cfg.workspace_base is not None or cfg.workspace_mount_path is not None:
         logger.openhands_logger.warning(
-            'DEPRECATED: The WORKSPACE_BASE and WORKSPACE_MOUNT_PATH environment variables are deprecated. '
-            "Please use RUNTIME_MOUNT instead, e.g. 'RUNTIME_MOUNT=/my/host/dir:/workspace:rw'"
+            '非推奨: WORKSPACE_BASE および WORKSPACE_MOUNT_PATH 環境変数は非推奨です。'
+            "代わりに RUNTIME_MOUNT を使用してください。例: 'RUNTIME_MOUNT=/my/host/dir:/workspace:rw'"
         )
     if cfg.sandbox.volumes is not None:
         # Split by commas to handle multiple mounts

@@ -88,7 +88,7 @@ class AgentConfig(BaseModel):
             base_config = cls.model_validate(base_data)
             agent_mapping['agent'] = base_config
         except ValidationError as e:
-            logger.warning(f'Invalid base agent configuration: {e}. Using defaults.')
+            logger.warning(f'無効なベースエージェント設定: {e}。デフォルトを使用します。')
             # If base config fails, create a default one
             base_config = cls()
             # Still add it to the mapping
@@ -123,7 +123,7 @@ class AgentConfig(BaseModel):
                 agent_mapping[name] = custom_config
             except ValidationError as e:
                 logger.warning(
-                    f'Invalid agent configuration for [{name}]: {e}. This section will be skipped.'
+                    f'エージェント設定 [{name}] が無効です: {e}。このセクションはスキップされます。'
                 )
                 # Skip this custom section but continue with others
                 continue

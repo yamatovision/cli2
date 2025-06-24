@@ -296,7 +296,7 @@ async def run_session(
 
     # If we loaded a state, we are resuming a previous session
     if initial_state is not None:
-        logger.info(f'Resuming session: {sid}')
+        logger.info(f'セッションを再開しています: {sid}')
 
         if initial_state.last_error:
             # If the last session ended in an error, provide a message.

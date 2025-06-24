@@ -69,13 +69,13 @@ ColorType = Literal[
 ]
 
 LOG_COLORS: Mapping[str, ColorType] = {
-    'ACTION': 'green',
-    'USER_ACTION': 'light_red',
-    'OBSERVATION': 'yellow',
-    'USER_OBSERVATION': 'light_green',
+    'ACTION': 'cyan',
+    'USER_ACTION': 'light_cyan',
+    'OBSERVATION': 'cyan',
+    'USER_OBSERVATION': 'light_cyan',
     'DETAIL': 'cyan',
     'ERROR': 'red',
-    'PLAN': 'light_magenta',
+    'PLAN': 'light_cyan',
 }
 
 
@@ -283,7 +283,7 @@ def get_console_handler(log_level: int = logging.INFO) -> logging.StreamHandler:
     """Returns a console handler for logging."""
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
-    formatter_str = '\033[92m%(asctime)s - %(name)s:%(levelname)s\033[0m: %(filename)s:%(lineno)s - %(message)s'
+    formatter_str = '\033[96m%(asctime)s - %(name)s:%(levelname)s\033[0m: %(filename)s:%(lineno)s - %(message)s'
     console_handler.setFormatter(ColoredFormatter(formatter_str, datefmt='%H:%M:%S'))
     return console_handler
 
@@ -294,7 +294,7 @@ def get_file_handler(
     """Returns a file handler for logging."""
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y-%m-%d')
-    file_name = f'openhands_{timestamp}.log'
+    file_name = f'bluelamp_{timestamp}.log'
     file_handler = logging.FileHandler(os.path.join(log_dir, file_name))
     file_handler.setLevel(log_level)
     if LOG_JSON:
@@ -350,7 +350,7 @@ def log_uncaught_exceptions(
 
 
 sys.excepthook = log_uncaught_exceptions
-openhands_logger = logging.getLogger('openhands')
+openhands_logger = logging.getLogger('bluelamp')
 current_log_level = logging.INFO
 
 if LOG_LEVEL in logging.getLevelNamesMapping():
@@ -362,7 +362,7 @@ if DEBUG:
 
 if current_log_level == logging.DEBUG:
     LOG_TO_FILE = True
-    openhands_logger.debug('DEBUG mode enabled.')
+    openhands_logger.debug('デバッグモードが有効になりました。')
 
 if LOG_JSON:
     openhands_logger.addHandler(json_log_handler(current_log_level))
@@ -371,7 +371,7 @@ else:
 
 openhands_logger.addFilter(SensitiveDataFilter(openhands_logger.name))
 openhands_logger.propagate = False
-openhands_logger.debug('Logging initialized')
+openhands_logger.debug('ロギングが初期化されました')
 
 LOG_DIR = os.path.join(
     # parent dir of openhands/core (i.e., root of the repo)
@@ -383,7 +383,7 @@ if LOG_TO_FILE:
     openhands_logger.addHandler(
         get_file_handler(LOG_DIR, current_log_level)
     )  # default log to project root
-    openhands_logger.debug(f'Logging to file in: {LOG_DIR}')
+    openhands_logger.debug(f'ファイルへのロギング: {LOG_DIR}')
 
 # Exclude LiteLLM from logging output as it can leak keys
 logging.getLogger('LiteLLM').disabled = True

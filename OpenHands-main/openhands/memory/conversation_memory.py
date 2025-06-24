@@ -197,7 +197,7 @@ class ConversationMemory:
                 - CmdRunAction: For executing bash commands
                 - IPythonRunCellAction: For running IPython code
                 - FileEditAction: For editing files
-                - FileReadAction: For reading files using openhands-aci commands
+                - FileReadAction: For reading files using bluelamp-aci commands
                 - BrowseInteractiveAction: For browsing the web
                 - AgentFinishAction: For ending the interaction
                 - MessageAction: For sending messages
@@ -335,7 +335,7 @@ class ConversationMemory:
         - CmdOutputObservation: Formats command execution results with exit codes
         - IPythonRunCellObservation: Formats IPython cell execution results, replacing base64 images
         - FileEditObservation: Formats file editing results
-        - FileReadObservation: Formats file reading results from openhands-aci
+        - FileReadObservation: Formats file reading results from bluelamp-aci
         - AgentDelegateObservation: Formats results from delegated agent tasks
         - ErrorObservation: Formats error messages from failed actions
         - UserRejectObservation: Formats user rejection messages
@@ -421,7 +421,7 @@ class ConversationMemory:
         elif isinstance(obs, FileReadObservation):
             message = Message(
                 role='user', content=[TextContent(text=obs.content)]
-            )  # Content is already truncated by openhands-aci
+            )  # Content is already truncated by bluelamp-aci
         elif isinstance(obs, BrowserOutputObservation):
             text = obs.content
             if (
