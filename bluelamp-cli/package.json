@@ -1,40 +1,46 @@
 {
   "name": "bluelamp-cli",
-  "version": "1.2.0",
-  "description": "BlueLamp CLI - AI-powered development assistant",
-  "main": "dist/index.js",
+  "version": "3.0.0",
+  "description": "BlueLamp CLI - マルチエージェントシステム",
+  "main": "dist/cli.js",
   "bin": {
-    "bluelamp": "dist/index.js"
+    "bluelamp": "dist/cli.js"
+  },
+  "directories": {
+    "doc": "docs"
   },
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
-    "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsx watch src/cli.ts",
+    "start": "node dist/cli.js",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "cli",
     "ai",
-    "development",
-    "assistant",
+    "multi-agent",
+    "orchestrator",
     "claude",
-    "code",
-    "file-tools"
+    "development",
+    "automation"
   ],
-  "author": "",
+  "author": "BlueLamp Team",
   "license": "MIT",
+  "type": "commonjs",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.3",
+    "@anthropic-ai/sdk": "^0.54.0",
+    "axios": "^1.10.0",
     "chalk": "^5.4.1",
-    "commander": "^12.0.0",
-    "dotenv": "^16.4.5",
-    "fast-glob": "^3.3.2",
-    "inquirer": "^12.6.3"
+    "commander": "^14.0.0",
+    "dotenv": "^16.5.0",
+    "inquirer": "^12.6.3",
+    "ora": "^8.2.0"
   },
   "devDependencies": {
-    "@types/inquirer": "^9.0.8",
-    "@types/node": "^20.14.9",
-    "tsx": "^4.16.0",
-    "typescript": "^5.5.3"
+    "@types/node": "^24.0.3",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }

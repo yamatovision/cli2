@@ -1,45 +1,30 @@
-# Dependencies
-node_modules/
-
-# Environment variables
+# 環境変数ファイル
 .env
 .env.local
-.env.*.local
+.env.development
+.env.test
+.env.production
 
-# Build output
+# 依存関係ディレクトリ
+node_modules/
 dist/
 build/
-*.tsbuildinfo
+coverage/
 
-# Logs
+# ログファイル
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+logs/
 
-# Security sensitive
-prompts/keys/
-*.key
-*.pem
+# OSが生成する一時ファイル
+.DS_Store
+Thumbs.db
 
-# IDE
-.vscode/
+# エディタ固有のファイル
 .idea/
+.vscode/
 *.swp
 *.swo
-.DS_Store
 
-# Temporary files
-*.tmp
-*.temp
-.cache/
-
-# Test coverage
-coverage/
-.nyc_output/
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# 機密情報を含む可能性のあるファイル
+**/config/secrets.js
+**/credentials.json

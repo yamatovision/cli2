@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# BlueLamp - OpenHands wrapper script
+# OpenHandsのインタラクティブモードを起動するラッパースクリプト
+
+# スクリプトの実際のパスを解決（シンボリックリンクの場合も対応）
+if [ -L "$0" ]; then
+    # シンボリックリンクの場合、実際のパスを取得
+    SCRIPT_PATH="$(readlink "$0")"
+else
+    SCRIPT_PATH="$0"
+fi
+
+# スクリプトのディレクトリを取得
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+
+# 現在のディレクトリを保存
+CURRENT_DIR="$(pwd)"
+
+# デバッグ用の環境変数設定
+export DEBUG=1
+export ANTHROPIC_LOG=debug
+
+# OpenHandsを現在のディレクトリで起動
+cd "$SCRIPT_DIR" || exit 1
+
+# Python実行環境の確認
+if command -v poetry &> /dev/null; then
+    # Poetryが利用可能な場合
+    poetry run python -m openhands.cli.main \
+        -f "$SCRIPT_DIR/task_greeting.txt" \
+        --config-file "$SCRIPT_DIR/config.toml" \
+        --directory "$CURRENT_DIR"
+else
+    # Poetryがない場合は直接Python実行
+    python -m openhands.cli.main \
+        -f "$SCRIPT_DIR/task_greeting.txt" \
+        --config-file "$SCRIPT_DIR/config.toml" \
+        --directory "$CURRENT_DIR"
+fi

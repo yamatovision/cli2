@@ -1,0 +1,164 @@
+{
+  "agents": {
+    "★1": {
+      "id": "★1",
+      "name": "要件定義エンジニア",
+      "description": "プロジェクトの要件定義と仕様策定を行う",
+      "promptFile": "01-requirements-engineer.md",
+      "category": "design",
+      "dependencies": [],
+      "outputs": ["requirements.md", "specifications/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★2": {
+      "id": "★2",
+      "name": "UIUXデザイナー",
+      "description": "ユーザーインターフェースとユーザー体験の設計",
+      "promptFile": "02-uiux-designer.md",
+      "category": "design",
+      "dependencies": ["★1"],
+      "outputs": ["mockups/", "design-system.md"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★3": {
+      "id": "★3",
+      "name": "データモデリングエンジニア",
+      "description": "データ構造とデータベース設計",
+      "promptFile": "03-data-modeling-engineer.md",
+      "category": "design",
+      "dependencies": ["★1"],
+      "outputs": ["data-models.md", "database-schema.sql"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★4": {
+      "id": "★4",
+      "name": "システムアーキテクト",
+      "description": "システム全体のアーキテクチャ設計",
+      "promptFile": "04-system-architect.md",
+      "category": "design",
+      "dependencies": ["★1", "★3"],
+      "outputs": ["architecture.md", "system-design/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★5": {
+      "id": "★5",
+      "name": "実装計画コンサルタント",
+      "description": "実装戦略と開発計画の策定",
+      "promptFile": "05-implementation-consultant.md",
+      "category": "planning",
+      "dependencies": ["★1", "★2", "★3", "★4"],
+      "outputs": ["implementation-plan.md", "development-roadmap.md"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★6": {
+      "id": "★6",
+      "name": "環境構築スペシャリスト",
+      "description": "開発環境のセットアップと構成管理",
+      "promptFile": "06-environment-setup.md",
+      "category": "implementation",
+      "dependencies": ["★5"],
+      "outputs": ["docker-compose.yml", "package.json", ".env.example"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★7": {
+      "id": "★7",
+      "name": "プロトタイプ実装エンジニア",
+      "description": "初期プロトタイプの実装",
+      "promptFile": "07-prototype-implementation.md",
+      "category": "implementation",
+      "dependencies": ["★6"],
+      "outputs": ["src/prototype/", "demo/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★8": {
+      "id": "★8",
+      "name": "バックエンド実装エンジニア",
+      "description": "サーバーサイドの実装",
+      "promptFile": "08-backend-implementation.md",
+      "category": "implementation",
+      "dependencies": ["★4", "★7"],
+      "outputs": ["src/backend/", "api/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★9": {
+      "id": "★9",
+      "name": "テスト品質検証エンジニア",
+      "description": "テスト戦略とテストコードの実装",
+      "promptFile": "09-test-quality-verification.md",
+      "category": "quality",
+      "dependencies": ["★8"],
+      "outputs": ["tests/", "test-reports/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★10": {
+      "id": "★10",
+      "name": "API統合スペシャリスト",
+      "description": "外部APIとの統合実装",
+      "promptFile": "10-api-integration.md",
+      "category": "integration",
+      "dependencies": ["★8"],
+      "outputs": ["src/integrations/", "api-docs/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★11": {
+      "id": "★11",
+      "name": "デバッグ探偵",
+      "description": "問題の特定と解決",
+      "promptFile": "11-debug-detective.md",
+      "category": "operations",
+      "dependencies": [],
+      "outputs": ["debug-reports/", "fixes/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★12": {
+      "id": "★12",
+      "name": "デプロイスペシャリスト",
+      "description": "本番環境への展開",
+      "promptFile": "12-deploy-specialist.md",
+      "category": "operations",
+      "dependencies": ["★9", "★10"],
+      "outputs": ["deployment/", "ci-cd/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★13": {
+      "id": "★13",
+      "name": "GitHubマネージャー",
+      "description": "バージョン管理とGitHub運用",
+      "promptFile": "13-github-manager.md",
+      "category": "continuous",
+      "dependencies": [],
+      "outputs": [".github/", "CONTRIBUTING.md"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★14": {
+      "id": "★14",
+      "name": "TypeScriptマネージャー",
+      "description": "TypeScript型エラーの解決",
+      "promptFile": "14-typescript-manager.md",
+      "category": "continuous",
+      "dependencies": [],
+      "outputs": ["types/", "tsconfig.json"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★15": {
+      "id": "★15",
+      "name": "機能拡張プランナー",
+      "description": "新機能の企画と実装",
+      "promptFile": "15-feature-expansion.md",
+      "category": "expansion",
+      "dependencies": [],
+      "outputs": ["features/", "feature-specs/"],
+      "tools": ["file_operations", "command_execution"]
+    },
+    "★16": {
+      "id": "★16",
+      "name": "リファクタリングエキスパート",
+      "description": "コードの改善とリファクタリング",
+      "promptFile": "16-refactoring-expert.md",
+      "category": "improvement",
+      "dependencies": [],
+      "outputs": ["refactored/", "improvement-reports/"],
+      "tools": ["file_operations", "command_execution"]
+    }
+  }
+}
