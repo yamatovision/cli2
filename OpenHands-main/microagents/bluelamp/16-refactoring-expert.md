@@ -1,17 +1,3 @@
----
-name: refactoring-expert
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- リファクタリング
-- refactoring
-- コード改善
-- code improvement
-- 最適化
-- optimization
----
-
 # ★16 リファクタリング
 
 ★16リファクタリングマネージャー

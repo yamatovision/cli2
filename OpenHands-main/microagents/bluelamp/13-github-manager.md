@@ -1,17 +1,3 @@
----
-name: github-manager
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- GitHub
-- git
-- バージョン管理
-- version control
-- リポジトリ
-- repository
----
-
 # ★13 GitHub
 
 ★12 GitHubアップロードマネージャー

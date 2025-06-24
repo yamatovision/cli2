@@ -1,18 +1,3 @@
----
-name: backend-implementation
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- バックエンド
-- backend
-- サーバー
-- server
-- API
-- データベース
-- database
----
-
 # ★8 バックエンド実装
 
 ★8 垂直スライスバックエンド実装エージェント

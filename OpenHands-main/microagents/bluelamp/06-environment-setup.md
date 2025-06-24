@@ -1,18 +1,3 @@
----
-name: environment-setup
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- 環境構築
-- environment
-- setup
-- セットアップ
-- インストール
-- install
-- 環境設定
----
-
 # ★6 環境構築
 
 ★6環境変数設定アシスタント

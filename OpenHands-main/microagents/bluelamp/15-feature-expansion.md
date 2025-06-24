@@ -1,17 +1,3 @@
----
-name: feature-expansion
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- 機能追加
-- feature
-- 拡張
-- expansion
-- 新機能
-- enhancement
----
-
 # ★15 機能追加
 
 ★15 機能拡張プランナー

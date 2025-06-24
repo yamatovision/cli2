@@ -14,29 +14,25 @@ fi
 # スクリプトのディレクトリを取得
 SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 
-# 現在のディレクトリを保存（実行した場所をワークスペースとする）
+# 現在のディレクトリを保存
 CURRENT_DIR="$(pwd)"
 
 # デバッグ用の環境変数設定
 export DEBUG=1
 export ANTHROPIC_LOG=debug
 
-# OpenHandsのパスを環境変数に設定
-export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+# OpenHandsを現在のディレクトリで起動
+cd "$SCRIPT_DIR" || exit 1
 
-# Python実行環境の確認と起動（現在のディレクトリから実行）
+# Python実行環境の確認
 if command -v poetry &> /dev/null; then
     # Poetryが利用可能な場合
-    cd "$SCRIPT_DIR" || exit 1
-    poetry run python -m openhands.cli.main \
+    WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
         -f "$SCRIPT_DIR/task_greeting.txt" \
-        --config-file "$SCRIPT_DIR/config.toml" \
-        --workspace-dir "$CURRENT_DIR"
+        --config-file "$SCRIPT_DIR/config.toml"
 else
     # Poetryがない場合は直接Python実行
-    cd "$SCRIPT_DIR" || exit 1  
-    python -m openhands.cli.main \
+    WORKSPACE_BASE="$CURRENT_DIR" python -m openhands.cli.main \
         -f "$SCRIPT_DIR/task_greeting.txt" \
-        --config-file "$SCRIPT_DIR/config.toml" \
-        --workspace-dir "$CURRENT_DIR"
+        --config-file "$SCRIPT_DIR/config.toml"
 fi

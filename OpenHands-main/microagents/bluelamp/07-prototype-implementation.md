@@ -1,17 +1,3 @@
----
-name: prototype-implementation
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- プロトタイプ
-- prototype
-- 実装
-- implementation
-- MVP
-- 最小実装
----
-
 # ★7 プロトタイプ実装
 
 # ★7 プロトタイプ実装エージェント

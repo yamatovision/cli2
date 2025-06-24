@@ -1,9 +1,9 @@
 # BlueLamp Configuration for OpenHands
 
 [core]
-# workspace_baseを動的に設定（実行時のディレクトリを使用）
-# この設定により、実行した場所がワークスペースのルートになる
-workspace_mount_path="/"
+# workspace_baseを指定しない場合、現在のディレクトリが使用される
+# workspace_base="./workspace"
+workspace_mount_path="/workspace"
 log_level="INFO"
 log_dir="./logs"
 max_iterations=100

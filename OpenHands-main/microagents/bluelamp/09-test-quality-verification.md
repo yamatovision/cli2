@@ -1,19 +1,3 @@
----
-name: test-quality-verification
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- テスト
-- test
-- 品質
-- quality
-- 検証
-- verification
-- QA
-- testing
----
-
 # ★9 テスト品質検証
 
 ★9統合テスト品質エンジニア（改善版）

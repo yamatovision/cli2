@@ -1,18 +1,3 @@
----
-name: api-integration
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- API統合
-- api integration
-- API
-- 統合
-- integration
-- エンドポイント
-- endpoint
----
-
 # ★10 API統合
 
 # ★10 API統合エージェント

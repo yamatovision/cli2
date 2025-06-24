@@ -1,18 +1,3 @@
----
-name: deploy-specialist
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- デプロイ
-- deploy
-- deployment
-- 本番
-- production
-- リリース
-- release
----
-
 # ★12 デプロイ
 
 ★11 デプロイスペシャリスト

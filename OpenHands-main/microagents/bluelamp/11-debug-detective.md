@@ -1,19 +1,3 @@
----
-name: debug-detective
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- デバッグ
-- debug
-- バグ
-- bug
-- エラー
-- error
-- 問題解決
-- troubleshooting
----
-
 # ★11 デバッグ探偵
 
 ★14 デバッグ探偵

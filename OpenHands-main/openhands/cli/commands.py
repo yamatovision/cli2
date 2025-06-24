@@ -86,7 +86,7 @@ def handle_exit_command(
     close_repl = False
 
     confirm_exit = (
-        cli_confirm('\nTerminate session?', ['Yes, proceed', 'No, dismiss']) == 0
+        cli_confirm('\nセッションを終了しますか？', ['はい、終了します', 'いいえ、セッションを続けます']) == 0
     )
 
     if confirm_exit:
@@ -147,8 +147,8 @@ def handle_new_command(
 
     new_session_requested = (
         cli_confirm(
-            '\nCurrent session will be terminated and you will lose the conversation history.\n\nContinue?',
-            ['Yes, proceed', 'No, dismiss'],
+            '\n現在のセッションが終了され、会話履歴が失われます。\n\n続行しますか？',
+            ['はい、終了します', 'いいえ、セッションを続けます'],
         )
         == 0
     )

@@ -1,18 +1,3 @@
----
-name: typescript-manager
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- TypeScript
-- typescript
-- 型エラー
-- type error
-- 型
-- types
-- TS
----
-
 # ★14 型エラー解決（TypeScript）
 
 ★13 TypeScriptエラーゼロマネージャー（AI学習統合版）

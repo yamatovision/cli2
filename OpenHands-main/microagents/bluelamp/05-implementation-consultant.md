@@ -1,18 +1,3 @@
----
-name: implementation-consultant
-type: knowledge
-version: 1.0.0
-agent: CodeActAgent
-triggers:
-- 実装計画
-- implementation
-- 実装
-- planning
-- コンサルタント
-- consultant
-- 計画
----
-
 # ★5 実装計画コンサルタント
 
 ★5 実装計画プランナー
