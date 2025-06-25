@@ -119,6 +119,20 @@ classpath = "openhands.agenthub.codeact_agent.refactoring_expert_agent:Refactori
 system_prompt_filename = "refactoring_expert_agent.j2"
 description = "コードのリファクタリングと最適化を担当"
 
+# ブラウザ自動化エージェント
+[agents.browsing_agent]
+name = "BrowsingAgent"
+classpath = "openhands.agenthub.browsing_agent.browsing_agent:BrowsingAgent"
+system_prompt_filename = "browsing_agent.j2"
+description = "Webブラウザを操作して情報収集や設定作業を担当"
+
+# ビジュアルブラウザエージェント
+[agents.visual_browsing_agent]
+name = "VisualBrowsingAgent"
+classpath = "openhands.agenthub.visualbrowsing_agent.visualbrowsing_agent:VisualBrowsingAgent"
+system_prompt_filename = "visual_browsing_agent.j2"
+description = "ビジュアル情報を活用した高度なブラウザ操作を担当"
+
 # Agent delegation mappings
 [delegation]
 # オーケストレーターは全てのエージェントに委譲可能
@@ -126,7 +140,8 @@ orchestration_can_delegate_to = [
     "requirements_engineer", "uiux_designer", "data_modeling_engineer", "system_architect",
     "implementation_consultant", "environment_setup", "prototype_implementation", "backend",
     "test_quality_verification", "api_integration", "debug_detective", "deployment",
-    "github_manager", "typescript_manager", "feature_expansion", "refactoring_expert"
+    "github_manager", "typescript_manager", "feature_expansion", "refactoring_expert",
+    "browsing_agent", "visual_browsing_agent"
 ]
 
 # 各エージェントはオーケストレーターに戻すことが可能
@@ -146,3 +161,5 @@ github_manager_can_delegate_to = ["orchestration"]
 typescript_manager_can_delegate_to = ["orchestration"]
 feature_expansion_can_delegate_to = ["orchestration"]
 refactoring_expert_can_delegate_to = ["orchestration"]
+browsing_agent_can_delegate_to = ["orchestration"]
+visual_browsing_agent_can_delegate_to = ["orchestration"]
