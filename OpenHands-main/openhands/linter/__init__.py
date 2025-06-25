@@ -6,6 +6,6 @@ code](https://github.com/paul-gauthier/aider/blob/main/aider/linter.py)).
 - The detailed implementation of the linter can be found at: https://github.com/All-Hands-AI/openhands-aci.
 """
 
-from bluelamp_aci.linter import DefaultLinter, LintResult
+from openhands_aci.linter import DefaultLinter, LintResult
 
 __all__ = ['DefaultLinter', 'LintResult']

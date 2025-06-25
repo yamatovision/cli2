@@ -1,7 +1,8 @@
 # BlueLamp CLI 自律的オーケストレーター実装計画書
 
 **作成日**: 2025-06-23
-**バージョン**: 1.0
+**更新日**: 2025-06-25
+**バージョン**: 2.0
 **対象**: 16エージェントプロンプトを活用したマルチエージェントシステム
 
 ## 1. プロジェクト概要
@@ -15,715 +16,202 @@
 - **階層的コンテキスト管理**: 200kトークン制約を効率的に回避
 - **視覚的進捗表示**: リアルタイムでエージェント活動を可視化
 
-## 2. アーキテクチャ設計
+## 2. 現在の制約事項（2025-06-25更新）
 
-### 2.1 システム全体構成
+### 2.1 OpenHandsの設計制約
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                BlueLamp Orchestrator                    │
-│  ┌─────────────────┐  ┌─────────────────────────────────┐ │
-│  │ Rule Engine     │  │ Context Manager                 │ │
-│  │ (AI不使用)      │  │ - Session Rotation              │ │
-│  │                 │  │ - Memory Optimization           │ │
-│  └─────────────────┘  └─────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────┐
-│                Agent Dispatcher                         │
-│  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
-│  │ Task Queue  │ │ Dependency  │ │ Progress Tracker    │ │
-│  │ Manager     │ │ Resolver    │ │                     │ │
-│  └─────────────┘ └─────────────┘ └─────────────────────┘ │
-└─────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────┐
-│                16 Specialized Agents                    │
-│  ★1 要件定義    ★2 UIUX      ★3 データ    ★4 アーキ   │
-│  ★5 実装計画    ★6 環境構築  ★7 プロトタイプ ★8 バックエンド │
-│  ★9 テスト      ★10 API統合  ★11 デバッグ   ★12 デプロイ │
-│  ★13 GitHub     ★14 TypeScript ★15 機能拡張 ★16 リファクタ │
-└─────────────────────────────────────────────────────────┘
-```
+#### できること ✅
+1. **単一エージェントの実行**
+   - 1つのCLIセッションで1つのエージェントが動作
+   - コマンドライン引数でエージェントを指定可能（`-c AgentName`）
 
-### 2.2 コンテキスト管理戦略
+2. **DELEGATE機能による逐次委譲**
+   - `AgentDelegateAction`を使った子エージェントへの委譲
+   - 委譲時に新しいコンテキスト（ほぼ0から）で開始
+   - 親エージェントは子の完了を待って再開
 
-```typescript
-interface ContextStrategy {
-  // レベル1: マスターコンテキスト（5k tokens以下）
-  masterContext: {
-    projectType: string;
-    currentPhase: string;
-    completedTasks: string[];
-  };
+3. **ファイルベースの情報共有**
+   - 各エージェントがファイルシステムを通じて情報共有
+   - SCOPE_PROGRESS.mdなどの進捗管理
 
-  // レベル2: エージェント固有セッション（150k tokens以下）
-  agentSessions: Map<string, ClaudeSession>;
+4. **プロンプトファイルによるエージェント動作カスタマイズ**
+   - 各エージェント用のプロンプトテンプレート作成可能
 
-  // レベル3: タスク専用セッション（50k tokens以下）
-  taskSessions: Map<string, ClaudeSession>;
+#### できないこと ❌
+1. **並列エージェント実行**
+   - 複数エージェントの同時実行は不可能
+   - DELEGATE機能はスタック構造（逐次処理のみ）
 
-  // レベル4: ファイルベース詳細データ
-  fileStorage: FileBasedStorage;
-}
-```
+2. **動的なエージェント切り替え**
+   - 実行中にエージェントタイプを変更できない
+   - 新しいエージェントは新しいセッションが必要
 
-## 3. 実装フェーズ
+3. **エージェント間の直接通信**
+   - エージェント同士が直接メッセージをやり取りできない
+   - すべてファイル経由での非同期通信
 
-### Phase 1: 基盤構築（2週間）
+4. **複雑な状態管理**
+   - オーケストレーターが複数エージェントの状態を管理できない
+   - 各エージェントは独立して動作
 
-#### 3.1.1 オーケストレーター基盤
-```typescript
-// src/orchestrator/core.ts
-export class BlueLampOrchestrator {
-  private ruleEngine: RuleBasedEngine;
-  private contextManager: HierarchicalContextManager;
-  private agentDispatcher: AgentDispatcher;
-  private uiManager: MultiAgentUIManager;
+### 2.2 実装上の課題
 
-  async orchestrate(userRequest: string): Promise<void> {
-    // 1. ルールベース分析（AIなし）
-    const analysis = await this.ruleEngine.analyze(userRequest);
+1. **ループ問題**
+   - 同じメッセージを繰り返し処理する可能性
+   - StuckDetectorによりエラーで終了
 
-    // 2. 実行計画生成
-    const plan = this.createExecutionPlan(analysis);
+2. **コンテキスト管理**
+   - DELEGATEを使えば新しいコンテキストで開始可能
+   - ただし、親の履歴は引き継がれない
 
-    // 3. 自律的実行
-    await this.executeAutonomously(plan);
-  }
-}
+3. **エラーハンドリング**
+   - エージェントがERROR状態になるとCLI全体が終了
+
+## 3. 実現可能な実装アプローチ
+
+### 3.1 アプローチ1: シンプルなDELEGATEベースコンシェルジュ
+
+```python
+class ConciergeAgent(Agent):
+    """ユーザーのリクエストを適切なエージェントに委譲"""
+
+    def step(self, state: State) -> Action:
+        # ユーザー入力を分析
+        target_agent = self._determine_target_agent(user_message)
+
+        if target_agent:
+            # DELEGATEで委譲（逐次実行）
+            return AgentDelegateAction(
+                agent=target_agent,
+                inputs={"task": user_message}
+            )
+
+        return MessageAction(content="適切なエージェントが見つかりません")
 ```
 
-#### 3.1.2 ルールベースエンジン
-```typescript
-// src/orchestrator/rule-engine.ts
-export class RuleBasedEngine {
-  private workflowTemplates = new Map<string, WorkflowTemplate>();
+**メリット**:
+- OpenHandsの設計に準拠
+- 実装がシンプル
+- 各エージェントが独立したコンテキスト
 
-  constructor() {
-    this.initializeTemplates();
-  }
+**デメリット**:
+- 並列実行不可
+- 単純な逐次処理のみ
 
-  private initializeTemplates() {
-    // 新機能開発ワークフロー
-    this.workflowTemplates.set('feature_development', {
-      phases: [
-        {
-          name: 'Planning',
-          agents: ['★1', '★2', '★3', '★4'],
-          parallel: true
-        },
-        {
-          name: 'Implementation',
-          agents: ['★7', '★8'],
-          parallel: true,
-          dependencies: ['Planning']
-        },
-        {
-          name: 'Integration',
-          agents: ['★9', '★10'],
-          parallel: true,
-          dependencies: ['Implementation']
-        },
-        {
-          name: 'Deployment',
-          agents: ['★12', '★13'],
-          parallel: true,
-          dependencies: ['Integration']
-        }
-      ]
-    });
+### 3.2 アプローチ2: 外部ツールによるエージェント管理
 
-    // バグ修正ワークフロー
-    this.workflowTemplates.set('bug_fix', {
-      phases: [
-        {
-          name: 'Investigation',
-          agents: ['★11'],
-          parallel: false
-        },
-        {
-          name: 'Fix',
-          agents: ['★16', '★14'],
-          parallel: true,
-          dependencies: ['Investigation']
-        },
-        {
-          name: 'Verification',
-          agents: ['★9'],
-          parallel: false,
-          dependencies: ['Fix']
-        }
-      ]
-    });
-  }
+```bash
+#!/bin/bash
+# bluelamp-orchestrator.sh
 
-  analyze(userRequest: string): RuleAnalysis {
-    // パターンマッチングで判断
-    const patterns = [
-      { regex: /新機能|機能追加|実装/, workflow: 'feature_development', confidence: 0.9 },
-      { regex: /バグ|エラー|修正|デバッグ/, workflow: 'bug_fix', confidence: 0.85 },
-      { regex: /リファクタ|改善|最適化/, workflow: 'refactoring', confidence: 0.8 },
-      { regex: /デプロイ|リリース|公開/, workflow: 'deployment', confidence: 0.9 }
-    ];
-
-    for (const pattern of patterns) {
-      if (pattern.regex.test(userRequest)) {
-        return {
-          workflow: pattern.workflow,
-          confidence: pattern.confidence,
-          template: this.workflowTemplates.get(pattern.workflow)
-        };
-      }
-    }
-
-    return { workflow: 'general', confidence: 0.5 };
-  }
-}
+case "$1" in
+  "requirements")
+    bluelamp -c CodeActAgent -t "要件定義を作成"
+    ;;
+  "ui-design")
+    bluelamp -c CodeActAgent -t "UIデザインを作成"
+    ;;
+  *)
+    echo "利用可能なエージェント..."
+    ;;
+esac
 ```
 
-#### 3.1.3 階層的コンテキスト管理
-```typescript
-// src/orchestrator/context-manager.ts
-export class HierarchicalContextManager {
-  private masterContext: MasterContext;
-  private agentSessions: Map<string, SessionPool> = new Map();
-  private fileStorage: FileBasedStorage;
+**メリット**:
+- 完全に独立したセッション
+- 並列実行可能（別ターミナル）
+- シンプルで確実
 
-  async getOptimizedContext(agentId: string, task: Task): Promise<string> {
-    // セッションプールから最適なセッションを取得
-    const sessionPool = this.getOrCreateSessionPool(agentId);
-    const session = await sessionPool.getAvailableSession();
+**デメリット**:
+- 自動化が困難
+- エージェント間の連携が手動
 
-    // 必要最小限のコンテキストを構築
-    const context = {
-      project: this.masterContext.getSummary(),
-      task: task.description,
-      dependencies: await this.getDependencySummaries(task.dependencies),
-      agentHistory: session.getRecentHistory(3)
-    };
+### 3.3 アプローチ3: ハイブリッド方式
 
-    return this.buildCompactPrompt(context);
-  }
+1. **メインコンシェルジュ**（DELEGATE使用）
+   - ユーザー対話を担当
+   - タスクの振り分け
+   - 逐次的なワークフロー管理
 
-  private getOrCreateSessionPool(agentId: string): SessionPool {
-    if (!this.agentSessions.has(agentId)) {
-      this.agentSessions.set(agentId, new SessionPool(agentId, 3)); // 最大3セッション
-    }
-    return this.agentSessions.get(agentId)!;
-  }
-}
+2. **外部スクリプト**（並列実行用）
+   - 独立性の高いタスクを別プロセスで実行
+   - 結果をファイル経由で共有
 
-class SessionPool {
-  private sessions: ClaudeSession[] = [];
-  private currentIndex = 0;
-  private maxTokensPerSession = 150000;
+## 4. 実装計画（改訂版）
 
-  async getAvailableSession(): Promise<ClaudeSession> {
-    const current = this.sessions[this.currentIndex];
+### Phase 1: 基本実装（1週間）
 
-    if (!current || current.tokenCount > this.maxTokensPerSession) {
-      // 新しいセッションを作成
-      const newSession = await this.createSessionWithContinuity();
-      this.sessions[this.currentIndex] = newSession;
+1. **シンプルなコンシェルジュエージェント作成**
+   - DELEGATE機能を使った基本的な委譲
+   - エージェント選択ロジック
+   - エラーハンドリング
 
-      // ローテーション
-      this.currentIndex = (this.currentIndex + 1) % 3;
+2. **プロンプトテンプレート整備**
+   - 16エージェント用のプロンプトファイル作成
+   - 役割と責任の明確化
 
-      return newSession;
-    }
+### Phase 2: ワークフロー実装（1週間）
 
-    return current;
-  }
+1. **タスク管理システム**
+   - SCOPE_PROGRESS.mdベースの進捗管理
+   - タスクの依存関係定義
+   - 逐次実行の最適化
 
-  private async createSessionWithContinuity(): Promise<ClaudeSession> {
-    const session = new ClaudeSession();
+2. **エラーリカバリー**
+   - エラー時の適切な処理
+   - 進捗の保存と再開
 
-    // 継続性のための要約を引き継ぎ
-    if (this.sessions.length > 0) {
-      const summary = await this.generateContinuitySummary();
-      await session.initialize(summary);
-    }
+### Phase 3: ユーザビリティ向上（1週間）
 
-    return session;
-  }
-}
-```
+1. **インタラクティブUI**
+   - 進捗の可視化
+   - エージェント状態表示
+   - ユーザーフィードバック機能
 
-### Phase 2: エージェント統合（3週間）
+2. **外部ツール連携**
+   - 並列実行用スクリプト
+   - 結果集約ツール
 
-#### 3.2.1 エージェント基底クラス
-```typescript
-// src/agents/base-agent.ts
-export abstract class BaseAgent {
-  protected agentId: string;
-  protected promptTemplate: string;
-  protected session: ClaudeSession;
-  protected tools: Tool[];
+## 5. 期待される成果（現実的な目標）
 
-  constructor(agentId: string, session: ClaudeSession) {
-    this.agentId = agentId;
-    this.session = session;
-    this.promptTemplate = this.loadPromptTemplate();
-    this.tools = this.initializeTools();
-  }
+### 5.1 実現可能な機能
+- ✅ 16エージェントへの適切なタスク振り分け
+- ✅ 逐次的なワークフロー実行
+- ✅ 各エージェントの独立したコンテキスト管理
+- ✅ ファイルベースの進捗管理
+- ✅ エラー時の適切なハンドリング
 
-  private loadPromptTemplate(): string {
-    // /16agents/ フォルダからプロンプトを読み込み
-    const promptPath = path.join(__dirname, '../../16agents', `${this.getPromptFileName()}`);
-    return fs.readFileSync(promptPath, 'utf8');
-  }
+### 5.2 制限事項
+- ❌ 真の並列実行（外部ツール使用時のみ可能）
+- ❌ リアルタイムなエージェント間通信
+- ❌ 複雑な状態管理とオーケストレーション
+- ❌ 動的なエージェント生成と破棄
 
-  abstract getPromptFileName(): string;
+## 6. リスクと対策
 
-  async execute(task: Task, context: AgentContext): Promise<AgentResult> {
-    try {
-      // プロンプトを構築
-      const prompt = this.buildPrompt(task, context);
-
-      // Claude APIで実行
-      const response = await this.session.generate({
-        prompt,
-        tools: this.tools,
-        maxTokens: 40000
-      });
-
-      // 結果を処理
-      return this.processResult(response);
-
-    } catch (error) {
-      return this.handleError(task, error);
-    }
-  }
-
-  private buildPrompt(task: Task, context: AgentContext): string {
-    return `
-${this.promptTemplate}
-
-## 現在のタスク
-${task.description}
-
-## プロジェクトコンテキスト
-${context.projectSummary}
-
-## 依存タスクの結果
-${context.dependencies.map(dep => `- ${dep.summary}`).join('\n')}
-
-## 実行してください
-    `;
-  }
-}
-```
-
-#### 3.2.2 具体的エージェント実装
-```typescript
-// src/agents/requirements-engineer.ts
-export class RequirementsEngineerAgent extends BaseAgent {
-  getPromptFileName(): string {
-    return '01-requirements-engineer.md';
-  }
-
-  protected initializeTools(): Tool[] {
-    return [
-      new ReadTool(),
-      new WriteTool(),
-      new EditTool()
-    ];
-  }
-}
-
-// src/agents/uiux-designer.ts
-export class UIUXDesignerAgent extends BaseAgent {
-  getPromptFileName(): string {
-    return '02-uiux-designer.md';
-  }
-
-  protected initializeTools(): Tool[] {
-    return [
-      new ReadTool(),
-      new WriteTool(),
-      new EditTool(),
-      new MockupGeneratorTool()
-    ];
-  }
-}
-
-// 他の14エージェントも同様に実装...
-```
-
-#### 3.2.3 エージェントディスパッチャー
-```typescript
-// src/orchestrator/agent-dispatcher.ts
-export class AgentDispatcher {
-  private agentFactory: AgentFactory;
-  private contextManager: HierarchicalContextManager;
-  private progressTracker: ProgressTracker;
-
-  async dispatchToAgent(agentId: string, task: Task): Promise<AgentResult> {
-    // 1. セッションを取得
-    const session = await this.contextManager.getSessionForAgent(agentId);
-
-    // 2. エージェントを作成
-    const agent = this.agentFactory.createAgent(agentId, session);
-
-    // 3. コンテキストを準備
-    const context = await this.contextManager.getOptimizedContext(agentId, task);
-
-    // 4. 進捗追跡開始
-    this.progressTracker.startTask(task.id, agentId);
-
-    // 5. エージェント実行
-    const result = await agent.execute(task, context);
-
-    // 6. 結果を保存
-    await this.contextManager.saveResult(task.id, result);
-
-    // 7. 進捗更新
-    this.progressTracker.completeTask(task.id);
-
-    return result;
-  }
-
-  async executePhaseInParallel(phase: Phase): Promise<AgentResult[]> {
-    const tasks = phase.tasks.map(task =>
-      this.dispatchToAgent(task.agentId, task)
-    );
-
-    return await Promise.all(tasks);
-  }
-}
-```
-
-### Phase 3: UI/UX実装（2週間）
-
-#### 3.3.1 マルチエージェントUI
-```typescript
-// src/ui/multi-agent-ui.ts
-export class MultiAgentUIManager {
-  private runningAgents: Map<string, AgentStatus> = new Map();
-  private updateInterval: NodeJS.Timeout;
-
-  startDisplay(): void {
-    this.updateInterval = setInterval(() => {
-      this.renderAgentActivity();
-    }, 1000);
-  }
-
-  private renderAgentActivity(): void {
-    console.clear();
-    console.log('═══════════════════════════════════════════════════════════════');
-    console.log('  🚀 BlueLamp Multi-Agent System - Active Agents');
-    console.log('═══════════════════════════════════════════════════════════════');
-    console.log();
-
-    // アクティブなエージェントを表示
-    const activeAgents = Array.from(this.runningAgents.entries())
-      .filter(([_, status]) => status.isActive);
-
-    if (activeAgents.length === 0) {
-      console.log('  💤 No active agents');
-      return;
-    }
-
-    // 2列レイアウトで表示
-    for (let i = 0; i < activeAgents.length; i += 2) {
-      const left = activeAgents[i];
-      const right = activeAgents[i + 1];
-
-      this.renderAgentPair(left, right);
-    }
-
-    // 全体進捗
-    this.renderOverallProgress();
-  }
-
-  private renderAgentPair(left: [string, AgentStatus], right?: [string, AgentStatus]): void {
-    const leftBox = this.createAgentBox(left[0], left[1]);
-    const rightBox = right ? this.createAgentBox(right[0], right[1]) : this.createEmptyBox();
-
-    // 2つのボックスを横並びで表示
-    const leftLines = leftBox.split('\n');
-    const rightLines = rightBox.split('\n');
-
-    for (let i = 0; i < Math.max(leftLines.length, rightLines.length); i++) {
-      const leftLine = leftLines[i] || ' '.repeat(40);
-      const rightLine = rightLines[i] || ' '.repeat(40);
-      console.log(`${leftLine}  ${rightLine}`);
-    }
-    console.log();
-  }
-
-  private createAgentBox(agentId: string, status: AgentStatus): string {
-    const emoji = this.getStatusEmoji(status);
-    const progress = Math.round(status.progress * 100);
-    const progressBar = this.createProgressBar(status.progress);
-
-    return `
-┌─── ${emoji} ${status.name} ─────────────────────┐
-│ Task: ${status.currentTask.substring(0, 30)}...   │
-│ ${progressBar} ${progress}%                      │
-│ ${status.lastAction.substring(0, 35)}...         │
-│ Tokens: ${status.tokensUsed.toLocaleString()}    │
-└──────────────────────────────────────────────┘`.trim();
-  }
-
-  private getStatusEmoji(status: AgentStatus): string {
-    if (status.isComplete) return '✅';
-    if (status.isRunning) return '🟢';
-    if (status.hasError) return '❌';
-    return '⏸️';
-  }
-
-  private createProgressBar(progress: number): string {
-    const width = 20;
-    const filled = Math.round(progress * width);
-    const empty = width - filled;
-    return '█'.repeat(filled) + '░'.repeat(empty);
-  }
-
-  private renderOverallProgress(): void {
-    const total = this.runningAgents.size;
-    const completed = Array.from(this.runningAgents.values())
-      .filter(status => status.isComplete).length;
-
-    console.log('─'.repeat(80));
-    console.log(`📊 Overall Progress: ${completed}/${total} agents completed`);
-    console.log('─'.repeat(80));
-  }
-}
-```
-
-#### 3.3.2 インタラクティブ制御
-```typescript
-// src/ui/interactive-controller.ts
-export class InteractiveController {
-  private orchestrator: BlueLampOrchestrator;
-  private uiManager: MultiAgentUIManager;
-
-  async startInteractiveSession(): Promise<void> {
-    console.log('🚀 BlueLamp Multi-Agent System v3.0');
-    console.log('=====================================');
-    console.log();
-
-    while (true) {
-      const userInput = await this.promptUser();
-
-      if (userInput.toLowerCase() === 'exit') {
-        break;
-      }
-
-      if (userInput.toLowerCase() === 'status') {
-        this.showDetailedStatus();
-        continue;
-      }
-
-      // オーケストレーターで実行
-      await this.orchestrator.orchestrate(userInput);
-    }
-  }
-
-  private async promptUser(): Promise<string> {
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    return new Promise((resolve) => {
-      readline.question('You: ', (answer: string) => {
-        readline.close();
-        resolve(answer);
-      });
-    });
-  }
-}
-```
-
-### Phase 4: 高度な機能（3週間）
-
-#### 3.4.1 学習と最適化
-```typescript
-// src/orchestrator/learning-engine.ts
-export class LearningEngine {
-  private executionHistory: ExecutionRecord[] = [];
-  private performanceMetrics: Map<string, AgentMetrics> = new Map();
-
-  recordExecution(record: ExecutionRecord): void {
-    this.executionHistory.push(record);
-    this.updateMetrics(record);
-  }
-
-  suggestOptimizations(): Optimization[] {
-    const suggestions: Optimization[] = [];
-
-    // 実行時間の分析
-    const slowAgents = this.identifySlowAgents();
-    for (const agent of slowAgents) {
-      suggestions.push({
-        type: 'performance',
-        target: agent.id,
-        suggestion: `${agent.name}の実行時間が平均より${agent.slowdownFactor}倍遅いです。プロンプトの最適化を検討してください。`
-      });
-    }
-
-    // 依存関係の最適化
-    const parallelizableSteps = this.identifyParallelizableSteps();
-    for (const step of parallelizableSteps) {
-      suggestions.push({
-        type: 'parallelization',
-        target: step.id,
-        suggestion: `${step.name}は並列実行可能です。実行時間を${step.estimatedSpeedup}%短縮できます。`
-      });
-    }
-
-    return suggestions;
-  }
-}
-```
-
-#### 3.4.2 エラーリカバリー
-```typescript
-// src/orchestrator/error-recovery.ts
-export class ErrorRecoveryManager {
-  private retryStrategies: Map<string, RetryStrategy> = new Map();
-
-  constructor() {
-    this.initializeStrategies();
-  }
-
-  private initializeStrategies(): void {
-    // API制限エラー
-    this.retryStrategies.set('rate_limit', {
-      maxRetries: 5,
-      backoffStrategy: 'exponential',
-      baseDelay: 1000
-    });
-
-    // コンテキスト制限エラー
-    this.retryStrategies.set('context_limit', {
-      maxRetries: 3,
-      backoffStrategy: 'immediate',
-      recovery: 'context_reset'
-    });
-
-    // ツール実行エラー
-    this.retryStrategies.set('tool_error', {
-      maxRetries: 3,
-      backoffStrategy: 'linear',
-      baseDelay: 500
-    });
-  }
-
-  async handleError(error: AgentError, context: ErrorContext): Promise<RecoveryResult> {
-    const strategy = this.retryStrategies.get(error.type);
-
-    if (!strategy) {
-      return { success: false, reason: 'No recovery strategy found' };
-    }
-
-    for (let attempt = 1; attempt <= strategy.maxRetries; attempt++) {
-      try {
-        // リカバリー処理
-        if (strategy.recovery === 'context_reset') {
-          await this.resetAgentContext(context.agentId);
-        }
-
-        // 遅延
-        if (strategy.baseDelay) {
-          const delay = this.calculateDelay(strategy, attempt);
-          await this.sleep(delay);
-        }
-
-        // 再試行
-        const result = await context.retryFunction();
-
-        return { success: true, result, attempts: attempt };
-
-      } catch (retryError) {
-        if (attempt === strategy.maxRetries) {
-          return {
-            success: false,
-            reason: `Max retries (${strategy.maxRetries}) exceeded`,
-            lastError: retryError
-          };
-        }
-      }
-    }
-  }
-}
-```
-
-## 4. 実装スケジュール
-
-### 4.1 詳細タイムライン
-
-| 週 | フェーズ | 主要成果物 | 担当者 |
-|---|---------|-----------|--------|
-| 1-2 | Phase 1 | オーケストレーター基盤、ルールエンジン、コンテキスト管理 | 開発者1 |
-| 3-5 | Phase 2 | 16エージェント統合、ディスパッチャー、セッション管理 | 開発者1-2 |
-| 6-7 | Phase 3 | マルチエージェントUI、インタラクティブ制御 | 開発者1 |
-| 8-10 | Phase 4 | 学習エンジン、エラーリカバリー、最適化 | 開発者1-2 |
-
-### 4.2 マイルストーン
-
-- **Week 2**: 基本的なオーケストレーション動作確認
-- **Week 5**: 16エージェント並列実行成功
-- **Week 7**: 視覚的UI完成、デモ可能状態
-- **Week 10**: 本格運用可能な完成版
-
-## 5. 技術的考慮事項
-
-### 5.1 パフォーマンス最適化
-- **並列実行**: 依存関係のないタスクは並列実行
-- **セッションプーリング**: エージェント毎に最大3セッション
-- **コンテキスト圧縮**: 要約化による効率的なメモリ使用
-
-### 5.2 エラーハンドリング
-- **グレースフルデグラデーション**: 一部エージェント失敗時の継続実行
-- **自動リトライ**: 指数バックオフによる再試行
-- **代替エージェント**: 主要エージェント失敗時の代替実行
-
-### 5.3 セキュリティ
-- **プロンプトインジェクション対策**: 入力サニタイゼーション
-- **API制限管理**: レート制限の監視と制御
-- **機密情報保護**: ログからの機密情報除外
-
-## 6. 期待される成果
-
-### 6.1 定量的効果
-- **開発効率**: 従来比300%向上（並列実行による）
-- **品質向上**: 専門エージェントによる高品質な成果物
-- **コスト削減**: 効率的なコンテキスト管理によるAPI料金最適化
-
-### 6.2 定性的効果
-- **ユーザー体験**: 視覚的で直感的な操作
-- **透明性**: 各エージェントの活動が明確
-- **拡張性**: 新しいエージェントの追加が容易
-
-## 7. リスク管理
-
-### 7.1 技術的リスク
+### 6.1 技術的リスク
 | リスク | 影響度 | 対策 |
 |--------|--------|------|
-| コンテキスト制限 | 高 | 階層的管理、セッションローテーション |
-| API制限 | 中 | レート制限監視、指数バックオフ |
-| エージェント間競合 | 中 | ファイルロック、状態管理 |
+| DELEGATEの制約 | 高 | 逐次処理に最適化した設計 |
+| ループ問題 | 中 | 適切な状態管理と処理済みチェック |
+| エラーでCLI終了 | 中 | エラーハンドリングの強化 |
 
-### 7.2 運用リスク
+### 6.2 運用リスク
 | リスク | 影響度 | 対策 |
 |--------|--------|------|
-| 長時間実行 | 中 | 進捗表示、中断・再開機能 |
-| メモリリーク | 低 | 定期的なセッションクリーンアップ |
-| 設定ミス | 低 | 設定検証、デフォルト値設定 |
+| 処理時間の長期化 | 中 | タスクの適切な分割 |
+| ユーザー体験の低下 | 低 | 進捗表示の充実 |
 
-## 8. 次のステップ
+## 7. 結論
 
-1. **Phase 1開始**: オーケストレーター基盤の実装
-2. **プロトタイプ作成**: 2-3エージェントでの動作確認
-3. **段階的拡張**: 残りエージェントの順次統合
-4. **ユーザーテスト**: 実際のプロジェクトでの検証
+当初の計画にあった完全自律的なマルチエージェントシステムは、OpenHandsの現在の設計では実現困難です。しかし、以下のアプローチにより、実用的なシステムを構築できます：
+
+1. **DELEGATE機能を活用した逐次処理システム**
+2. **外部ツールによる並列実行の補完**
+3. **ファイルベースの情報共有**
+
+これにより、16エージェントの専門性を活かしながら、現実的で安定したシステムを実現できます。
 
 ---
 
-この実装計画により、BlueLamp CLIは単なるツールから真の「AI開発パートナー」へと進化し、OpenHandsと同等以上の自律的マルチエージェントシステムを実現できます。
+**注記**: この計画書は、実際の実装経験に基づいて更新されました。当初の野心的な目標から、OpenHandsの制約を考慮した現実的なアプローチに修正しています。

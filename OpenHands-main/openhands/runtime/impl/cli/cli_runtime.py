@@ -17,10 +17,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from binaryornot.check import is_binary
-from bluelamp_aci.editor.editor import OHEditor
-from bluelamp_aci.editor.exceptions import ToolError
-from bluelamp_aci.editor.results import ToolResult
-from bluelamp_aci.utils.diff import get_diff
+from openhands_aci.editor.editor import OHEditor
+from openhands_aci.editor.exceptions import ToolError
+from openhands_aci.editor.results import ToolResult
+from openhands_aci.utils.diff import get_diff
 from pydantic import SecretStr
 
 from openhands.core.config import OpenHandsConfig
