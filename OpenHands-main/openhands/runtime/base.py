@@ -11,7 +11,7 @@ from abc import abstractmethod
 from pathlib import Path
 from types import MappingProxyType
 from typing import Callable, cast
-from zipfile import ZipFile
+
 
 import httpx
 
@@ -52,7 +52,6 @@ from openhands.integrations.provider import (
 from openhands.integrations.service_types import AuthenticationError
 from openhands.microagent import (
     BaseMicroagent,
-    load_microagents_from_dir,
 )
 from openhands.runtime.plugins import (
     JupyterRequirement,
@@ -547,49 +546,7 @@ fi
 
         self.log('info', 'Git pre-commit hook installed successfully')
 
-    def _load_microagents_from_directory(
-        self, microagents_dir: Path, source_description: str
-    ) -> list[BaseMicroagent]:
-        """Load microagents from a directory.
 
-        Args:
-            microagents_dir: Path to the directory containing microagents
-            source_description: Description of the source for logging purposes
-
-        Returns:
-            A list of loaded microagents
-        """
-        loaded_microagents: list[BaseMicroagent] = []
-        files = self.list_files(str(microagents_dir))
-
-        if not files:
-            return loaded_microagents
-
-        self.log(
-            'info',
-            f'Found {len(files)} files in {source_description} microagents directory',
-        )
-        zip_path = self.copy_from(str(microagents_dir))
-        microagent_folder = tempfile.mkdtemp()
-
-        try:
-            with ZipFile(zip_path, 'r') as zip_file:
-                zip_file.extractall(microagent_folder)
-
-            zip_path.unlink()
-            repo_agents, knowledge_agents = load_microagents_from_dir(microagent_folder)
-
-            self.log(
-                'info',
-                f'Loaded {len(repo_agents)} repo agents and {len(knowledge_agents)} knowledge agents from {source_description}',
-            )
-
-            loaded_microagents.extend(repo_agents.values())
-            loaded_microagents.extend(knowledge_agents.values())
-        finally:
-            shutil.rmtree(microagent_folder)
-
-        return loaded_microagents
 
     async def _get_authenticated_git_url(
         self, repo_name: str, git_provider_tokens: PROVIDER_TOKEN_TYPE | None
@@ -713,11 +670,7 @@ fi
                     f'Successfully cloned org-level microagents from {org_openhands_repo}',
                 )
 
-                # Load microagents from the org-level repo
-                org_microagents_dir = org_repo_dir / 'microagents'
-                loaded_microagents = self._load_microagents_from_directory(
-                    org_microagents_dir, 'org-level'
-                )
+                # Note: org-level microagents directory loading removed as part of cleanup
 
                 # Clean up the org repo directory
                 shutil.rmtree(org_repo_dir)
@@ -739,12 +692,11 @@ fi
         If selected_repository is None, load microagents from the current workspace.
         This is the main entry point for loading microagents.
 
-        This method also checks for user/org level microagents stored in a .openhands repository.
+        This method checks for user/org level microagents and .openhands_instructions files.
         For example, if the repository is github.com/acme-co/api, it will also check for
         github.com/acme-co/.openhands and load microagents from there if it exists.
         """
         loaded_microagents: list[BaseMicroagent] = []
-        microagents_dir = self.workspace_root / '.openhands' / 'microagents'
         repo_root = None
 
         # Check for user/org level microagents if a repository is selected
@@ -753,17 +705,15 @@ fi
             org_microagents = self.get_microagents_from_org_or_user(selected_repository)
             loaded_microagents.extend(org_microagents)
 
-            # Continue with repository-specific microagents
+            # Set repo root for .openhands_instructions file lookup
             repo_root = self.workspace_root / selected_repository.split('/')[-1]
-            microagents_dir = repo_root / '.openhands' / 'microagents'
 
         self.log(
             'info',
-            f'Selected repo: {selected_repository}, loading microagents from {microagents_dir} (inside runtime)',
+            f'Selected repo: {selected_repository}, loading microagents (inside runtime)',
         )
 
-        # Legacy Repo Instructions
-        # Check for legacy .openhands_instructions file
+        # Check for .openhands_instructions file (used by IssueResolver)
         obs = self.read(
             FileReadAction(path=str(self.workspace_root / '.openhands_instructions'))
         )
@@ -771,7 +721,7 @@ fi
             # If the instructions file is not found in the workspace root, try to load it from the repo root
             self.log(
                 'debug',
-                f'.openhands_instructions not present, trying to load from repository {microagents_dir=}',
+                f'.openhands_instructions not present, trying to load from repository {repo_root}',
             )
             obs = self.read(
                 FileReadAction(path=str(repo_root / '.openhands_instructions'))
@@ -786,12 +736,6 @@ fi
                     file_content=obs.content,
                 )
             )
-
-        # Load microagents from directory
-        repo_microagents = self._load_microagents_from_directory(
-            microagents_dir, 'repository'
-        )
-        loaded_microagents.extend(repo_microagents)
 
         return loaded_microagents
 

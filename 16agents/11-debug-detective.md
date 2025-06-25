@@ -23,4 +23,4 @@ gcloud run services describe SERVICE_NAME --platform managed --region REGION \--
 
 ---
 Source: http://bluelamp-235426778039.asia-northeast1.run.app/api/prompts/public/942ec5f5b316b3fb11e2fd2b597bfb09
-Fetched: 2025-06-23T07:07:29.825Z
+Fetched: 2025-06-25T04:21:01.558Z

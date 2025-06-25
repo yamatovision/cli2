@@ -7,6 +7,12 @@
 - **最終更新日**: 2025-05-13
 - **最終更新内容**: ドキュメント管理構造の改善とプロンプト追加
 
+## 実行中エージェント
+
+| エージェント名 | 開始時刻 | 作業内容 |
+|---------------|----------|----------|
+
+
 ## 2. 実装概要
 
 AppGeniusの開発プロセスを効率化するため、最適化されたドキュメント構造と開発フローを確立します。シンプルで論理的なドキュメントの階層構造を設計し、モックアップを中心としたAIエージェント協働システムを整備します。これにより、非技術者でも理解しやすい開発プロセスと、AIエージェント間の円滑な連携を実現します。
@@ -406,7 +412,7 @@ project/
 - **要件定義テンプレート**: [ideal_requirements_template.md](/docs/prompts/ideal_requirements_template.md)
 - **スコープ進捗文書テンプレート**: [improved_scope_progress_template.md](/docs/prompts/improved_scope_progress_template.md)
 - **Markdownテンプレートガイド**: [markdown-template-guide.md](/docs/templates/markdown-template-guide.md)
-- **サンプルドキュメント**: 
+- **サンプルドキュメント**:
   - [サンプル現況文書](/docs/samples/sample-current-status.md)
   - [サンプルAPI仕様書](/docs/samples/sample-api-spec.md)
   - [初期スコープ進捗テンプレート](/docs/samples/initial-scope-progress-template.md)
@@ -573,7 +579,7 @@ project/
 - **実装状況**: フェーズ1（基本互換性対応）完了、フェーズ2（完全移行）進行中
 
 ### G. AIエージェント最適化フェーズ
-- **参照資料**: 
+- **参照資料**:
   - [AIエージェントプロンプト作成ガイド](/docs/prompts/prompt_excellence_guide.md)
   - [エージェントプロンプトテンプレート集](/docs/prompts/templates/)
   - [AIエージェントシステム完成計画書](/docs/prompts/agent-system-enhancement-plan.md)
@@ -586,7 +592,7 @@ project/
     - 分かりやすく覚えやすいエージェント名の検討
     - 担当業務を適切に反映した名称への変更
     - 番号付けの連番化と論理的整理
-    
+
 - [ ] **G-2**: 開発プロンプトカード表示方法の改善
   - 目標: 2025-05-21
   - 内容:
@@ -612,17 +618,17 @@ project/
   - 目標: 2025-05-21
   - 参照: [/docs/plans/planning/ext-prompt-cards-update-20250520.md](/docs/plans/planning/ext-prompt-cards-update-20250520.md)
   - 内容: バックエンド実装とフロントエンド実装の間にテスト品質エンジニアプロンプトを追加し、後続のプロンプト番号を調整する
-    
+
 - [ ] **T-PROMPT-1**: プロンプトカードの順序と名称変更
   - 目標: 2025-05-21
   - 参照: [/docs/plans/planning/ext-prompt-cards-update-20250520.md](/docs/plans/planning/ext-prompt-cards-update-20250520.md)
   - 内容: プロンプトカードの順序を変更し（★11: デバッグ探偵、★12: デプロイ、★13: GitHub、★14: 型エラー解決、★15: 機能追加、★16: リファクタリング）、一部の名称をより簡潔にする
-    
+
 - [ ] **T-TEMPLATE-1**: テンプレートファイル自動更新機能の実装
   - 目標: 2025-05-22
   - 参照: [/docs/plans/planning/ext-template-update-20250520.md](/docs/plans/planning/ext-template-update-20250520.md)
   - 内容: プロジェクト新規作成・読み込み時に最新のSCOPE_PROGRESS_TEMPLATEとCLAUDETEMPLATEに基づいてファイルを更新する機能を実装
-    
+
 - [ ] **CLI-001**: BlueLamp CLI Claude Code化移行計画の実装
   - 目標: 2025-08-01
   - 参照: [/docs/plans/planning/ext-bluelamp-cli-claude-code-migration-2025-06-18.md](/docs/plans/planning/ext-bluelamp-cli-claude-code-migration-2025-06-18.md)
@@ -630,7 +636,7 @@ project/
     - Phase 1（基礎機能拡充）: 基本ツール7種類の実装、初期コンテキスト収集、メモリシステム構築
     - Phase 2（高度な機能）: 並列実行機能、セキュリティ強化、Webツール実装
     - Phase 3（最適化と独自機能）: パフォーマンス最適化、プロジェクトテンプレート生成、開発メトリクス機能
-    
+
 - [ ] **UI-1**: ファイルビューワー自動更新機能の実装
   - 目標: 2025-05-17
   - 参照: [/docs/plans/planning/ext-docs-auto-refresh-20250514.md](/docs/plans/planning/ext-docs-auto-refresh-20250514.md)
@@ -745,6 +751,3 @@ project/
 - 標準化と柔軟性のバランスを取り、特殊なケースにも対応できる拡張性を確保すること
 - すべてのプロンプトは「単一の真実源」の原則に従い、整合性を維持すること
 - プロンプト作成には「AIエージェントプロンプト作成の卓越ガイド」に従うこと
-
-
-

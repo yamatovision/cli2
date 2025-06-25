@@ -513,7 +513,6 @@ def test_process_events_with_empty_environment_info(conversation_memory):
         recall_type=RecallType.WORKSPACE_CONTEXT,
         repo_name='',
         repo_directory='',
-        repo_instructions='',
         runtime_hosts={},
         additional_agent_instructions='',
         microagent_knowledge=[],
@@ -680,7 +679,7 @@ def test_process_events_with_environment_microagent_observation(conversation_mem
         recall_type=RecallType.WORKSPACE_CONTEXT,
         repo_name='test-repo',
         repo_directory='/path/to/repo',
-        repo_instructions='# Test Repository\nThis is a test repository.',
+
         runtime_hosts={'localhost': 8080},
         content='Retrieved environment info',
     )
@@ -710,10 +709,7 @@ def test_process_events_with_environment_microagent_observation(conversation_mem
     assert call_args['repository_info'].repo_directory == '/path/to/repo'
     assert isinstance(call_args['runtime_info'], RuntimeInfo)
     assert call_args['runtime_info'].available_hosts == {'localhost': 8080}
-    assert (
-        call_args['repo_instructions']
-        == '# Test Repository\nThis is a test repository.'
-    )
+
 
 
 def test_process_events_with_knowledge_microagent_microagent_observation(
@@ -949,7 +945,6 @@ each of which has a corresponding port:
         recall_type=RecallType.WORKSPACE_CONTEXT,
         repo_name='owner/repo',
         repo_directory='/workspace/repo',
-        repo_instructions='This repository contains important code.',
         runtime_hosts={'example.com': 8080},
         content='Retrieved environment info',
     )
@@ -971,9 +966,7 @@ each of which has a corresponding port:
     assert 'owner/repo' in message.content[0].text
     assert '/workspace/repo' in message.content[0].text
 
-    # Check that the message contains the repository instructions
-    assert '<REPOSITORY_INSTRUCTIONS>' in message.content[0].text
-    assert 'This repository contains important code.' in message.content[0].text
+    # Repository instructions are no longer supported
 
     # Check that the message contains the runtime info
     assert '<RUNTIME_INFORMATION>' in message.content[0].text

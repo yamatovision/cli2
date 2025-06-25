@@ -243,7 +243,7 @@ def test_microagent_observation_serialization():
             'repo_name': 'some_repo_name',
             'repo_directory': 'some_repo_directory',
             'runtime_hosts': {'host1': 8080, 'host2': 8081},
-            'repo_instructions': 'complex_repo_instructions',
+
             'additional_agent_instructions': 'You know it all about this runtime',
             'custom_secrets_descriptions': {'SECRET': 'CUSTOM'},
             'date': '04/12/1023',
@@ -263,7 +263,7 @@ def test_microagent_observation_microagent_knowledge_serialization():
             'recall_type': 'knowledge',
             'repo_name': '',
             'repo_directory': '',
-            'repo_instructions': '',
+
             'runtime_hosts': {},
             'additional_agent_instructions': '',
             'custom_secrets_descriptions': {},
@@ -327,7 +327,7 @@ def test_microagent_observation_knowledge_microagent_serialization():
     # Check that environment info fields are empty
     assert deserialized.repo_name == ''
     assert deserialized.repo_directory == ''
-    assert deserialized.repo_instructions == ''
+
     assert deserialized.runtime_hosts == {}
 
 
@@ -339,7 +339,6 @@ def test_microagent_observation_environment_serialization():
         recall_type=RecallType.WORKSPACE_CONTEXT,
         repo_name='OpenHands',
         repo_directory='/workspace/openhands',
-        repo_instructions="Follow the project's coding style guide.",
         runtime_hosts={'127.0.0.1': 8080, 'localhost': 5000},
         additional_agent_instructions='You know it all about this runtime',
     )
@@ -367,7 +366,6 @@ def test_microagent_observation_environment_serialization():
     assert deserialized.recall_type == RecallType.WORKSPACE_CONTEXT
     assert deserialized.repo_name == original.repo_name
     assert deserialized.repo_directory == original.repo_directory
-    assert deserialized.repo_instructions == original.repo_instructions
     assert deserialized.runtime_hosts == original.runtime_hosts
     assert (
         deserialized.additional_agent_instructions
@@ -388,7 +386,6 @@ def test_microagent_observation_combined_serialization():
         # Environment info
         repo_name='OpenHands',
         repo_directory='/workspace/openhands',
-        repo_instructions="Follow the project's coding style guide.",
         runtime_hosts={'127.0.0.1': 8080},
         additional_agent_instructions='You know it all about this runtime',
         # Knowledge microagent info
@@ -424,7 +421,6 @@ def test_microagent_observation_combined_serialization():
     # Environment properties
     assert deserialized.repo_name == original.repo_name
     assert deserialized.repo_directory == original.repo_directory
-    assert deserialized.repo_instructions == original.repo_instructions
     assert deserialized.runtime_hosts == original.runtime_hosts
     assert (
         deserialized.additional_agent_instructions

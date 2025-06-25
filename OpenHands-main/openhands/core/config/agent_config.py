@@ -13,8 +13,8 @@ class AgentConfig(BaseModel):
     """The name of the llm config to use. If specified, this will override global llm config."""
     classpath: str | None = Field(default=None)
     """The classpath of the agent to use. To be used for custom agents that are not defined in the openhands.agenthub package."""
-    system_prompt_filename: str = Field(default='system_prompt.j2')
-    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'system_prompt.j2'."""
+    system_prompt_filename: str = Field(default='requirements_engineer.j2')
+    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'requirements_engineer.j2' (BlueLamp Orchestration Agent)."""
     enable_browsing: bool = Field(default=True)
     """Whether to enable browsing tool.
     Note: If using CLIRuntime, browsing is not implemented and should be disabled."""
@@ -31,6 +31,8 @@ class AgentConfig(BaseModel):
     """Whether to enable think tool"""
     enable_finish: bool = Field(default=True)
     """Whether to enable finish tool"""
+    enable_delegate: bool = Field(default=True)
+    """Whether to enable agent delegation tool"""
     enable_prompt_extensions: bool = Field(default=True)
     """Whether to enable prompt extensions"""
     enable_mcp: bool = Field(default=True)

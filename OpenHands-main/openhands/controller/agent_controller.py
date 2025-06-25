@@ -28,6 +28,7 @@ from openhands.controller.state.state import State
 from openhands.controller.state.state_tracker import StateTracker
 from openhands.controller.stuck import StuckDetector
 from openhands.core.config import AgentConfig, LLMConfig
+from openhands.core.config.agent_registry import agent_registry
 from openhands.core.exceptions import (
     AgentStuckInLoopError,
     FunctionCallNotExistsError,
@@ -423,9 +424,18 @@ class AgentController:
             await self.start_delegate(action)
             assert self.delegate is not None
             # Post a MessageAction with the task for the delegate
-            if 'task' in action.inputs:
+            # Handle both dict and string inputs for compatibility
+            task_content = None
+            if isinstance(action.inputs, dict):
+                if 'task' in action.inputs:
+                    task_content = action.inputs['task']
+            elif isinstance(action.inputs, str):
+                # If inputs is a string, use it directly as the task
+                task_content = action.inputs
+
+            if task_content:
                 self.event_stream.add_event(
-                    MessageAction(content='TASK: ' + action.inputs['task']),
+                    MessageAction(content='TASK: ' + str(task_content)),
                     EventSource.USER,
                 )
                 await self.delegate.set_agent_state_to(AgentState.RUNNING)
@@ -625,7 +635,16 @@ class AgentController:
             action (AgentDelegateAction): The action containing information about the delegate agent to start.
         """
         agent_cls: type[Agent] = Agent.get_cls(action.agent)
-        agent_config = self.agent_configs.get(action.agent, self.agent.config)
+
+        # Try to get agent config from registry first, then fallback to existing logic
+        registry_config = agent_registry.get_agent_config(action.agent.lower())
+        if registry_config:
+            agent_config = registry_config
+            logger.info(f"Using agent config from registry for {action.agent}")
+        else:
+            agent_config = self.agent_configs.get(action.agent, self.agent.config)
+            logger.info(f"Using fallback agent config for {action.agent}")
+
         llm_config = self.agent_to_llm_config.get(action.agent, self.agent.llm.config)
         # Make sure metrics are shared between parent and child for global accumulation
         llm = LLM(

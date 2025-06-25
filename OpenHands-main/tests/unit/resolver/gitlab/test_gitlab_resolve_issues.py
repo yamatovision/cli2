@@ -98,7 +98,7 @@ def mock_user_instructions_template():
 
 @pytest.fixture
 def mock_conversation_instructions_template():
-    return 'Instructions: {{ repo_instruction }}'
+    return 'Instructions: No repo instructions'
 
 
 @pytest.fixture
@@ -664,7 +664,7 @@ When you think you have fixed the issue through code changes, please finish the 
     assert images_urls == ['https://sampleimage.com/sample.png']
 
 
-def test_file_instruction_with_repo_instruction():
+def test_file_instruction_without_repo_instruction():
     issue = Issue(
         owner='test_owner',
         repo='test_repo',
@@ -681,19 +681,14 @@ def test_file_instruction_with_repo_instruction():
     ) as f:
         conversation_instructions_prompt = f.read()
 
-    # load repo instruction from openhands/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt
-    with open(
-        'openhands/resolver/prompts/repo_instructions/all-hands-ai___openhands-resolver.txt',
-        'r',
-    ) as f:
-        repo_instruction = f.read()
+
 
     mock_llm_config = LLMConfig(model='test_model', api_key='test_api_key')
     issue_handler = ServiceContextIssue(
         GitlabIssueHandler('owner', 'repo', 'token'), mock_llm_config
     )
     instruction, conversation_instructions, image_urls = issue_handler.get_instruction(
-        issue, prompt, conversation_instructions_prompt, repo_instruction
+        issue, prompt, conversation_instructions_prompt, None
     )
 
     expected_instruction = """Please fix the following issue for the repository in /workspace.

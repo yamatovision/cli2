@@ -109,12 +109,10 @@ class PromptManager:
         repository_info: RepositoryInfo | None,
         runtime_info: RuntimeInfo | None,
         conversation_instructions: ConversationInstructions | None,
-        repo_instructions: str = '',
     ) -> str:
         """Renders the additional info template with the stored repository/runtime info."""
         return self.additional_info_template.render(
             repository_info=repository_info,
-            repository_instructions=repo_instructions,
             runtime_info=runtime_info,
             conversation_instructions=conversation_instructions,
         ).strip()

@@ -528,9 +528,7 @@ class ConversationMemory:
                         content=obs.conversation_instructions
                     )
 
-                repo_instructions = (
-                    obs.repo_instructions if obs.repo_instructions else ''
-                )
+
 
                 # Have some meaningful content before calling the template
                 has_repo_info = repo_info is not None and (
@@ -539,7 +537,7 @@ class ConversationMemory:
                 has_runtime_info = runtime_info is not None and (
                     runtime_info.date or runtime_info.custom_secrets_descriptions
                 )
-                has_repo_instructions = bool(repo_instructions.strip())
+
                 has_conversation_instructions = conversation_instructions is not None
 
                 # Filter and process microagent knowledge
@@ -561,7 +559,6 @@ class ConversationMemory:
                 if (
                     has_repo_info
                     or has_runtime_info
-                    or has_repo_instructions
                     or has_conversation_instructions
                 ):
                     formatted_workspace_text = (
@@ -569,7 +566,6 @@ class ConversationMemory:
                             repository_info=repo_info,
                             runtime_info=runtime_info,
                             conversation_instructions=conversation_instructions,
-                            repo_instructions=repo_instructions,
                         )
                     )
                     message_content.append(TextContent(text=formatted_workspace_text))

@@ -60,7 +60,6 @@ At the user's request, repository {{ repository_info.repo_name }} has been clone
     additional_info = manager.build_workspace_context(
         repository_info=repo_info,
         runtime_info=None,
-        repo_instructions='',
         conversation_instructions=None,
     )
     assert '<REPOSITORY_INFO>' in additional_info
@@ -237,15 +236,12 @@ Today's date is {{ runtime_info.date }}
         available_hosts={'example.com': 8080},
         additional_agent_instructions='You know everything about this runtime.',
     )
-    repo_instructions = 'This repository contains important code.'
-
     conversation_instructions = ConversationInstructions(content='additional context')
 
     # Build additional info
     result = manager.build_workspace_context(
         repository_info=repo_info,
         runtime_info=runtime_info,
-        repo_instructions=repo_instructions,
         conversation_instructions=conversation_instructions,
     )
 
@@ -253,8 +249,7 @@ Today's date is {{ runtime_info.date }}
     assert '<REPOSITORY_INFO>' in result
     assert 'owner/repo' in result
     assert '/workspace/repo' in result
-    assert '<REPOSITORY_INSTRUCTIONS>' in result
-    assert 'This repository contains important code.' in result
+
     assert '<RUNTIME_INFORMATION>' in result
     assert 'example.com (port 8080)' in result
     assert 'You know everything about this runtime.' in result

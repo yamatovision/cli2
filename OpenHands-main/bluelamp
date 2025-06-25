@@ -28,11 +28,9 @@ cd "$SCRIPT_DIR" || exit 1
 if command -v poetry &> /dev/null; then
     # Poetryが利用可能な場合
     WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
-        -f "$SCRIPT_DIR/task_greeting.txt" \
         --config-file "$SCRIPT_DIR/config.toml"
 else
     # Poetryがない場合は直接Python実行
     WORKSPACE_BASE="$CURRENT_DIR" python -m openhands.cli.main \
-        -f "$SCRIPT_DIR/task_greeting.txt" \
         --config-file "$SCRIPT_DIR/config.toml"
 fi

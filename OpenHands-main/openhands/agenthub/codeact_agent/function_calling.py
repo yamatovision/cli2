@@ -11,6 +11,7 @@ from litellm import (
 
 from openhands.agenthub.codeact_agent.tools import (
     BrowserTool,
+    DelegateTool,
     FinishTool,
     IPythonTool,
     LLMBasedFileEditTool,
@@ -113,6 +114,24 @@ def response_to_actions(
                 action = AgentDelegateAction(
                     agent='BrowsingAgent',
                     inputs=arguments,
+                )
+
+            # ================================================
+            # AgentDelegateAction
+            # ================================================
+            elif tool_call.function.name == DelegateTool['function']['name']:
+                if 'agent' not in arguments:
+                    raise FunctionCallValidationError(
+                        f'Missing required argument "agent" in tool call {tool_call.function.name}'
+                    )
+                if 'inputs' not in arguments:
+                    raise FunctionCallValidationError(
+                        f'Missing required argument "inputs" in tool call {tool_call.function.name}'
+                    )
+                action = AgentDelegateAction(
+                    agent=arguments['agent'],
+                    inputs=arguments['inputs'],
+                    thought=arguments.get('thought', ''),
                 )
 
             # ================================================

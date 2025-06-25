@@ -540,4 +540,4 @@ deployment/deploy.mdを更新します。
 
 ---
 Source: http://bluelamp-235426778039.asia-northeast1.run.app/api/prompts/public/612fc1991ca477744c4544255d40fe0b
-Fetched: 2025-06-23T07:07:31.327Z
+Fetched: 2025-06-25T04:21:02.124Z

@@ -140,17 +140,7 @@ class Memory:
         # Create WORKSPACE_CONTEXT info:
         # - repository_info
         # - runtime_info
-        # - repository_instructions
         # - microagent_knowledge
-
-        # Collect raw repository instructions
-        repo_instructions = ''
-
-        # Retrieve the context of repo instructions from all repo microagents
-        for microagent in self.repo_microagents.values():
-            if repo_instructions:
-                repo_instructions += '\n\n'
-            repo_instructions += microagent.content
 
         # Find any matched microagents based on the query
         microagent_knowledge = self._find_microagent_knowledge(event.query)
@@ -159,7 +149,6 @@ class Memory:
         if (
             self.repository_info
             or self.runtime_info
-            or repo_instructions
             or microagent_knowledge
             or self.conversation_instructions
         ):
@@ -172,7 +161,7 @@ class Memory:
                 if self.repository_info
                 and self.repository_info.repo_directory is not None
                 else '',
-                repo_instructions=repo_instructions if repo_instructions else '',
+
                 runtime_hosts=self.runtime_info.available_hosts
                 if self.runtime_info and self.runtime_info.available_hosts is not None
                 else {},

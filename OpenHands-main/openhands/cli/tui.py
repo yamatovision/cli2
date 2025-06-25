@@ -66,7 +66,6 @@ DEFAULT_STYLE = Style.from_dict(
 COMMANDS = {
     '/exit': 'Exit the application',
     '/help': 'Display available commands',
-    '/init': 'Initialize a new repository',
     '/status': 'Display conversation details and usage metrics',
     '/new': 'Create a new conversation',
     '/settings': 'Display and modify current settings',
@@ -228,7 +227,7 @@ def display_error(error: str) -> None:
                 style='ansired',
                 wrap_lines=True,
             ),
-            title='Error',
+            title='エラー',
             style='ansired',
         )
         print_formatted_text('')
@@ -243,7 +242,7 @@ def display_command(event: CmdRunAction) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='Command',
+        title='コマンド',
         style='ansicyan',
     )
     print_formatted_text('')
@@ -271,7 +270,7 @@ def display_command_output(output: str) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='Command Output',
+        title='コマンド出力',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -286,7 +285,7 @@ def display_file_edit(event: FileEditObservation) -> None:
             wrap_lines=True,
             lexer=CustomDiffLexer(),
         ),
-        title='File Edit',
+        title='ファイル編集',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -302,7 +301,7 @@ def display_file_read(event: FileReadObservation) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='File Read',
+        title='ファイル読み込み',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -322,7 +321,7 @@ def initialize_streaming_output():
     )
     container = Frame(
         streaming_output_text_area,
-        title='Streaming Output',
+        title='ストリーミング出力',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -471,7 +470,7 @@ def display_status(usage_metrics: UsageMetrics, session_id: str) -> None:
 def display_agent_running_message() -> None:
     print_formatted_text('')
     print_formatted_text(
-        HTML('<cyan>BlueLamp実行中...</cyan> <grey>(Ctrl-P で一時停止)</grey>')
+        HTML('<cyan>BlueLamp実行中...</cyan> <grey>(ESC で一時停止・新規指示)</grey>')
     )
 
 
@@ -585,18 +584,27 @@ async def process_agent_pause(done: asyncio.Event, event_stream: EventStream) ->
 
     def keys_ready() -> None:
         for key_press in input.read_keys():
-            if (
-                key_press.key == Keys.ControlP
-                or key_press.key == Keys.ControlC
-                or key_press.key == Keys.ControlD
-            ):
+            if key_press.key == Keys.Escape:
                 print_formatted_text('')
                 print_formatted_text(HTML('<cyan>エージェントを一時停止しています...</cyan>'))
+                print_formatted_text(HTML('<yellow>新しい指示を入力してください:</yellow>'))
+                # is_pausedフラグを設定してから状態変更
+                done.set()  # まずprocess_agent_pauseを終了
                 event_stream.add_event(
                     ChangeAgentStateAction(AgentState.PAUSED),
                     EventSource.USER,
                 )
-                done.set()
+            elif (
+                key_press.key == Keys.ControlC
+                or key_press.key == Keys.ControlD
+            ):
+                print_formatted_text('')
+                print_formatted_text(HTML('<red>プログラムを終了しています...</red>'))
+                done.set()  # まずprocess_agent_pauseを終了
+                event_stream.add_event(
+                    ChangeAgentStateAction(AgentState.FINISHED),
+                    EventSource.USER,
+                )
 
     with input.raw_mode():
         with input.attach(keys_ready):

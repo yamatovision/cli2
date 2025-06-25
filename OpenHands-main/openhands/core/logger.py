@@ -330,6 +330,11 @@ def json_log_handler(
 # Set up logging
 logging.basicConfig(level=logging.ERROR)
 
+# Fix openhands_aci file_cache logger level to prevent DEBUG spam
+# This is needed because openhands_aci.editor.file_cache sets level=DEBUG
+file_cache_logger = logging.getLogger('openhands_aci.editor.file_cache')
+file_cache_logger.setLevel(logging.WARNING)
+
 
 def log_uncaught_exceptions(
     ex_cls: type[BaseException], ex: BaseException, tb: TracebackType | None
@@ -362,7 +367,8 @@ if DEBUG:
 
 if current_log_level == logging.DEBUG:
     LOG_TO_FILE = True
-    openhands_logger.debug('デバッグモードが有効になりました。')
+    # デバッグモードメッセージを非表示
+    # openhands_logger.debug('デバッグモードが有効になりました。')
 
 if LOG_JSON:
     openhands_logger.addHandler(json_log_handler(current_log_level))
@@ -371,7 +377,8 @@ else:
 
 openhands_logger.addFilter(SensitiveDataFilter(openhands_logger.name))
 openhands_logger.propagate = False
-openhands_logger.debug('ロギングが初期化されました')
+# ロギング初期化メッセージを非表示
+# openhands_logger.debug('ロギングが初期化されました')
 
 LOG_DIR = os.path.join(
     # parent dir of openhands/core (i.e., root of the repo)
@@ -383,7 +390,8 @@ if LOG_TO_FILE:
     openhands_logger.addHandler(
         get_file_handler(LOG_DIR, current_log_level)
     )  # default log to project root
-    openhands_logger.debug(f'ファイルへのロギング: {LOG_DIR}')
+    # ファイルロギングメッセージを非表示
+    # openhands_logger.debug(f'ファイルへのロギング: {LOG_DIR}')
 
 # Exclude LiteLLM from logging output as it can leak keys
 logging.getLogger('LiteLLM').disabled = True

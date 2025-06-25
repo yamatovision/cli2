@@ -4,10 +4,12 @@
 # workspace_baseを指定しない場合、現在のディレクトリが使用される
 # workspace_base="./workspace"
 workspace_mount_path="/workspace"
-log_level="INFO"
+log_level="WARNING"
 log_dir="./logs"
-max_iterations=100
+max_iterations=500
 cache_dir="./cache"
+confirmation_mode=true    # ユーザー確認モード有効
+headless_mode=false      # TUIモード（停止機能有効）
 
 [runtime]
 runtime="cli"

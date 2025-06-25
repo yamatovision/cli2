@@ -179,20 +179,31 @@ async def run_session(
                 return
 
     async def on_event_async(event: Event) -> None:
-        nonlocal reload_microagents, is_paused, always_confirm_mode
+        nonlocal reload_microagents, is_paused, always_confirm_mode, controller
         display_event(event, config)
         update_usage_metrics(event, usage_metrics)
 
         if isinstance(event, AgentStateChangedObservation):
-            if event.agent_state in [
-                AgentState.AWAITING_USER_INPUT,
-                AgentState.FINISHED,
-            ]:
+            if event.agent_state == AgentState.FINISHED:
+                # 委譲されたエージェントの場合、自動的にオーケストレーションに戻る
+                if hasattr(config, 'is_delegated_agent') and config.is_delegated_agent:
+                    print_formatted_text('')
+                    print_formatted_text(HTML('<blue>委譲タスクが完了しました。オーケストレーションに戻ります...</blue>'))
+                    # CLIを終了せずに、オーケストレーションに戻ることを通知
+                    return
+
+                # メインエージェント（オーケストレーション）の場合は次のタスクを待つ
+                print_formatted_text('')
+                print_formatted_text(HTML('<green>タスクが完了しました。</green>'))
+                # 次のタスクの入力を待つ（CLIは終了しない）
+                await prompt_for_next_task(AgentState.AWAITING_USER_INPUT)
+
+            if event.agent_state == AgentState.AWAITING_USER_INPUT:
                 # If the agent is paused, do not prompt for input as it's already handled by PAUSED state change
                 if is_paused.is_set():
                     return
 
-                # Reload microagents after initialization of repo.md
+                # Reload microagents if needed
                 if reload_microagents:
                     microagents: list[BaseMicroagent] = (
                         runtime.get_microagents_from_selected_repo(None)
@@ -255,7 +266,7 @@ async def run_session(
             selected_repository=config.sandbox.selected_repo,
         )
 
-    # when memory is created, it will load the microagents from the selected repository
+    # when memory is created, it will load the microagents from org/user level and .openhands_instructions
     memory = create_memory(
         runtime=runtime,
         event_stream=event_stream,

@@ -288,7 +288,7 @@ REPOSITORY INSTRUCTIONS: This is a test repository.
         assert observation.recall_type == RecallType.WORKSPACE_CONTEXT
         assert observation.repo_name == 'owner/repo'
         assert observation.repo_directory == '/workspace/repo'
-        assert 'This is a test repository' in observation.repo_instructions
+
 
     # Clean up
     os.remove(os.path.join(prompt_dir, 'micro', f'{repo_microagent_name}.md'))
@@ -463,7 +463,6 @@ def test_custom_secrets_descriptions_serialization(prompt_dir):
     workspace_context = prompt_manager.build_workspace_context(
         repository_info=repository_info,
         runtime_info=runtime_info,
-        repo_instructions='Test repository instructions',
         conversation_instructions=conversation_instructions,
     )
 
@@ -488,7 +487,7 @@ def test_serialization_deserialization_with_custom_secrets():
             'recall_type': 'workspace_context',
             'repo_name': 'test-owner/test-repo',
             'repo_directory': '/workspace/test-repo',
-            'repo_instructions': 'Test repository instructions',
+
             'runtime_hosts': {'test-host.example.com': 8080},
             'additional_agent_instructions': 'Test instructions',
             'date': '2025-05-15',
@@ -580,8 +579,7 @@ REPOSITORY INSTRUCTIONS: This is the second test repository.
         assert observation.recall_type == RecallType.WORKSPACE_CONTEXT
         assert observation.repo_name == 'owner/repo'
         assert observation.repo_directory == '/workspace/repo'
-        assert 'This is the first test repository' in observation.repo_instructions
-        assert 'This is the second test repository' in observation.repo_instructions
+
 
     # Clean up
     os.remove(os.path.join(prompt_dir, 'micro', f'{repo_microagent1_name}.md'))

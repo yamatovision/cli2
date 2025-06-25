@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 
 from prompt_toolkit import print_formatted_text
@@ -21,8 +20,6 @@ from openhands.cli.tui import (
 from openhands.cli.utils import (
     add_local_config_trusted_dir,
     get_local_config_trusted_dirs,
-    read_file,
-    write_to_file,
 )
 from openhands.core.config import (
     OpenHandsConfig,
@@ -58,10 +55,6 @@ async def handle_commands(
         )
     elif command == '/help':
         handle_help_command()
-    elif command == '/init':
-        close_repl, reload_microagents = await handle_init_command(
-            config, event_stream, current_dir
-        )
     elif command == '/status':
         handle_status_command(usage_metrics, sid)
     elif command == '/new':
@@ -102,37 +95,6 @@ def handle_exit_command(
 
 def handle_help_command() -> None:
     display_help()
-
-
-async def handle_init_command(
-    config: OpenHandsConfig, event_stream: EventStream, current_dir: str
-) -> tuple[bool, bool]:
-    REPO_MD_CREATE_PROMPT = """
-        Please explore this repository. Create the file .openhands/microagents/repo.md with:
-            - A description of the project
-            - An overview of the file structure
-            - Any information on how to run tests or other relevant commands
-            - Any other information that would be helpful to a brand new developer
-        Keep it short--just a few paragraphs will do.
-    """
-    close_repl = False
-    reload_microagents = False
-
-    if config.runtime == 'local':
-        init_repo = await init_repository(current_dir)
-        if init_repo:
-            event_stream.add_event(
-                MessageAction(content=REPO_MD_CREATE_PROMPT),
-                EventSource.USER,
-            )
-            reload_microagents = True
-            close_repl = True
-    else:
-        print_formatted_text(
-            '\nRepository initialization through the CLI is only supported for local runtime.\n'
-        )
-
-    return close_repl, reload_microagents
 
 
 def handle_status_command(usage_metrics: UsageMetrics, sid: str) -> None:
@@ -205,63 +167,6 @@ async def handle_resume_command(
     # )
 
     return close_repl, new_session_requested
-
-
-async def init_repository(current_dir: str) -> bool:
-    repo_file_path = Path(current_dir) / '.openhands' / 'microagents' / 'repo.md'
-    init_repo = False
-
-    if repo_file_path.exists():
-        try:
-            # Path.exists() ensures repo_file_path is not None, so we can safely pass it to read_file
-            content = await asyncio.get_event_loop().run_in_executor(
-                None, read_file, repo_file_path
-            )
-
-            print_formatted_text(
-                'Repository instructions file (repo.md) already exists.\n'
-            )
-
-            container = Frame(
-                TextArea(
-                    text=content,
-                    read_only=True,
-                    style=COLOR_GREY,
-                    wrap_lines=True,
-                ),
-                title='Repository Instructions (repo.md)',
-                style=f'fg:{COLOR_GREY}',
-            )
-            print_container(container)
-            print_formatted_text('')  # Add a newline after the frame
-
-            init_repo = (
-                cli_confirm(
-                    'Do you want to re-initialize?',
-                    ['Yes, re-initialize', 'No, dismiss'],
-                )
-                == 0
-            )
-
-            if init_repo:
-                write_to_file(repo_file_path, '')
-        except Exception:
-            print_formatted_text('Error reading repository instructions file (repo.md)')
-            init_repo = False
-    else:
-        print_formatted_text(
-            '\nRepository instructions file will be created by exploring the repository.\n'
-        )
-
-        init_repo = (
-            cli_confirm(
-                'Do you want to proceed?',
-                ['Yes, create', 'No, dismiss'],
-            )
-            == 0
-        )
-
-    return init_repo
 
 
 def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -> bool:

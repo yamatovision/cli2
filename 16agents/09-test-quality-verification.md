@@ -180,4 +180,4 @@ npm run test:integration -- tests/integration/[対象ファイル]
 
 ---
 Source: http://bluelamp-235426778039.asia-northeast1.run.app/api/prompts/public/5a3f08098fd5b7846602e9b5446b7d44
-Fetched: 2025-06-23T07:07:28.187Z
+Fetched: 2025-06-25T04:21:00.434Z
