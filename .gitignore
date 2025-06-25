@@ -31,3 +31,10 @@ docs/deployment/deploy.md
 # macOS system files
 .DS_Store
 **/.DS_Store
+
+# Private components (not for public repository)
+private/
+
+# OpenHands logs
+cli/OpenHands/logs/
+OpenHands-main/logs/

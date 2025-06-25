@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# BlueLamp CLI - Powered by OpenHands
+# AI開発支援ツール
+
+# シンボリックリンクを解決して実際のディレクトリを取得
+if [ -L "$0" ]; then
+    SCRIPT_PATH="$(readlink "$0")"
+else
+    SCRIPT_PATH="$0"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+# 現在のディレクトリを保存
+CURRENT_DIR="$(pwd)"
+
+# OpenHandsを起動
+cd "$SCRIPT_DIR" || exit 1
+WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
+    --config-file "$SCRIPT_DIR/agent_configs.toml"
