@@ -7,8 +7,8 @@ import authHeader from '../../utils/auth-header';
 // apiConfig.jsは削除予定のため、使用しない
 
 // API基本URL 
-// axios.defaults.baseURLが自動的に/apiを付加するため、相対パスのみ指定
-const SIMPLE_API_URL = '/simple';
+// バックエンドは/api/simpleでルーティングされているため、完全なパスを指定
+const SIMPLE_API_URL = '/api/simple';
 
 // リフレッシュ中かどうかのフラグ（重複防止）
 let isRefreshing = false;
