@@ -15,10 +15,12 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
 
-from litellm import ChatCompletionMessageToolCall, ModelInfo, PromptTokensDetails
+from litellm import ChatCompletionMessageToolCall, PromptTokensDetails
 from litellm import Message as LiteLLMMessage
 from litellm import completion as litellm_completion
 from litellm import completion_cost as litellm_completion_cost
+from litellm.types.router import ModelInfo
+from litellm.types.utils import ModelInfo as UtilsModelInfo
 from litellm.exceptions import (
     RateLimitError,
 )
@@ -134,7 +136,7 @@ class LLM(RetryMixin, DebugMixin):
         self.cost_metric_supported: bool = True
         self.config: LLMConfig = copy.deepcopy(config)
 
-        self.model_info: ModelInfo | None = None
+        self.model_info: UtilsModelInfo | None = None
         self.retry_listener = retry_listener
         
         # 割り込み制御用の初期化
@@ -328,8 +330,9 @@ class LLM(RetryMixin, DebugMixin):
             # NOTE: this setting is global; unlike drop_params, it cannot be overridden in the litellm completion partial
             litellm.modify_params = self.config.modify_params
 
-            # if we're not using litellm proxy, remove the extra_body
-            if 'litellm_proxy' not in self.config.model:
+            # Always remove extra_body for Anthropic models as they don't support it
+            # Also remove for non-litellm_proxy models
+            if 'anthropic' in self.config.model.lower() or 'claude' in self.config.model.lower() or 'litellm_proxy' not in self.config.model:
                 kwargs.pop('extra_body', None)
 
             # Record start time for latency measurement
@@ -782,7 +785,7 @@ class LLM(RetryMixin, DebugMixin):
         if not self.cost_metric_supported:
             return 0.0
 
-        extra_kwargs = {}
+        extra_kwargs: dict[str, Any] = {}
         if (
             self.config.input_cost_per_token is not None
             and self.config.output_cost_per_token is not None
@@ -806,17 +809,28 @@ class LLM(RetryMixin, DebugMixin):
         try:
             if cost is None:
                 try:
-                    cost = litellm_completion_cost(
-                        completion_response=response, **extra_kwargs
-                    )
+                    if 'custom_cost_per_token' in extra_kwargs:
+                        cost = litellm_completion_cost(
+                            completion_response=response, 
+                            custom_cost_per_token=extra_kwargs['custom_cost_per_token']
+                        )
+                    else:
+                        cost = litellm_completion_cost(completion_response=response)
                 except Exception as e:
                     logger.debug(f'Error getting cost from litellm: {e}')
 
             if cost is None:
                 _model_name = '/'.join(self.config.model.split('/')[1:])
-                cost = litellm_completion_cost(
-                    completion_response=response, model=_model_name, **extra_kwargs
-                )
+                if 'custom_cost_per_token' in extra_kwargs:
+                    cost = litellm_completion_cost(
+                        completion_response=response, 
+                        model=_model_name,
+                        custom_cost_per_token=extra_kwargs['custom_cost_per_token']
+                    )
+                else:
+                    cost = litellm_completion_cost(
+                        completion_response=response, model=_model_name
+                    )
                 logger.debug(
                     f'Using fallback model name {_model_name} to get cost: {cost}'
                 )

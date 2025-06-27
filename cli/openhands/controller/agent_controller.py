@@ -5,7 +5,7 @@ import copy
 import os
 import time
 import traceback
-from typing import Callable
+from typing import Any, Callable, Union
 
 from litellm.exceptions import (  # noqa
     APIConnectionError,
@@ -97,6 +97,7 @@ class AgentController:
     _delegate_start_time: float | None = None  # timestamp when delegate was started
     _delegate_last_activity: float | None = None  # timestamp of last delegate activity
     _pending_action_info: tuple[Action, float] | None = None  # (action, timestamp)
+    _last_timeout_log: float = 0.0  # timestamp of last timeout log to prevent spam
     _closed: bool = False
     _cached_first_user_message: MessageAction | None = None
 
@@ -171,8 +172,15 @@ class AgentController:
         self._initial_max_iterations = iteration_delta
         self._initial_max_budget_per_task = budget_per_task_delta
 
-        # stuck helper
-        self._stuck_detector = StuckDetector(self.state)
+        # stuck helper with improved configuration
+        # Use more conservative settings to reduce false positives
+        min_pattern_steps = 10  # Increased from 8 to be more conservative
+        enable_progress_detection = True  # Enable progress detection
+        self._stuck_detector = StuckDetector(
+            self.state, 
+            min_pattern_steps=min_pattern_steps,
+            enable_progress_detection=enable_progress_detection
+        )
         self.status_callback = status_callback
 
         # replay-related
@@ -294,7 +302,7 @@ class AgentController:
                 f'Error while running the agent (session ID: {self.id}): {e}. '
                 f'Traceback: {traceback.format_exc()}',
             )
-            reported = RuntimeError(
+            reported: Union[RuntimeError, Exception] = RuntimeError(
                 f'There was an unexpected error while running the agent: {e.__class__.__name__}. You can refresh the page or ask the agent to try again.'
             )
             if (
@@ -601,7 +609,8 @@ class AgentController:
                     content=ERROR_ACTION_NOT_EXECUTED,
                     error_id=ERROR_ACTION_NOT_EXECUTED_ID,
                 )
-                obs.tool_call_metadata = self._pending_action.tool_call_metadata
+                if self._pending_action.tool_call_metadata is not None:
+                    obs.tool_call_metadata = self._pending_action.tool_call_metadata
                 obs._cause = self._pending_action.id  # type: ignore[attr-defined]
                 self.event_stream.add_event(obs, EventSource.AGENT)
 
@@ -865,7 +874,8 @@ class AgentController:
         for event in reversed(self.state.history):
             if isinstance(event, AgentDelegateAction):
                 delegate_action = event
-                obs.tool_call_metadata = delegate_action.tool_call_metadata
+                if delegate_action.tool_call_metadata is not None:
+                    obs.tool_call_metadata = delegate_action.tool_call_metadata
                 break
 
         self.event_stream.add_event(obs, EventSource.AGENT)
@@ -1037,14 +1047,28 @@ class AgentController:
         elapsed_time = current_time - timestamp
 
         # Log if the pending action has been active for a long time (but don't clear it)
+        # Add throttling to prevent log spam
         if elapsed_time > 60.0:  # 1 minute - just for logging purposes
-            action_id = getattr(action, 'id', 'unknown')
-            action_type = type(action).__name__
-            self.log(
-                'warning',
-                f'Pending action active for {elapsed_time:.2f}s: {action_type} (id={action_id})',
-                extra={'msg_type': 'PENDING_ACTION_TIMEOUT'},
-            )
+            # Only log every 30 seconds to prevent spam
+            if (current_time - self._last_timeout_log) > 30.0:
+                action_id = getattr(action, 'id', 'unknown')
+                action_type = type(action).__name__
+                self.log(
+                    'warning',
+                    f'Pending action active for {elapsed_time:.2f}s: {action_type} (id={action_id})',
+                    extra={'msg_type': 'PENDING_ACTION_TIMEOUT'},
+                )
+                self._last_timeout_log = current_time
+                
+                # Force clear action if it's been pending for too long (5 minutes)
+                if elapsed_time > 300.0:
+                    self.log(
+                        'error',
+                        f'Force clearing pending action after {elapsed_time:.2f}s: {action_type} (id={action_id})',
+                        extra={'msg_type': 'PENDING_ACTION_FORCE_CLEAR'},
+                    )
+                    self._pending_action_info = None
+                    return None
 
         return action
 
@@ -1120,6 +1144,7 @@ class AgentController:
         total_events = len(self.state.history)
         kept_events_count = len(kept_events)
         reduction_percentage = round((total_events - kept_events_count) / total_events * 100, 1) if total_events > 0 else 0
+        forgotten_events_count = total_events - kept_events_count
         
         self.log(
             'warning',
@@ -1128,7 +1153,7 @@ class AgentController:
                 'msg_type': 'CONTEXT_WINDOW_REDUCTION',
                 'total_events_before': total_events,
                 'kept_events_count': kept_events_count,
-                'forgotten_events_count': len(forgotten_event_ids),
+                'forgotten_events_count': forgotten_events_count,
                 'reduction_percentage': reduction_percentage,
                 'agent_name': self.agent.name,
                 'delegate_level': self.state.delegate_level,
@@ -1302,7 +1327,7 @@ class AgentController:
         agent_metrics = self.state.metrics
 
         # Get metrics from condenser LLM if it exists
-        condenser_metrics: TokenUsage | None = None
+        condenser_metrics: Metrics | None = None
         if hasattr(self.agent, 'condenser') and hasattr(self.agent.condenser, 'llm'):
             condenser_metrics = self.agent.condenser.llm.metrics
 

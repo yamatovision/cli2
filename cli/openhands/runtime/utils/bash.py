@@ -506,7 +506,7 @@ class BashSession:
                 content=(
                     f'ERROR: Cannot execute multiple commands at once.\n'
                     f'Please run each command separately OR chain them into a single command via && or ;\n'
-                    f'Provided commands:\n{"\n".join(f"({i + 1}) {cmd}" for i, cmd in enumerate(splited_commands))}'
+                    f'Provided commands:\n{chr(10).join(f"({i + 1}) {cmd}" for i, cmd in enumerate(splited_commands))}'
                 )
             )
 
@@ -594,8 +594,8 @@ class BashSession:
             logger.debug(
                 f'PANE CONTENT GOT after {time.time() - _start_time:.2f} seconds'
             )
-            logger.debug(f'BEGIN OF PANE CONTENT: {cur_pane_output.split("\n")[:10]}')
-            logger.debug(f'END OF PANE CONTENT: {cur_pane_output.split("\n")[-10:]}')
+            logger.debug(f'BEGIN OF PANE CONTENT: {cur_pane_output.split(chr(10))[:10]}')
+            logger.debug(f'END OF PANE CONTENT: {cur_pane_output.split(chr(10))[-10:]}')
             ps1_matches = CmdOutputMetadata.matches_ps1_metadata(cur_pane_output)
             current_ps1_count = len(ps1_matches)
 

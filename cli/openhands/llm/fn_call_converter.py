@@ -318,7 +318,7 @@ The server is running on port 5000 with PID 126. You can access the list of numb
 }
 
 
-def get_example_for_tools(tools: list[dict]) -> str:
+def get_example_for_tools(tools: list[dict] | list[ChatCompletionToolParam]) -> str:
     """Generate an in-context learning example based on available tools."""
     available_tools = set()
     for tool in tools:
@@ -437,7 +437,7 @@ def convert_tool_call_to_string(tool_call: dict) -> str:
     return ret
 
 
-def convert_tools_to_description(tools: list[dict]) -> str:
+def convert_tools_to_description(tools: list[dict] | list[ChatCompletionToolParam]) -> str:
     ret = ''
     for i, tool in enumerate(tools):
         assert tool['type'] == 'function'
@@ -621,7 +621,9 @@ def convert_fncall_messages_to_non_fncall_messages(
 
 
 def _extract_and_validate_params(
-    matching_tool: dict, param_matches: Iterable[re.Match], fn_name: str
+    matching_tool: dict | ChatCompletionToolParam, 
+    param_matches: Iterable[re.Match], 
+    fn_name: str
 ) -> dict:
     params = {}
     # Parse and validate parameters

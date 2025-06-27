@@ -419,9 +419,11 @@ export class ProjectService implements IProjectService {
         if (existingProject) {
           // 既存のプロジェクトが見つかった場合は、アクティブに設定
           projectId = existingProject.id;
-          await this._projectManagementService.updateProject(projectId, {
-            updatedAt: Date.now()
-          });
+          if (projectId) { 
+            await this._projectManagementService.updateProject(projectId, {
+              updatedAt: Date.now()
+            });
+          }
           Logger.info(`ProjectService: 既存プロジェクトをアクティブに更新: ID=${projectId}, 名前=${projectName}`);
         } else {
           // 新規プロジェクトとして登録
@@ -560,12 +562,14 @@ export class ProjectService implements IProjectService {
         // アクティブタブ情報を更新
         if (existingProject) {
           const metadata = existingProject.metadata || {};
-          await this._projectManagementService.updateProject(projectId, {
-            metadata: {
-              ...metadata,
-              activeTab: activeTab || metadata.activeTab || 'scope-progress'
-            }
-          });
+          if (projectId) { 
+            await this._projectManagementService.updateProject(projectId, {
+              metadata: {
+                ...metadata,
+                activeTab: activeTab || metadata.activeTab || 'scope-progress'
+              }
+            });
+          }
         }
         
         await this._projectManagementService.setActiveProject(projectId);
@@ -578,14 +582,16 @@ export class ProjectService implements IProjectService {
           if (existingProjectWithPath) {
             // パスが同じプロジェクトが見つかった場合は更新
             projectId = existingProjectWithPath.id;
-            await this._projectManagementService.updateProject(projectId, {
-              name: name,
-              updatedAt: Date.now(),
-              metadata: {
-                ...existingProjectWithPath.metadata,
-                activeTab: activeTab || existingProjectWithPath.metadata?.activeTab || 'scope-progress'
-              }
-            });
+            if (projectId) { 
+              await this._projectManagementService.updateProject(projectId, {
+                name: name,
+                updatedAt: Date.now(),
+                metadata: {
+                  ...existingProjectWithPath.metadata,
+                  activeTab: activeTab || existingProjectWithPath.metadata?.activeTab || 'scope-progress'
+                }
+              });
+            }
             Logger.info(`ProjectService: 既存プロジェクトを更新: ID=${projectId}, 名前=${name}, アクティブタブ=${activeTab || existingProjectWithPath.metadata?.activeTab || 'scope-progress'}`);
           } else {
             // 新規プロジェクトとして登録
@@ -641,10 +647,11 @@ export class ProjectService implements IProjectService {
         });
         this._onProjectsUpdated.fire(this._currentProjects);
       } catch (error) {
-        Logger.warn(`ProjectService: プロジェクト情報の更新に失敗しました: ${error}`);
+        Logger.error(`ProjectService: プロジェクトを開く際にエラーが発生しました`, error as Error);
+        throw error;
       }
     } catch (error) {
-      Logger.error(`ProjectService: プロジェクトを開く際にエラーが発生しました`, error as Error);
+      Logger.error(`ProjectService: selectProjectでエラーが発生しました`, error as Error);
       throw error;
     }
   }
@@ -799,10 +806,12 @@ export class ProjectService implements IProjectService {
       metadata.lastTabUpdateTime = Date.now(); // 最終更新時間も記録
       
       // 5. プロジェクトを更新
-      await this._projectManagementService.updateProject(projectId, {
-        metadata: metadata,
-        updatedAt: Date.now() // プロジェクト自体の更新時間も更新
-      });
+      if (projectId) { 
+        await this._projectManagementService.updateProject(projectId, {
+          metadata: metadata,
+          updatedAt: Date.now() // プロジェクト自体の更新時間も更新
+        });
+      }
       
       // 6. アクティブプロジェクトを再取得して内部状態を更新
       this._activeProject = this._projectManagementService.getProject(projectId);

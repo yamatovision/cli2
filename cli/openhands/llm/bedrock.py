@@ -1,4 +1,4 @@
-import boto3
+import boto3  # type: ignore[import-untyped]
 
 from openhands.core.logger import openhands_logger as logger
 
