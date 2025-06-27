@@ -34,7 +34,8 @@ class AgentRegistry:
 
             # Load agent configurations
             if 'agents' in config:
-                self._agents = config['agents']
+                # Filter out non-dict values (common settings like enable_interruption)
+                self._agents = {k: v for k, v in config['agents'].items() if isinstance(v, dict)}
                 logger.info(f"Loaded {len(self._agents)} agent configurations")
 
             # Load delegation rules
