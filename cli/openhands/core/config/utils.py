@@ -295,6 +295,8 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
         'core',
         'extended',
         'agent',
+        'agents',
+        'delegation',
         'llm',
         'security',
         'sandbox',

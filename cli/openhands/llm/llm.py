@@ -208,7 +208,7 @@ class LLM(RetryMixin, DebugMixin):
         self._completion_unwrapped = self._completion
 
     def _start_cancellation_monitor(self):
-        """別スレッドで割り込み監視を開始"""
+        """別スレッドで割り込み監視を開始（Ctrl+Cシグナル検出）"""
         def monitor():
             while not self._cancellation_event.is_set():
                 if should_exit():

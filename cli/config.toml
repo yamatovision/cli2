@@ -3,7 +3,6 @@
 [core]
 # workspace_baseを指定しない場合、現在のディレクトリが使用される
 # workspace_base="./workspace"
-workspace_mount_path="/workspace"
 log_level="WARNING"
 log_dir="./logs"
 max_iterations=500
