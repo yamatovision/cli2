@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Web Guide デモ - MongoDB アカウント作成</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: #00ed64;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        
+        button:hover {
+            background: #00d158;
+        }
+        
+        /* AIガイドのスタイル */
+        #ai-guide {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        #ai-guide h3 {
+            margin-top: 0;
+            color: #00ed64;
+        }
+        
+        #ai-guide .guide-content {
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        
+        #ai-guide .guide-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        #ai-guide button {
+            flex: 1;
+            padding: 8px;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        #ai-guide .close-btn {
+            background: #666;
+        }
+        
+        /* ハイライトアニメーション */
+        .highlight-element {
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+        
+        .highlight-element::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 3px solid #ff0000;
+            border-radius: 5px;
+            pointer-events: none;
+            animation: pulse-border 1s infinite;
+        }
+        
+        @keyframes pulse-border {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .demo-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #333;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        
+        .demo-controls button {
+            background: #00ed64;
+            margin: 5px 0;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MongoDB Atlas - アカウント作成</h1>
+        <p style="text-align: center; color: #666;">これはAI Webガイドのデモページです</p>
+        
+        <form id="signup-form">
+            <div class="form-group">
+                <label for="email">メールアドレス</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" placeholder="8文字以上">
+            </div>
+            
+            <div class="form-group">
+                <label for="firstName">名前</label>
+                <input type="text" id="firstName" name="firstName" placeholder="太郎">
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">姓</label>
+                <input type="text" id="lastName" name="lastName" placeholder="山田">
+            </div>
+            
+            <div class="form-group">
+                <label for="company">会社名（オプション）</label>
+                <input type="text" id="company" name="company" placeholder="株式会社〇〇">
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="terms"> 利用規約に同意します
+                </label>
+            </div>
+            
+            <button type="submit">アカウントを作成</button>
+        </form>
+    </div>
+    
+    <!-- AIガイド表示エリア -->
+    <div id="ai-guide">
+        <h3>🤖 AIガイド</h3>
+        <div class="guide-content" id="guide-content">
+            ガイドを開始するには、下のボタンをクリックしてください。
+        </div>
+        <div class="guide-buttons">
+            <button id="next-step">次へ</button>
+            <button class="close-btn" id="close-guide">閉じる</button>
+        </div>
+    </div>
+    
+    <!-- デモコントロール -->
+    <div class="demo-controls">
+        <h4>デモコントロール</h4>
+        <button onclick="startGuide()">ガイドを開始</button>
+        <button onclick="resetDemo()">リセット</button>
+    </div>
+    
+    <script>
+        // AIガイドのステップ定義
+        const guideSteps = [
+            {
+                message: "MongoDBアカウントを作成しましょう！まず、メールアドレスを入力してください。",
+                element: "#email",
+                action: "fill"
+            },
+            {
+                message: "次に、安全なパスワードを設定しましょう。8文字以上で、大文字・小文字・数字を含めることをお勧めします。",
+                element: "#password",
+                action: "fill"
+            },
+            {
+                message: "お名前（名）を入力してください。",
+                element: "#firstName",
+                action: "fill"
+            },
+            {
+                message: "お名前（姓）を入力してください。",
+                element: "#lastName",
+                action: "fill"
+            },
+            {
+                message: "会社名は任意です。個人利用の場合は空欄でも構いません。",
+                element: "#company",
+                action: "optional"
+            },
+            {
+                message: "利用規約を確認し、同意する場合はチェックボックスをクリックしてください。",
+                element: "#terms",
+                action: "click"
+            },
+            {
+                message: "すべての必須項目を入力したら、「アカウントを作成」ボタンをクリックして完了です！",
+                element: "button[type='submit']",
+                action: "submit"
+            }
+        ];
+        
+        let currentStep = 0;
+        let guideActive = false;
+        
+        function startGuide() {
+            guideActive = true;
+            currentStep = 0;
+            document.getElementById('ai-guide').style.display = 'block';
+            showStep(currentStep);
+        }
+        
+        function showStep(stepIndex) {
+            if (stepIndex >= guideSteps.length) {
+                completeGuide();
+                return;
+            }
+            
+            const step = guideSteps[stepIndex];
+            
+            // ガイドメッセージを更新
+            document.getElementById('guide-content').innerHTML = `
+                <strong>ステップ ${stepIndex + 1}/${guideSteps.length}</strong><br>
+                ${step.message}
+            `;
+            
+            // 前のハイライトを削除
+            document.querySelectorAll('.highlight-element').forEach(el => {
+                el.classList.remove('highlight-element');
+            });
+            
+            // 新しい要素をハイライト
+            const targetElement = document.querySelector(step.element);
+            if (targetElement) {
+                targetElement.classList.add('highlight-element');
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+        
+        function completeGuide() {
+            document.getElementById('guide-content').innerHTML = `
+                <strong>🎉 ガイド完了！</strong><br>
+                すべての手順が完了しました。実際のMongoDBサイトでも同じ手順で進められます。
+            `;
+            document.getElementById('next-step').style.display = 'none';
+        }
+        
+        function resetDemo() {
+            document.getElementById('signup-form').reset();
+            currentStep = 0;
+            guideActive = false;
+            document.getElementById('ai-guide').style.display = 'none';
+            document.getElementById('next-step').style.display = 'block';
+            document.querySelectorAll('.highlight-element').forEach(el => {
+                el.classList.remove('highlight-element');
+            });
+        }
+        
+        // イベントリスナー
+        document.getElementById('next-step').addEventListener('click', () => {
+            currentStep++;
+            showStep(currentStep);
+        });
+        
+        document.getElementById('close-guide').addEventListener('click', () => {
+            document.getElementById('ai-guide').style.display = 'none';
+            guideActive = false;
+        });
+        
+        // フォーム送信を防ぐ
+        document.getElementById('signup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            alert('デモフォームです。実際のアカウントは作成されません。');
+        });
+        
+        // ページロード時の説明
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!guideActive) {
+                    alert('左下の「ガイドを開始」ボタンをクリックして、AIガイドのデモを体験してください！');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

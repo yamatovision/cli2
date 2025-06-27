@@ -37,6 +37,7 @@ from openhands.core.exceptions import (
     LLMMalformedActionError,
     LLMNoActionError,
     LLMResponseError,
+    UserCancelledError,
 )
 from openhands.core.logger import LOG_ALL_EVENTS
 from openhands.core.logger import openhands_logger as logger
@@ -956,6 +957,10 @@ class AgentController:
                 if action is None:
                     raise LLMNoActionError('No action was returned')
                 action._source = EventSource.AGENT  # type: ignore [attr-defined]
+            except UserCancelledError:
+                self.log('info', '🛑 Agent step cancelled by user')
+                await self.set_agent_state_to(AgentState.STOPPED)
+                return
             except (
                 LLMMalformedActionError,
                 LLMNoActionError,

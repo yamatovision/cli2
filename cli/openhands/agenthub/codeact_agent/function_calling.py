@@ -111,9 +111,11 @@ def response_to_actions(
                     )
                 action = IPythonRunCellAction(code=arguments['code'])
             elif tool_call.function.name == 'delegate_to_browsing_agent':
+                # Ensure inputs is a dict
+                inputs = arguments if isinstance(arguments, dict) else {'task': str(arguments)}
                 action = AgentDelegateAction(
                     agent='BrowsingAgent',
-                    inputs=arguments,
+                    inputs=inputs,
                 )
 
             # ================================================
@@ -128,19 +130,40 @@ def response_to_actions(
                     raise FunctionCallValidationError(
                         f'Missing required argument "inputs" in tool call {tool_call.function.name}'
                     )
+                
+                # Handle inputs - if it's a string, try to parse it as JSON
+                inputs = arguments['inputs']
+                if isinstance(inputs, str):
+                    try:
+                        inputs = json.loads(inputs)
+                    except json.JSONDecodeError:
+                        # If JSON parsing fails, create a dict with the string as 'task'
+                        inputs = {'task': inputs}
+                
                 action = AgentDelegateAction(
                     agent=arguments['agent'],
-                    inputs=arguments['inputs'],
-                    thought=arguments.get('thought', ''),
+                    inputs=inputs,
                 )
 
             # ================================================
             # AgentFinishAction
             # ================================================
             elif tool_call.function.name == FinishTool['function']['name']:
+                from openhands.events.action.agent import AgentFinishTaskCompleted
+                
+                # Convert boolean to enum
+                task_completed_bool = arguments.get('task_completed', None)
+                task_completed_enum = None
+                if task_completed_bool is not None:
+                    task_completed_enum = (
+                        AgentFinishTaskCompleted.TRUE 
+                        if task_completed_bool 
+                        else AgentFinishTaskCompleted.FALSE
+                    )
+                
                 action = AgentFinishAction(
                     final_thought=arguments.get('message', ''),
-                    task_completed=arguments.get('task_completed', None),
+                    task_completed=task_completed_enum,
                 )
 
             # ================================================

@@ -17,4 +17,5 @@ CURRENT_DIR="$(pwd)"
 # OpenHandsを起動
 cd "$SCRIPT_DIR" || exit 1
 WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
-    --config-file "$SCRIPT_DIR/agent_configs.toml"
+    --config-file "$SCRIPT_DIR/agent_configs.toml" \
+    --agent-cls "orchestration"

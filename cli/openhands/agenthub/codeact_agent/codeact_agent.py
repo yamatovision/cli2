@@ -81,6 +81,12 @@ class CodeActAgent(Agent):
         - config (AgentConfig): The configuration for this agent
         """
         super().__init__(llm, config)
+        
+        # LLMに割り込み設定を適用
+        if hasattr(llm, '_enable_interruption'):
+            llm._enable_interruption = config.enable_interruption
+            llm._check_interval = config.interruption_check_interval
+        
         self.pending_actions: deque['Action'] = deque()
         self.reset()
         self.tools = self._get_tools()

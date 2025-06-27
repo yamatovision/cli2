@@ -19,8 +19,8 @@ class AgentConfig(BaseModel):
     """The name of the llm config to use. If specified, this will override global llm config."""
     classpath: str | None = Field(default=None)
     """The classpath of the agent to use. To be used for custom agents that are not defined in the openhands.agenthub package."""
-    system_prompt_filename: str = Field(default='requirements_engineer.j2')
-    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'requirements_engineer.j2' (BlueLamp Orchestration Agent)."""
+    system_prompt_filename: str = Field(default='orchestration_agent.j2')
+    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'orchestration_agent.j2' (BlueLamp Orchestration Agent)."""
     enable_browsing: bool = Field(default=True)
     """Whether to enable browsing tool.
     Note: If using CLIRuntime, browsing is not implemented and should be disabled."""
@@ -49,6 +49,12 @@ class AgentConfig(BaseModel):
     """Whether history should be truncated to continue the session when hitting LLM context length limit."""
     enable_som_visual_browsing: bool = Field(default=True)
     """Whether to enable SoM (Set of Marks) visual browsing."""
+    enable_interruption: bool = Field(default=True)
+    """Whether to enable interruption (Ctrl+C) during LLM calls for immediate response."""
+    interruption_check_interval: float = Field(default=0.1)
+    """Interval in seconds between interruption checks during LLM calls."""
+    interruption_timeout: float = Field(default=300.0)
+    """Maximum time in seconds to wait for LLM response before automatic timeout."""
     condenser: CondenserConfig = Field(
         default_factory=lambda: NoOpCondenserConfig(type='noop')
     )

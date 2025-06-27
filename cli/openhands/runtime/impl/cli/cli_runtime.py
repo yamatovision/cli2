@@ -493,7 +493,8 @@ class CLIRuntime(Runtime):
             'Please disable the Jupyter plugin in AgentConfig.'
         )
         return ErrorObservation(
-            'Executing IPython cells is not implemented in CLIRuntime. '
+            'IPythonセルの実行はCLIランタイムでは利用できません。\n'
+            'Pythonスクリプトを作成して実行するか、別の方法をお試しください。'
         )
 
     def _sanitize_filename(self, filename: str) -> str:
@@ -508,8 +509,18 @@ class CLIRuntime(Runtime):
             )
         elif filename.startswith('/'):
             if not filename.startswith(self._workspace_path):
+                # ユーザーフレンドリーなエラーメッセージ
+                hint = (
+                    f"\n\n💡 ヒント: 現在の作業ディレクトリ外のファイルにアクセスしようとしています。\n"
+                    f"現在の作業ディレクトリ: {self._workspace_path}\n"
+                    f"要求されたパス: {filename}\n\n"
+                    f"解決方法:\n"
+                    f"1. 現在のディレクトリ内のファイルで作業を行う\n"
+                    f"2. 必要なファイルを現在のディレクトリにコピーする\n"
+                    f"3. 新しいセッションを適切なディレクトリから開始する"
+                )
                 raise LLMMalformedActionError(
-                    f'Invalid path: {filename}. You can only work with files in {self._workspace_path}.'
+                    f'アクセスできないパス: {filename}{hint}'
                 )
             actual_filename = filename
         else:
@@ -520,8 +531,16 @@ class CLIRuntime(Runtime):
 
         # Check if the resolved path is still within the workspace
         if not resolved_path.startswith(self._workspace_path):
+            # パストラバーサル攻撃を防ぐためのエラー（日本語化）
+            hint = (
+                f"\n\n⚠️ セキュリティ警告: パストラバーサルが検出されました。\n"
+                f"要求されたパス: {filename}\n"
+                f"解決されたパス: {resolved_path}\n"
+                f"作業ディレクトリ: {self._workspace_path}\n\n"
+                f"'..' や '.' を使用した相対パスは、作業ディレクトリ内に収まる必要があります。"
+            )
             raise LLMMalformedActionError(
-                f'Invalid path traversal: {filename}. Path resolves outside the workspace. Resolved: {resolved_path}, Workspace: {self._workspace_path}'
+                f'不正なパストラバーサル: {filename}{hint}'
             )
 
         return resolved_path
@@ -535,7 +554,10 @@ class CLIRuntime(Runtime):
 
         # Cannot read binary files
         if os.path.exists(file_path) and is_binary(file_path):
-            return ErrorObservation('ERROR_BINARY_FILE')
+            return ErrorObservation(
+                f'バイナリファイルは読み込めません: {action.path}\n'
+                f'テキストファイルのみ読み込み可能です。'
+            )
 
         # Use OHEditor for OH_ACI implementation source
         if action.impl_source == FileReadSource.OH_ACI:

@@ -9,7 +9,8 @@
     "test": "jest --detectOpenHandles",
     "lint": "eslint .",
     "test:api": "node tests/api.test.js",
-    "test:proxy": "jest --testPathPattern=tests/api-proxy.test.js"
+    "test:proxy": "jest --testPathPattern=tests/api-proxy.test.js",
+    "ts:check": "node ../scripts/ts-error/analyzer.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

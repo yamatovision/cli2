@@ -28,9 +28,10 @@ Available agents:
 {chr(10).join(agent_descriptions)}
 
 The inputs should include:
-- task: Clear description of what needs to be done
-- requirements: Any specific requirements or constraints
-- context: Background information the agent needs to know
+- task: Clear description of what needs to be done (required)
+- completion_criteria: Clear definition of what constitutes task completion (required)
+- requirements: Any specific requirements or constraints (optional)
+- context: Background information the agent needs to know (optional)
 """
 
 # 動的にエージェントリストを取得
@@ -70,12 +71,12 @@ DelegateTool = ChatCompletionToolParam(
                             'type': 'string',
                             'description': 'Background information and context the agent needs',
                         },
+                        'completion_criteria': {
+                            'type': 'string',
+                            'description': 'Clear definition of what constitutes task completion',
+                        },
                     },
-                    'required': ['task'],
-                },
-                'thought': {
-                    'type': 'string',
-                    'description': 'Your reasoning for delegating to this specific agent',
+                    'required': ['task', 'completion_criteria'],
                 },
             },
         },

@@ -27,6 +27,7 @@ export enum Feature {
   SIMPLE_CHAT = 'simple_chat',
   CLAUDE_CODE = 'claude_code',
   ENV_VARIABLES = 'env_variables',
+  ENVIRONMENT_VARIABLES = 'environment_variables', // 環境変数アシスタント
   
   // 管理者専用機能
   USER_MANAGEMENT = 'user_management',
@@ -54,7 +55,8 @@ export const RoleFeatureMap: Record<Role, Feature[]> = {
     Feature.MOCKUP_GALLERY,
     Feature.SIMPLE_CHAT,
     Feature.CLAUDE_CODE,
-    Feature.ENV_VARIABLES
+    Feature.ENV_VARIABLES,
+    Feature.ENVIRONMENT_VARIABLES
   ],
   
   // 管理者はすべての機能にアクセス可能
@@ -69,6 +71,7 @@ export const RoleFeatureMap: Record<Role, Feature[]> = {
     Feature.SIMPLE_CHAT,
     Feature.CLAUDE_CODE,
     Feature.ENV_VARIABLES,
+    Feature.ENVIRONMENT_VARIABLES,
     Feature.USER_MANAGEMENT,
     Feature.SYSTEM_SETTINGS
   ],
@@ -85,6 +88,7 @@ export const RoleFeatureMap: Record<Role, Feature[]> = {
     Feature.SIMPLE_CHAT,
     Feature.CLAUDE_CODE,
     Feature.ENV_VARIABLES,
+    Feature.ENVIRONMENT_VARIABLES,
     Feature.USER_MANAGEMENT,
     Feature.SYSTEM_SETTINGS
   ]
@@ -104,6 +108,7 @@ export const FeatureDisplayNames: Record<Feature, string> = {
   [Feature.SIMPLE_CHAT]: '要件定義チャット',
   [Feature.CLAUDE_CODE]: 'Claude Code 連携',
   [Feature.ENV_VARIABLES]: '環境変数管理',
+  [Feature.ENVIRONMENT_VARIABLES]: '環境変数アシスタント',
   [Feature.USER_MANAGEMENT]: 'ユーザー管理',
   [Feature.SYSTEM_SETTINGS]: 'システム設定'
 };

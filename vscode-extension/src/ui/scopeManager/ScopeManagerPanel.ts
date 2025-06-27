@@ -348,6 +348,14 @@ export class ScopeManagerPanel extends ProtectedPanel {
             case 'openOriginalMockupGallery':
               await this._handleOpenOriginalMockupGallery(message.filePath);
               break;
+            
+            // 環境変数アシスタント関連
+            case 'createEnvFile':
+              await this._handleCreateEnvFile(message.content);
+              break;
+            case 'selectEnvFile':
+              await this._handleSelectEnvFile();
+              break;
 
             case 'openMarkdownViewer':
               await this._handleOpenMarkdownViewer();
@@ -1654,6 +1662,83 @@ export class ScopeManagerPanel extends ProtectedPanel {
       Logger.info('スコープマネージャー: 認証状態監視を開始しました');
     } catch (error) {
       Logger.error('認証状態監視の設定中にエラーが発生しました', error as Error);
+    }
+  }
+
+  /**
+   * .envファイルを作成する
+   */
+  private async _handleCreateEnvFile(content: string): Promise<void> {
+    try {
+      if (!this._projectPath) {
+        vscode.window.showErrorMessage('プロジェクトが選択されていません');
+        return;
+      }
+
+      const envFilePath = path.join(this._projectPath, '.env');
+      
+      // ファイルが既に存在する場合は確認
+      if (fs.existsSync(envFilePath)) {
+        const choice = await vscode.window.showWarningMessage(
+          '.envファイルが既に存在します。上書きしますか？',
+          '上書き',
+          'キャンセル'
+        );
+        
+        if (choice !== '上書き') {
+          return;
+        }
+      }
+
+      // ファイルを作成
+      fs.writeFileSync(envFilePath, content, 'utf8');
+      
+      // 成功メッセージ
+      vscode.window.showInformationMessage('.envファイルを作成しました');
+      
+      // ファイルをエディタで開く
+      const document = await vscode.workspace.openTextDocument(envFilePath);
+      await vscode.window.showTextDocument(document);
+      
+    } catch (error) {
+      Logger.error('.envファイルの作成中にエラーが発生しました', error as Error);
+      vscode.window.showErrorMessage('.envファイルの作成に失敗しました');
+    }
+  }
+
+  /**
+   * .envファイルを選択して読み込む
+   */
+  private async _handleSelectEnvFile(): Promise<void> {
+    try {
+      const options: vscode.OpenDialogOptions = {
+        canSelectMany: false,
+        openLabel: '選択',
+        filters: {
+          'Environment files': ['env'],
+          'All files': ['*']
+        },
+        defaultUri: this._projectPath ? vscode.Uri.file(this._projectPath) : undefined
+      };
+
+      const fileUri = await vscode.window.showOpenDialog(options);
+      
+      if (fileUri && fileUri[0]) {
+        const filePath = fileUri[0].fsPath;
+        const content = fs.readFileSync(filePath, 'utf8');
+        
+        // Webviewに内容を送信
+        this._panel.webview.postMessage({
+          command: 'loadEnvContent',
+          content: content
+        });
+        
+        vscode.window.showInformationMessage('.envファイルを読み込みました');
+      }
+      
+    } catch (error) {
+      Logger.error('.envファイルの読み込み中にエラーが発生しました', error as Error);
+      vscode.window.showErrorMessage('.envファイルの読み込みに失敗しました');
     }
   }
 }

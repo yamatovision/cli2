@@ -1,5 +1,165 @@
 # ブラウザエージェント統合実装計画
 
+## ディレクトリ構造とプロジェクト分離戦略
+
+### 現在の構造
+```
+AppGenius/
+├── cli/                    # ブルーランプCLI（browsing_agent, visual_browsing_agent含む）
+├── vscode-extension/       # VSCode拡張機能
+├── portal/                 # Webポータル
+└── docs/                   # ドキュメント
+```
+
+### Phase 1: 環境変数アシスタント（現在のAppGenius）
+**対象ディレクトリ**: `/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/vscode-extension/`
+**使用エージェント**: `browsing_agent`
+
+### Phase 2: LP/HP制作特化プロジェクト（コピープロジェクト）
+**対象ディレクトリ**: `/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGeniusのコピー/`
+**使用エージェント**: `visual_browsing_agent`
+
+## Phase 2: プロジェクト分離とファイル移行計画
+
+### 移行対象ファイル・フォルダ
+
+#### 1. 必須移行ファイル（CLIシステム）
+```bash
+# 元のディレクトリから移行
+AppGenius/cli/ → AppGeniusのコピー/cli/
+```
+
+**移行するファイル**:
+- `cli/bluelamp` - メインCLI実行ファイル
+- `cli/agent_configs.toml` - エージェント設定（visual_browsing_agent含む）
+- `cli/config.toml` - CLI設定
+- `cli/openhands/` - OpenHandsコア（visual_browsing_agent実装含む）
+- `cli/pyproject.toml` - Python依存関係
+- `cli/poetry.lock` - 依存関係ロック
+- `cli/install-bluelamp.sh` - インストールスクリプト
+
+#### 2. VSCode拡張機能の改修
+```bash
+# 新しい構造
+AppGeniusのコピー/
+├── cli/                    # 移行したCLIシステム
+├── vscode-extension/       # LP/HP制作特化の拡張機能
+│   ├── src/
+│   │   ├── services/
+│   │   │   ├── UIAnalysisService.ts      # 新規作成
+│   │   │   └── VisualBrowsingService.ts  # 新規作成
+│   │   ├── ui/
+│   │   │   ├── lpgenius/                 # 新規作成
+│   │   │   └── hpgenius/                 # 新規作成
+│   │   └── extension.ts                  # LP/HP機能追加
+│   └── package.json                      # LP/HP用コマンド追加
+└── docs/
+    ├── lpgenius_requirements.md
+    ├── hpgenius_requirements.md
+    └── LPGeniusImplementationPLAN.md
+```
+
+#### 3. 不要ファイルの削除
+```bash
+# コピープロジェクトから削除
+AppGeniusのコピー/portal/          # バックエンド不要
+AppGeniusのコピー/docs/deployment/ # デプロイ関連不要
+```
+
+### 具体的な移行手順
+
+#### Step 1: CLIシステムの移行
+```bash
+# 1. 必要なCLIファイルをコピー
+cp -r AppGenius/cli/ AppGeniusのコピー/cli/
+
+# 2. 不要なファイルを削除
+rm -rf AppGeniusのコピー/cli/logs/
+rm -rf AppGeniusのコピー/cli/cache/
+rm -rf AppGeniusのコピー/cli/workspace/
+```
+
+#### Step 2: VSCode拡張機能の特化
+```bash
+# 1. package.jsonの更新
+# LP/HP制作用のコマンドを追加
+# 環境変数アシスタント関連のコマンドを削除
+
+# 2. 新しいサービスクラスの作成
+# UIAnalysisService.ts
+# VisualBrowsingService.ts
+
+# 3. 新しいUIパネルの作成
+# LPGeniusPanel.ts
+# HPGeniusPanel.ts
+```
+
+#### Step 3: プロンプトファイルの整理
+```bash
+# LP/HP特化のプロンプトを作成
+AppGeniusのコピー/docs/prompts/
+├── ★1conversion_strategist.md
+├── ★2sales_copywriter.md
+├── ★3lp_designer.md
+├── ★4lp_architect.md
+├── ★5performance_optimizer.md
+├── ★6tracking_setup.md
+├── ★7implementation_engineer.md
+├── ★8ab_test_manager.md
+├── ★9brand_strategist.md        # HP用
+├── ★10sitemap_architect.md      # HP用
+├── ★11content_strategist.md     # HP用
+├── ★12design_system_creator.md  # HP用
+├── ★13ux_designer.md           # HP用
+├── ★14frontend_implementer.md  # HP用
+├── ★15performance_optimizer.md # HP用
+├── ★16seo_specialist.md        # HP用
+├── ★17cms_integration.md       # HP用
+└── ★18qa_manager.md            # HP用
+```
+
+### 最終的なディレクトリ構造
+
+#### 元のAppGenius（汎用開発支援）
+```
+AppGenius/
+├── cli/                    # browsing_agent統合済み
+├── vscode-extension/       # 環境変数アシスタント追加
+│   ├── src/
+│   │   ├── services/
+│   │   │   └── BrowserAutomationService.ts
+│   │   └── ui/
+│   │       └── environmentVariables/
+│   │           └── EnvironmentVariablesAssistantPanel.ts
+│   └── package.json        # 環境変数アシスタントコマンド追加
+├── portal/                 # Webポータル（そのまま）
+└── docs/
+    └── browser-integration-plan.md
+```
+
+#### コピープロジェクト（LP/HP制作特化）
+```
+AppGeniusのコピー/
+├── cli/                    # visual_browsing_agent統合済み
+├── vscode-extension/       # LP/HP制作特化
+│   ├── src/
+│   │   ├── services/
+│   │   │   ├── UIAnalysisService.ts
+│   │   │   └── VisualBrowsingService.ts
+│   │   └── ui/
+│   │       ├── lpgenius/
+│   │       │   ├── LPGeniusPanel.ts
+│   │       │   └── ConversionStrategyPanel.ts
+│   │       └── hpgenius/
+│   │           ├── HPGeniusPanel.ts
+│   │           └── BrandStrategyPanel.ts
+│   └── package.json        # LP/HP制作コマンド追加
+└── docs/
+    ├── lpgenius_requirements.md
+    ├── hpgenius_requirements.md
+    └── LPGeniusImplementationPLAN.md
+```
+
 ## Phase 1: 環境変数アシスタントにブラウザ操作機能追加
 
 ### 1.1 新しいサービスクラスの作成

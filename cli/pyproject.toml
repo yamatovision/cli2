@@ -87,6 +87,7 @@ anthropic = { extras = [ "vertex" ], version = "*" }
 boto3 = "*"
 kubernetes = "^33.1.0"
 pyyaml = "^6.0.2"
+memory-profiler = "^0.61.0"
 
 [tool.poetry.group.dev]
 optional = true

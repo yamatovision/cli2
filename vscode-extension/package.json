@@ -171,6 +171,12 @@
         "key": "ctrl+shift+d",
         "mac": "cmd+shift+d",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "appgenius.ai.openEnvironmentVariablesAssistant",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorTextFocus"
       }
     ],
     "viewsContainers": {
@@ -246,6 +252,11 @@
         },
         {
           "command": "appgenius-ai.openDevelopmentAssistant",
+          "group": "AppGenius",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "appgenius.ai.openEnvironmentVariablesAssistant",
           "group": "AppGenius",
           "when": "editorTextFocus"
         },
@@ -386,6 +397,21 @@
           "type": "string",
           "default": "",
           "description": "現在選択中のプロジェクトパス"
+        },
+        "appgeniusAI.browserAutomation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "ブラウザ自動化機能を有効にする"
+        },
+        "appgeniusAI.browserAutomation.headless": {
+          "type": "boolean",
+          "default": false,
+          "description": "ヘッドレスモードでブラウザを実行"
+        },
+        "appgeniusAI.browserAutomation.timeout": {
+          "type": "number",
+          "default": 30000,
+          "description": "ブラウザ操作のタイムアウト（ミリ秒）"
         }
       }
     }
@@ -438,7 +464,7 @@
     "mocha": "^10.2.0",
     "sinon": "^15.2.0",
     "ts-jest": "^29.2.6",
-    "ts-loader": "^9.4.2",
+    "ts-loader": "^9.5.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.0.4",

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# BlueLamp BrowsingAgent専用起動スクリプト
+
+# シンボリックリンクを解決して実際のディレクトリを取得
+if [ -L "$0" ]; then
+    SCRIPT_PATH="$(readlink "$0")"
+else
+    SCRIPT_PATH="$0"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+# 現在のディレクトリを保存
+CURRENT_DIR="$(pwd)"
+
+# BrowsingAgent専用設定でOpenHandsを起動
+cd "$SCRIPT_DIR" || exit 1
+
+echo "🌐 BrowsingAgent起動中..."
+echo "ワークスペース: $CURRENT_DIR"
+echo "設定ファイル: $SCRIPT_DIR/browsing_config.toml"
+echo ""
+
+# タスクが指定されていない場合は対話モードで起動
+if [ $# -eq 0 ] || [[ "$*" != *"-t"* && "$*" != *"--task"* ]]; then
+    echo "🗣️  対話モードで起動します..."
+    echo "ブラウザ操作について何でも聞いてください！"
+    echo ""
+    WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
+        --config-file "$SCRIPT_DIR/browsing_config.toml" \
+        -c BrowsingAgent
+else
+    # タスクが指定されている場合はタスクモードで起動
+    WORKSPACE_BASE="$CURRENT_DIR" poetry run python -m openhands.cli.main \
+        --config-file "$SCRIPT_DIR/browsing_config.toml" \
+        -c BrowsingAgent \
+        "$@"
+fi

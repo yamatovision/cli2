@@ -21,6 +21,7 @@ from openhands.controller.agent import Agent
 
 # Original orchestrator agent
 Agent.register('CodeActAgent', CodeActAgent)
+Agent.register('orchestration', CodeActAgent)  # BlueLamp用のオーケストレーター
 
 # 16 Microagents System (numbered according to microagents/*.md)
 Agent.register('01_requirements_engineer', RequirementsEngineerAgent)  # ★1 要件定義エンジニア

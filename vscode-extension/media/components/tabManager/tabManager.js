@@ -373,6 +373,20 @@ class TabManager {
         }, false);
       }
     }
+    // 環境変数タブが選択された場合の処理
+    else if (tabId === 'environment-variables') {
+      console.log('環境変数タブが選択されました');
+      
+      // 環境変数マネージャーが初期化されていない場合は初期化
+      if (window.environmentVariablesManager) {
+        // 既存のプロジェクトの.envファイルがあれば読み込み
+        const projectPath = stateManager.getState().activeProjectPath;
+        if (projectPath) {
+          // .envファイルの存在チェックと自動読み込みは後で実装
+          console.log('プロジェクトパス:', projectPath);
+        }
+      }
+    }
     
     // UIの更新
     this.tabs.forEach(tab => {

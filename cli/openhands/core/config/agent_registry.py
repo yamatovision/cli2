@@ -55,7 +55,9 @@ class AgentRegistry:
 
         return AgentConfig(
             classpath=agent_info.get('classpath'),
-            system_prompt_filename=agent_info.get('system_prompt_filename', 'system_prompt.j2')
+            system_prompt_filename=agent_info.get('system_prompt_filename', 'system_prompt.j2'),
+            enable_finish=agent_info.get('enable_finish', True),
+            enable_delegate=agent_info.get('enable_delegate', True)
         )
 
     def can_delegate_to(self, from_agent: str, to_agent: str) -> bool:
