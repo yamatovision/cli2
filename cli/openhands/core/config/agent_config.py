@@ -9,6 +9,12 @@ from openhands.utils.import_utils import get_impl
 
 
 class AgentConfig(BaseModel):
+    """Configuration for an agent.
+    
+    Note: The fields 'enable_prompt_extensions' and 'disabled_microagents' are deprecated
+    and no longer used for microagent functionality. They are kept for backward compatibility
+    to avoid breaking existing configurations and tests.
+    """
     llm_config: str | None = Field(default=None)
     """The name of the llm config to use. If specified, this will override global llm config."""
     classpath: str | None = Field(default=None)
@@ -34,11 +40,11 @@ class AgentConfig(BaseModel):
     enable_delegate: bool = Field(default=True)
     """Whether to enable agent delegation tool"""
     enable_prompt_extensions: bool = Field(default=True)
-    """Whether to enable prompt extensions"""
+    """DEPRECATED: This field is no longer used. Kept for backward compatibility."""
     enable_mcp: bool = Field(default=True)
     """Whether to enable MCP tools"""
     disabled_microagents: list[str] = Field(default_factory=list)
-    """A list of microagents to disable (by name, without .py extension, e.g. ["github", "lint"]). Default is None."""
+    """DEPRECATED: This field is no longer used. Kept for backward compatibility."""
     enable_history_truncation: bool = Field(default=True)
     """Whether history should be truncated to continue the session when hitting LLM context length limit."""
     enable_som_visual_browsing: bool = Field(default=True)
@@ -63,10 +69,10 @@ class AgentConfig(BaseModel):
         Example:
         Apply generic agent config with custom agent overrides, e.g.
             [agent]
-            enable_prompt_extensions = false
+            enable_browsing = false
             [agent.BrowsingAgent]
-            enable_prompt_extensions = true
-        results in prompt_extensions being true for BrowsingAgent but false for others.
+            enable_browsing = true
+        results in browsing being true for BrowsingAgent but false for others.
 
         Returns:
             dict[str, AgentConfig]: A mapping where the key "agent" corresponds to the default configuration

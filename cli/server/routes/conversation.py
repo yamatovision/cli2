@@ -6,7 +6,6 @@ from openhands.core.logger import openhands_logger as logger
 from openhands.events.event_filter import EventFilter
 from openhands.events.serialization.event import event_to_dict
 from openhands.memory.memory import Memory
-from openhands.microagent.types import InputMetadata
 from openhands.runtime.base import Runtime
 from openhands.server.dependencies import get_dependencies
 from openhands.server.session.conversation import ServerConversation
@@ -162,92 +161,3 @@ async def add_event(
     return JSONResponse({'success': True})
 
 
-class MicroagentResponse(BaseModel):
-    """Response model for microagents endpoint."""
-
-    name: str
-    type: str
-    content: str
-    triggers: list[str] = []
-    inputs: list[InputMetadata] = []
-    tools: list[str] = []
-
-
-@app.get('/microagents')
-async def get_microagents(
-    conversation: ServerConversation = Depends(get_conversation),
-) -> JSONResponse:
-    """Get all microagents associated with the conversation.
-
-    This endpoint returns all repository and knowledge microagents that are loaded for the conversation.
-
-    Returns:
-        JSONResponse: A JSON response containing the list of microagents.
-    """
-    try:
-        # Get the agent session for this conversation
-        agent_session = conversation_manager.get_agent_session(conversation.sid)
-
-        if not agent_session:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={'error': 'Agent session not found for this conversation'},
-            )
-
-        # Access the memory to get the microagents
-        memory: Memory | None = agent_session.memory
-        if memory is None:
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={
-                    'error': 'Memory is not yet initialized for this conversation'
-                },
-            )
-
-        # Prepare the response
-        microagents = []
-
-        # Add repo microagents
-        for name, agent in memory.repo_microagents.items():
-            microagents.append(
-                MicroagentResponse(
-                    name=name,
-                    type='repo',
-                    content=agent.content,
-                    triggers=[],
-                    inputs=agent.metadata.inputs,
-                    tools=[
-                        server.name for server in agent.metadata.mcp_tools.stdio_servers
-                    ]
-                    if agent.metadata.mcp_tools
-                    else [],
-                )
-            )
-
-        # Add knowledge microagents
-        for name, agent in memory.knowledge_microagents.items():
-            microagents.append(
-                MicroagentResponse(
-                    name=name,
-                    type='knowledge',
-                    content=agent.content,
-                    triggers=agent.triggers,
-                    inputs=agent.metadata.inputs,
-                    tools=[
-                        server.name for server in agent.metadata.mcp_tools.stdio_servers
-                    ]
-                    if agent.metadata.mcp_tools
-                    else [],
-                )
-            )
-
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={'microagents': [m.dict() for m in microagents]},
-        )
-    except Exception as e:
-        logger.error(f'Error getting microagents: {e}')
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={'error': f'Error getting microagents: {e}'},
-        )

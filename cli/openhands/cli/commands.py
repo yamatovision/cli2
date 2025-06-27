@@ -42,9 +42,8 @@ async def handle_commands(
     config: OpenHandsConfig,
     current_dir: str,
     settings_store: FileSettingsStore,
-) -> tuple[bool, bool, bool]:
+) -> tuple[bool, bool]:
     close_repl = False
-    reload_microagents = False
     new_session_requested = False
 
     if command == '/exit':
@@ -70,7 +69,7 @@ async def handle_commands(
         action = MessageAction(content=command)
         event_stream.add_event(action, EventSource.USER)
 
-    return close_repl, reload_microagents, new_session_requested
+    return close_repl, new_session_requested
 
 
 def handle_exit_command(

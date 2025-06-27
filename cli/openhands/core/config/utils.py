@@ -422,7 +422,7 @@ def get_agent_config_arg(
 
     ```
     [agent.default]
-    enable_prompt_extensions = false
+    enable_browsing = false
     ```
 
     The user-defined group name, like "default", is the argument to this function. The function will load the AgentConfig object

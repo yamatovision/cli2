@@ -45,7 +45,6 @@ from openhands.events import (
     EventSource,
     EventStream,
     EventStreamSubscriber,
-    RecallType,
 )
 from openhands.events.action import (
     Action,
@@ -60,7 +59,7 @@ from openhands.events.action import (
     NullAction,
     SystemMessageAction,
 )
-from openhands.events.action.agent import CondensationAction, RecallAction
+from openhands.events.action.agent import CondensationAction  # RecallAction removed
 from openhands.events.event import Event
 from openhands.events.observation import (
     AgentDelegateObservation,
@@ -94,6 +93,8 @@ class AgentController:
     agent_configs: dict[str, AgentConfig]
     parent: 'AgentController | None' = None
     delegate: 'AgentController | None' = None
+    _delegate_start_time: float | None = None  # timestamp when delegate was started
+    _delegate_last_activity: float | None = None  # timestamp of last delegate activity
     _pending_action_info: tuple[Action, float] | None = None  # (action, timestamp)
     _closed: bool = False
     _cached_first_user_message: MessageAction | None = None
@@ -322,11 +323,28 @@ class AgentController:
         """
         # it might be the delegate's day in the sun
         if self.delegate is not None:
+            delegate_state = self.delegate.get_agent_state()
+            self.log(
+                'debug',
+                f'Delegate exists with state: {delegate_state}. Not stepping parent agent.',
+                extra={'msg_type': 'DELEGATE_BLOCKING_STEP', 'delegate_state': str(delegate_state)}
+            )
             return False
 
+        # ユーザーメッセージは最優先で処理（デッドロック防止）
+        if isinstance(event, MessageAction) and event.source == EventSource.USER:
+            # ペンディングアクションがある場合は詳細ログを出力してクリア
+            if self._pending_action:
+                # Log clearing of pending action
+                self.log(
+                    'warning',
+                    f'Clearing pending action {type(self._pending_action).__name__} to process user message',
+                    extra={'msg_type': 'CLEARING_PENDING_FOR_USER'}
+                )
+                self._pending_action = None
+            return True
+
         if isinstance(event, Action):
-            if isinstance(event, MessageAction) and event.source == EventSource.USER:
-                return True
             if (
                 isinstance(event, MessageAction)
                 and self.get_agent_state() != AgentState.AWAITING_USER_INPUT
@@ -343,7 +361,7 @@ class AgentController:
                 isinstance(event, NullObservation)
                 and event.cause is not None
                 and event.cause
-                > 0  # NullObservation has cause > 0 (RecallAction), not 0 (user message)
+                > 0  # NullObservation has cause > 0, not 0 (user message)
             ):
                 return True
             if isinstance(event, AgentStateChangedObservation) or isinstance(
@@ -362,6 +380,38 @@ class AgentController:
         # If we have a delegate that is not finished or errored, forward events to it
         if self.delegate is not None:
             delegate_state = self.delegate.get_agent_state()
+            self.log(
+                'debug',
+                f'Delegate found with state: {delegate_state}. Event type: {type(event).__name__}',
+                extra={'msg_type': 'DELEGATE_EVENT_PROCESSING', 'delegate_state': str(delegate_state), 'event_type': type(event).__name__}
+            )
+            
+            # Check for delegate timeout (6 hours = 21600 seconds)
+            import time
+            current_time = time.time()
+            if self._delegate_start_time is not None:
+                elapsed_time = current_time - self._delegate_start_time
+                if elapsed_time > 21600:  # 6 hours timeout
+                    self.log(
+                        'warning',
+                        f'Delegate has been running for {elapsed_time:.1f} seconds. Forcing termination.',
+                        extra={'msg_type': 'DELEGATE_TIMEOUT', 'elapsed_time': elapsed_time}
+                    )
+                    self.end_delegate()
+                    return
+                    
+                # Check for delegate inactivity (10 minutes = 600 seconds)
+                if self._delegate_last_activity is not None:
+                    inactivity_time = current_time - self._delegate_last_activity
+                    if inactivity_time > 600:  # 10 minutes inactivity
+                        self.log(
+                            'warning',
+                            f'Delegate has been inactive for {inactivity_time:.1f} seconds. Forcing termination.',
+                            extra={'msg_type': 'DELEGATE_INACTIVITY', 'inactivity_time': inactivity_time}
+                        )
+                        self.end_delegate()
+                        return
+            
             if (
                 delegate_state
                 not in (
@@ -375,12 +425,29 @@ class AgentController:
                 in self.delegate.state.last_error
             ):
                 # Forward the event to delegate and skip parent processing
+                self.log(
+                    'debug',
+                    f'Forwarding event {type(event).__name__} to delegate in state {delegate_state}',
+                    extra={'msg_type': 'FORWARDING_TO_DELEGATE'}
+                )
                 asyncio.get_event_loop().run_until_complete(
                     self.delegate._on_event(event)
+                )
+                # Update last activity time after successful event processing
+                self._delegate_last_activity = current_time
+                self.log(
+                    'debug',
+                    f'Event forwarding completed. Delegate state after processing: {self.delegate.get_agent_state()}',
+                    extra={'msg_type': 'DELEGATE_EVENT_COMPLETED'}
                 )
                 return
             else:
                 # delegate is done or errored, so end it
+                self.log(
+                    'info',
+                    f'Ending delegate with final state: {delegate_state}',
+                    extra={'msg_type': 'ENDING_DELEGATE'}
+                )
                 self.end_delegate()
                 return
 
@@ -500,21 +567,7 @@ class AgentController:
                 extra={'msg_type': 'ACTION', 'event_source': EventSource.USER},
             )
 
-            # if this is the first user message for this agent, matters for the microagent info type
-            first_user_message = self._first_user_message()
-            is_first_user_message = (
-                action.id == first_user_message.id if first_user_message else False
-            )
-            recall_type = (
-                RecallType.WORKSPACE_CONTEXT
-                if is_first_user_message
-                else RecallType.KNOWLEDGE
-            )
-
-            recall_action = RecallAction(query=action.content, recall_type=recall_type)
-            self._pending_action = recall_action
-            # this is source=USER because the user message is the trigger for the microagent retrieval
-            self.event_stream.add_event(recall_action, EventSource.USER)
+            # No RecallAction functionality - just process the user message
 
             if self.get_agent_state() != AgentState.RUNNING:
                 await self.set_agent_state_to(AgentState.RUNNING)
@@ -550,8 +603,6 @@ class AgentController:
                 obs.tool_call_metadata = self._pending_action.tool_call_metadata
                 obs._cause = self._pending_action.id  # type: ignore[attr-defined]
                 self.event_stream.add_event(obs, EventSource.AGENT)
-
-        # NOTE: RecallActions don't need an ErrorObservation upon reset, as long as they have no tool calls
 
         # reset the pending action, this will be called when the agent is STOPPED or ERROR
         self._pending_action = None
@@ -617,6 +668,27 @@ class AgentController:
             AgentState: The current state of the agent.
         """
         return self.state.agent_state
+
+    def _get_task_summary(self, inputs: Any) -> str:
+        """Get a summary of the task from the inputs.
+        
+        Args:
+            inputs: The inputs which might be a dict or string
+            
+        Returns:
+            A summarized task description
+        """
+        if isinstance(inputs, dict):
+            task = inputs.get('task', 'No task specified')
+        elif isinstance(inputs, str):
+            task = inputs
+        else:
+            task = 'No task specified'
+        
+        # Truncate if too long
+        if len(task) > 100:
+            return task[:100] + '...'
+        return task
 
     async def start_delegate(self, action: AgentDelegateAction) -> None:
         """Start a delegate agent to handle a subtask.
@@ -688,6 +760,40 @@ class AgentController:
             is_delegate=True,
             headless_mode=self.headless_mode,
         )
+        
+        # Record delegate start time for timeout detection
+        import time
+        current_time = time.time()
+        self._delegate_start_time = current_time
+        self._delegate_last_activity = current_time
+        
+        # Enhanced agent switch logging
+        self.log(
+            'info',
+            f'🔄 AGENT SWITCH: {self.agent.name} → {delegate_agent.name}',
+            extra={
+                'msg_type': 'AGENT_SWITCH_START',
+                'from_agent': self.agent.name,
+                'to_agent': delegate_agent.name,
+                'switch_time': current_time,
+                'delegate_level': self.state.delegate_level + 1,
+                'task_summary': self._get_task_summary(action.inputs),
+                'context_events_count': len(self.state.history),
+                'parent_iteration': self.state.iteration_flag.current_value
+            }
+        )
+
+        # Handover details logging (INFO level - always visible)
+        self.log(
+            'info',
+            f'📋 HANDOVER DETAILS: Task delegation to {delegate_agent.name}',
+            extra={
+                'msg_type': 'AGENT_HANDOVER_DETAILS',
+                'delegate_inputs': action.inputs,
+                'thought': getattr(action, 'thought', 'No thought provided'),
+                'agent_config_type': type(agent_config).__name__
+            }
+        )
 
     def end_delegate(self) -> None:
         """Ends the currently active delegate (e.g., if it is finished or errored).
@@ -695,9 +801,19 @@ class AgentController:
         so that this controller can resume normal operation.
         """
         if self.delegate is None:
+            self.log(
+                'debug',
+                'end_delegate called but no delegate exists',
+                extra={'msg_type': 'END_DELEGATE_NO_DELEGATE'}
+            )
             return
 
         delegate_state = self.delegate.get_agent_state()
+        self.log(
+            'info',
+            f'Ending delegate with state: {delegate_state}',
+            extra={'msg_type': 'END_DELEGATE_START', 'delegate_state': str(delegate_state)}
+        )
 
         # update iteration that is shared across agents
         self.state.iteration_flag.current_value = (
@@ -753,8 +869,30 @@ class AgentController:
 
         self.event_stream.add_event(obs, EventSource.AGENT)
 
+        # Enhanced agent switch completion logging
+        import time
+        delegate_duration = time.time() - self._delegate_start_time if self._delegate_start_time else 0
+        delegate_name = self.delegate.agent.name
+        
         # unset delegate so parent can resume normal handling
         self.delegate = None
+        self._delegate_start_time = None
+        self._delegate_last_activity = None
+        
+        self.log(
+            'info',
+            f'🔄 AGENT SWITCH COMPLETE: {delegate_name} → {self.agent.name}',
+            extra={
+                'msg_type': 'AGENT_SWITCH_END',
+                'from_agent': delegate_name,
+                'to_agent': self.agent.name,
+                'delegate_state': str(delegate_state),
+                'duration_seconds': round(delegate_duration, 2),
+                'final_outputs_keys': list(delegate_outputs.keys()) if delegate_outputs else [],
+                'context_events_count': len(self.state.history),
+                'delegate_level': self.state.delegate_level
+            }
+        )
 
     async def _step(self) -> None:
         """Executes a single step of the parent or delegate agent. Detects stuck agents and limits on the number of iterations and the task budget."""
@@ -781,6 +919,10 @@ class AgentController:
             f'LEVEL {self.state.delegate_level} LOCAL STEP {self.state.get_local_step()} GLOBAL STEP {self.state.iteration_flag.current_value}',
             extra={'msg_type': 'STEP'},
         )
+        
+        # コンテクストウィンドウ使用率監視（10ステップごと）
+        if self.state.iteration_flag.current_value % 10 == 0:
+            self._log_context_window_status('periodic_check')
 
         # Ensure budget control flag is synchronized with the latest metrics.
         # In the future, we should centralized the use of one LLM object per conversation.
@@ -969,9 +1111,24 @@ class AgentController:
         kept_events = self._apply_conversation_window(current_view.events)
         kept_event_ids = {e.id for e in kept_events}
 
+        # Enhanced context window reduction logging
+        total_events = len(self.state.history)
+        kept_events_count = len(kept_events)
+        reduction_percentage = round((total_events - kept_events_count) / total_events * 100, 1) if total_events > 0 else 0
+        
         self.log(
-            'info',
-            f'Context window exceeded. Keeping events with IDs: {kept_event_ids}',
+            'warning',
+            f'📊 CONTEXT WINDOW EXCEEDED: Reduced {total_events} → {kept_events_count} events ({reduction_percentage}% reduction)',
+            extra={
+                'msg_type': 'CONTEXT_WINDOW_REDUCTION',
+                'total_events_before': total_events,
+                'kept_events_count': kept_events_count,
+                'forgotten_events_count': len(forgotten_event_ids),
+                'reduction_percentage': reduction_percentage,
+                'agent_name': self.agent.name,
+                'delegate_level': self.state.delegate_level,
+                'kept_event_ids': list(kept_event_ids)
+            }
         )
 
         # The events to forget are those that are not in the kept set
@@ -1028,8 +1185,7 @@ class AgentController:
         # 1. Identify essential initial events
         system_message: SystemMessageAction | None = None
         first_user_msg: MessageAction | None = None
-        recall_action: RecallAction | None = None
-        recall_observation: Observation | None = None
+        # RecallAction functionality removed
 
         # Find System Message (should be the first event, if it exists)
         system_message = next(
@@ -1060,26 +1216,7 @@ class AgentController:
                 first_user_msg_index = i
                 break
 
-        # Find Recall Action and Observation related to the First User Message
-        # Look for RecallAction after the first user message
-        for i in range(first_user_msg_index + 1, len(history)):
-            event = history[i]
-            if (
-                isinstance(event, RecallAction)
-                and event.query == first_user_msg.content
-            ):
-                # Found RecallAction, now look for its Observation
-                recall_action = event
-                for j in range(i + 1, len(history)):
-                    obs_event = history[j]
-                    # Check for Observation caused by this RecallAction
-                    if (
-                        isinstance(obs_event, Observation)
-                        and obs_event.cause == recall_action.id
-                    ):
-                        recall_observation = obs_event
-                        break  # Found the observation, stop inner loop
-                break  # Found the recall action (and maybe obs), stop outer loop
+        # RecallAction functionality removed - no longer searching for recall actions
 
         essential_events: list[Event] = []
         if system_message:
@@ -1087,13 +1224,7 @@ class AgentController:
         # Only include first user message if history is not empty
         if history:
             essential_events.append(first_user_msg)
-            # Include recall action and observation if both exist
-            if recall_action and recall_observation:
-                essential_events.append(recall_action)
-                essential_events.append(recall_observation)
-            # Include recall action without observation for backward compatibility
-            elif recall_action:
-                essential_events.append(recall_action)
+            # RecallAction functionality removed - no recall actions to include
 
         # 2. Determine the slice of recent events to potentially keep
         num_non_essential_events = len(history) - len(essential_events)
@@ -1292,3 +1423,33 @@ class AgentController:
 
     def save_state(self):
         self.state_tracker.save_state()
+
+    def _log_context_window_status(self, event_type: str = 'step') -> None:
+        """コンテクストウィンドウの使用状況をログに記録"""
+        try:
+            current_events = len(self.state.history)
+            # LLMの最大コンテクスト長を取得（概算）
+            max_context = getattr(self.agent.llm.config, 'max_input_tokens', 4096)
+            # イベント1つあたり平均100トークンと仮定
+            estimated_tokens = current_events * 100
+            usage_percentage = min(round(estimated_tokens / max_context * 100, 1), 100)
+            
+            if usage_percentage > 80:  # 80%を超えた場合のみログ
+                self.log(
+                    'info',
+                    f'📊 CONTEXT USAGE: {usage_percentage}% ({current_events} events, ~{estimated_tokens} tokens)',
+                    extra={
+                        'msg_type': 'CONTEXT_WINDOW_STATUS',
+                        'event_type': event_type,
+                        'current_events': current_events,
+                        'estimated_tokens': estimated_tokens,
+                        'usage_percentage': usage_percentage,
+                        'max_context_tokens': max_context,
+                        'agent_name': self.agent.name,
+                        'delegate_level': self.state.delegate_level
+                    }
+                )
+        except Exception as e:
+            self.log('debug', f'Failed to log context window status: {str(e)}')
+
+    # RecallAction functionality removed - _log_recall_action_context_impact method deleted

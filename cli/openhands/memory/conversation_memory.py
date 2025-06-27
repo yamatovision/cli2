@@ -570,14 +570,7 @@ class ConversationMemory:
                     )
                     message_content.append(TextContent(text=formatted_workspace_text))
 
-                # Add microagent knowledge if present
-                if has_microagent_knowledge:
-                    formatted_microagent_text = (
-                        self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-                    )
-                    message_content.append(TextContent(text=formatted_microagent_text))
+                # Microagent knowledge handling removed - no longer adding microagent info
 
                 # Return the combined message if we have any content
                 if message_content:
@@ -600,17 +593,8 @@ class ConversationMemory:
                         if agent.name not in self.agent_config.disabled_microagents
                     ]
 
-                    # Only proceed if we still have agents after filtering out disabled ones
-                    if filtered_agents:
-                        formatted_text = self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-
-                        return [
-                            Message(
-                                role='user', content=[TextContent(text=formatted_text)]
-                            )
-                        ]
+                    # Microagent info rendering removed - returning empty list
+                    pass
 
                 # Return empty list if no microagents to include or all were disabled
                 return []
