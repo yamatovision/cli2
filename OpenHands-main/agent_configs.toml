@@ -1,0 +1,210 @@
+# BlueLamp 16-Agent System Configuration
+
+[core]
+# デフォルトエージェント - オーケストレーションエージェント
+default_agent = "orchestration"
+
+# 全エージェント共通設定（デフォルト値）
+[agents]
+enable_interruption = true
+interruption_check_interval = 0.1
+interruption_timeout = 300.0
+
+# ★1 要件定義エンジニア（オーケストレーター）
+[agents.orchestration]
+name = "OrchestrationAgent"
+classpath = "openhands.agenthub.codeact_agent.codeact_agent:CodeActAgent"
+system_prompt_filename = "orchestration_agent.j2"
+description = "全体調整・委譲管理を担当"
+enable_delegate = true
+enable_finish = false
+interruption_timeout = 1800.0  # オーケストレーターは長時間実行のため30分に延長
+
+# ★1 要件定義エンジニア（単体エージェント）
+[agents.requirements_engineer]
+name = "RequirementsEngineerAgent"
+classpath = "openhands.agenthub.codeact_agent.requirements_engineer_agent:RequirementsEngineerAgent"
+system_prompt_filename = "requirements_engineer_agent.j2"
+description = "要件定義とプロジェクトスコープの明確化を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★2 UIUXデザイナー
+[agents.uiux_designer]
+name = "UIUXDesignerAgent"
+classpath = "openhands.agenthub.codeact_agent.uiux_designer_agent:UIUXDesignerAgent"
+system_prompt_filename = "uiux_designer_agent.j2"
+description = "UI/UXデザインとモックアップ作成を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★3 データモデリングエンジニア
+[agents.data_modeling_engineer]
+name = "DataModelingEngineerAgent"
+classpath = "openhands.agenthub.codeact_agent.data_modeling_engineer_agent:DataModelingEngineerAgent"
+system_prompt_filename = "data_modeling_engineer_agent.j2"
+description = "データベース設計とデータモデリングを担当"
+enable_delegate = false
+enable_finish = true
+
+# ★4 システムアーキテクト
+[agents.system_architect]
+name = "SystemArchitectAgent"
+classpath = "openhands.agenthub.codeact_agent.system_architect_agent:SystemArchitectAgent"
+system_prompt_filename = "system_architect_agent.j2"
+description = "システム全体のアーキテクチャ設計を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★5 実装計画コンサルタント
+[agents.implementation_consultant]
+name = "ImplementationConsultantAgent"
+classpath = "openhands.agenthub.codeact_agent.implementation_consultant_agent:ImplementationConsultantAgent"
+system_prompt_filename = "implementation_consultant_agent.j2"
+description = "実装計画と開発戦略の策定を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★6 環境構築
+[agents.environment_setup]
+name = "EnvironmentSetupAgent"
+classpath = "openhands.agenthub.codeact_agent.environment_setup_agent:EnvironmentSetupAgent"
+system_prompt_filename = "environment_setup_agent.j2"
+description = "開発環境の構築と設定を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★7 プロトタイプ実装
+[agents.prototype_implementation]
+name = "PrototypeImplementationAgent"
+classpath = "openhands.agenthub.codeact_agent.prototype_implementation_agent:PrototypeImplementationAgent"
+system_prompt_filename = "prototype_implementation_agent.j2"
+description = "プロトタイプの実装とPOC開発を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★8 バックエンド実装
+[agents.backend]
+name = "BackendAgent"
+classpath = "openhands.agenthub.codeact_agent.backend_agent:BackendAgent"
+system_prompt_filename = "backend_agent.j2"
+description = "バックエンド開発、API実装、データベース操作を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★9 テスト品質検証
+[agents.test_quality_verification]
+name = "TestQualityVerificationAgent"
+classpath = "openhands.agenthub.codeact_agent.test_quality_verification_agent:TestQualityVerificationAgent"
+system_prompt_filename = "test_quality_verification_agent.j2"
+description = "テスト実装と品質保証を担彅"
+enable_delegate = false
+enable_finish = true
+
+# ★10 API統合
+[agents.api_integration]
+name = "APIIntegrationAgent"
+classpath = "openhands.agenthub.codeact_agent.api_integration_agent:APIIntegrationAgent"
+system_prompt_filename = "api_integration_agent.j2"
+description = "API統合とフロントエンド・バックエンド連携を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★11 デバッグ探偵
+[agents.debug_detective]
+name = "DebugDetectiveAgent"
+classpath = "openhands.agenthub.codeact_agent.debug_detective_agent:DebugDetectiveAgent"
+system_prompt_filename = "debug_detective_agent.j2"
+description = "バグの調査と修正を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★12 デプロイスペシャリスト
+[agents.deployment]
+name = "DeploymentAgent"
+classpath = "openhands.agenthub.codeact_agent.deploy_specialist_agent:DeploySpecialistAgent"
+system_prompt_filename = "deploy_specialist_agent.j2"
+description = "デプロイメントとインフラ構築を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★13 GitHubマネージャー
+[agents.github_manager]
+name = "GitHubManagerAgent"
+classpath = "openhands.agenthub.codeact_agent.github_manager_agent:GitHubManagerAgent"
+system_prompt_filename = "github_manager_agent.j2"
+description = "GitHub操作とバージョン管理を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★14 TypeScriptマネージャー
+[agents.typescript_manager]
+name = "TypeScriptManagerAgent"
+classpath = "openhands.agenthub.codeact_agent.typescript_manager_agent:TypeScriptManagerAgent"
+system_prompt_filename = "typescript_manager_agent.j2"
+description = "TypeScript関連の型エラー解決を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★15 機能拡張エキスパート
+[agents.feature_expansion]
+name = "FeatureExpansionAgent"
+classpath = "openhands.agenthub.codeact_agent.feature_expansion_agent:FeatureExpansionAgent"
+system_prompt_filename = "feature_expansion_agent.j2"
+description = "新機能の追加と拡張を担当"
+enable_delegate = false
+enable_finish = true
+
+# ★16 リファクタリングエキスパート
+[agents.refactoring_expert]
+name = "RefactoringExpertAgent"
+classpath = "openhands.agenthub.codeact_agent.refactoring_expert_agent:RefactoringExpertAgent"
+system_prompt_filename = "refactoring_expert_agent.j2"
+description = "コードのリファクタリングと最適化を担当"
+enable_delegate = false
+enable_finish = true
+
+# ブラウザ自動化エージェント
+[agents.browsing_agent]
+name = "BrowsingAgent"
+classpath = "openhands.agenthub.browsing_agent.browsing_agent:BrowsingAgent"
+system_prompt_filename = "browsing_agent.j2"
+description = "Webブラウザを操作して情報収集や設定作業を担当"
+
+# ビジュアルブラウザエージェント
+[agents.visual_browsing_agent]
+name = "VisualBrowsingAgent"
+classpath = "openhands.agenthub.visualbrowsing_agent.visualbrowsing_agent:VisualBrowsingAgent"
+system_prompt_filename = "visual_browsing_agent.j2"
+description = "ビジュアル情報を活用した高度なブラウザ操作を担当"
+
+# Agent delegation mappings
+[delegation]
+# オーケストレーターは全てのエージェントに委譲可能
+orchestration_can_delegate_to = [
+    "requirements_engineer", "uiux_designer", "data_modeling_engineer", "system_architect",
+    "implementation_consultant", "environment_setup", "prototype_implementation", "backend",
+    "test_quality_verification", "api_integration", "debug_detective", "deployment",
+    "github_manager", "typescript_manager", "feature_expansion", "refactoring_expert",
+    "browsing_agent", "visual_browsing_agent"
+]
+
+# 各エージェントはオーケストレーターに戻すことが可能
+requirements_engineer_can_delegate_to = ["orchestration"]
+uiux_designer_can_delegate_to = ["orchestration"]
+data_modeling_engineer_can_delegate_to = ["orchestration"]
+system_architect_can_delegate_to = ["orchestration"]
+implementation_consultant_can_delegate_to = ["orchestration"]
+environment_setup_can_delegate_to = ["orchestration"]
+prototype_implementation_can_delegate_to = ["orchestration"]
+backend_can_delegate_to = ["orchestration"]
+test_quality_verification_can_delegate_to = ["orchestration"]
+api_integration_can_delegate_to = ["orchestration"]
+debug_detective_can_delegate_to = ["orchestration"]
+deployment_can_delegate_to = ["orchestration"]
+github_manager_can_delegate_to = ["orchestration"]
+typescript_manager_can_delegate_to = ["orchestration"]
+feature_expansion_can_delegate_to = ["orchestration"]
+refactoring_expert_can_delegate_to = ["orchestration"]
+browsing_agent_can_delegate_to = ["orchestration"]
+visual_browsing_agent_can_delegate_to = ["orchestration"]
