@@ -9,7 +9,6 @@ export interface UIState {
   directoryStructure?: string;
   markdownContent?: string;
   isProjectNavCollapsed?: boolean;
-  activeTabId?: string;
 }
 
 /**
@@ -125,17 +124,8 @@ export class UIStateService implements IUIStateService {
    * WebViewのUIを更新
    */
   public updateUI(): void {
-    try {
-      if (this._panel && this._extensionUri) {
-        // WebViewのHTMLコンテンツを更新
-        this._panel.webview.html = this.getWebviewContent(this._extensionUri);
-        Logger.info('UIStateService: WebView UIを更新しました');
-      } else {
-        Logger.warn('UIStateService: パネルまたは拡張機能URIが設定されていません');
-      }
-    } catch (error) {
-      Logger.error('UIStateService: UI更新エラー', error as Error);
-    }
+    // UIの更新はScopeManagerTemplateで行うため、このメソッドは無効化
+    Logger.info('UIStateService: updateUIは無効化されています。ScopeManagerTemplateを使用してください。');
   }
   
   /**

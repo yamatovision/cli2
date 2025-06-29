@@ -8,12 +8,14 @@
 /* ベースレイアウト */
 .scope-manager-container {
   padding: 0;
+  margin: 0;
   background-color: #f8f9fa;
   color: #333333;
   height: 100vh;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* 固定ライトテーマ定義 - VSCodeのテーマ設定に依存しない */
@@ -61,26 +63,6 @@
   color: #333333 !important;
 }
 
-/* ファイルブラウザ用のライトテーマ強制適用 */
-.scope-manager-container .tab-content.active #file-browser-tab,
-.scope-manager-container .file-browser,
-.scope-manager-container .file-browser * {
-  --fb-background: #f8f9fa;
-  --fb-text: #333333;
-  --fb-text-secondary: #718096;
-  --fb-heading-color: #2d3748;
-  --fb-card-background: #ffffff;
-  --fb-input-background: #ffffff;
-  --fb-border-color: #e2e8f0;
-  --fb-hover-background: #f1f5fd;
-  --fb-selected-background: rgba(74, 105, 189, 0.1);
-  --fb-selected-text: #333333;
-  --fb-primary: #4a69bd;
-  --fb-primary-dark: #3a5a9e;
-  --fb-primary-light: rgba(74, 105, 189, 0.2);
-  background-color: #f8f9fa !important;
-  color: #333333 !important;
-}
 
 .panel-header {
   display: flex;
@@ -249,11 +231,11 @@ h1, h2, h3, h4 {
 .content-area {
   display: flex;
   flex-direction: column;
-  gap: var(--app-spacing-md);
+  gap: 0;
   overflow-y: visible;
   overflow-x: hidden;
-  padding-right: var(--app-spacing-sm);
-  padding-left: 12px; /* 左側にパディングを追加してボタンとの重なりを防ぐ */
+  padding-right: 0;
+  padding-left: 0;
   max-height: none;
   flex: 1;
   width: 100%;
@@ -269,15 +251,15 @@ h1, h2, h3, h4 {
   background-color: var(--app-card-background);
   border-radius: var(--app-border-radius);
   border: 1px solid var(--app-border-color);
-  padding: var(--app-spacing-md);
+  padding: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin-bottom: var(--app-spacing-md);
+  margin-bottom: 0;
   overflow: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 20px);
-  max-height: calc(100vh - 40px);
+  height: 100vh;
+  max-height: 100vh;
   width: 100%;
   box-sizing: border-box;
 }
@@ -291,105 +273,16 @@ h1, h2, h3, h4 {
   border-bottom: 1px solid var(--app-border-color);
 }
 
-.tabs {
-  display: flex;
-  border-bottom: 1px solid var(--app-border-color);
-  margin-bottom: var(--app-spacing-md);
-  justify-content: space-between; /* 左右に分ける */
-  padding: 0 var(--app-spacing-md);
-  align-items: flex-end;
-  flex-wrap: wrap; /* タブが多い場合は折り返し */
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.tabs-container {
-  display: flex;
-  flex-wrap: wrap; /* タブが多い場合は折り返す */
-  gap: 2px;
-}
-
-.tab {
-  padding: var(--app-spacing-sm) var(--app-spacing-md); /* タブの幅を少し小さく */
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  color: var(--app-text-secondary);
-  transition: all var(--app-transition);
-  margin: 0 2px; /* タブ間に少しスペースを追加 */
-  white-space: nowrap; /* タブテキストが切れないように */
-  min-width: 60px; /* 最小幅を設定 */
-  text-align: center; /* テキストを中央揃え */
-}
-
-.tab.active {
-  border-bottom-color: var(--app-primary);
-  color: var(--app-text);
-  font-weight: var(--app-font-weight-medium);
-  background-color: var(--app-primary-light);
-  border-radius: 6px 6px 0 0;
-}
-
-.tab:hover:not(.active) {
-  border-bottom-color: var(--app-gray-300);
-  color: var(--app-text);
-  background-color: var(--app-gray-100);
-  border-radius: 6px 6px 0 0;
-}
-
-/* プロジェクト名エリア（タブバーの左側に表示） */
-.project-display {
-  display: flex;
-  flex-direction: column;
-  padding: var(--app-spacing-sm) var(--app-spacing-md);
-  background-color: var(--app-primary-light);
-  border-radius: 6px 6px 0 0;
-  border-bottom: 3px solid var(--app-primary);
-  margin-bottom: -1px; /* ボーダーの重なりを調整 */
-  max-width: 250px; /* プロジェクト表示エリアの幅を制限 */
-  flex-shrink: 1; /* スペースが足りない場合は縮小できるように */
-}
-
-.project-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--app-primary-dark);
-  margin: 0;
-  padding: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* プロジェクトパスは非表示に */
-.project-path-display {
-  display: none;
-}
-
-.tab-content {
-  display: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: calc(100vh - 130px);
-  max-height: calc(100vh - 130px);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.tab-content.active {
-  display: block;
-  width: 100%;
-}
 
 /* カード本体のスタイル */
 .card-body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: var(--app-spacing-md);
+  padding: 0 var(--app-spacing-md) 0 var(--app-spacing-md);
   padding-right: 10px;
-  min-height: calc(100vh - 160px);
-  height: calc(100vh - 120px);
-  max-height: calc(100vh - 120px);
+  height: 100%;
+  max-height: 100%;
   width: 100%;
   box-sizing: border-box;
 }
@@ -901,21 +794,6 @@ pre.code-block.directory-structure br {
   display: inline-block;
 }
 
-/* タブコンテンツ */
-.tab-content {
-  display: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: calc(100vh - 130px);
-  max-height: calc(100vh - 130px);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.tab-content.active {
-  display: block;
-  width: 100%;
-}
 
 .filter-bar {
   display: flex;
@@ -1462,29 +1340,6 @@ pre.code-block.directory-structure br {
   color: rgba(0, 0, 0, 0.2);
 }
 
-.toggle-share-btn {
-  position: fixed;
-  bottom: 0;
-  right: 20px;
-  background-color: var(--app-primary);
-  color: white;
-  border: 1px solid var(--app-primary);
-  border-bottom: none;
-  border-radius: var(--app-border-radius) var(--app-border-radius) 0 0;
-  padding: 5px 15px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  z-index: 1001;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-  transition: all 0.2s ease;
-}
-
-.toggle-share-btn:hover {
-  background-color: var(--app-primary-dark);
-  transform: translateY(-2px);
-}
 
 
 /* 旧スタイル（後方互換性のため） */
@@ -1771,5 +1626,189 @@ pre.code-block.directory-structure br {
   
   .env-variable-item {
     flex-direction: column;
+  }
+}
+
+/* フローティングアクションバー */
+.floating-action-bar {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  display: flex !important;
+  flex-direction: row;
+  gap: var(--app-spacing-sm);
+  z-index: 9999 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+}
+
+.fab-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--app-card-background);
+  color: var(--app-text);
+  cursor: pointer;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all var(--app-transition);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--app-border-color);
+  visibility: visible !important;
+}
+
+.fab-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background-color: var(--app-hover-background);
+}
+
+.fab-btn.primary {
+  background-color: var(--app-primary);
+  color: white;
+  border-color: var(--app-primary);
+}
+
+.fab-btn.primary:hover {
+  background-color: var(--app-primary-dark);
+  border-color: var(--app-primary-dark);
+}
+
+.fab-btn .material-icons {
+  font-size: 24px;
+  color: var(--app-primary);
+}
+
+.fab-btn.primary .material-icons {
+  color: white;
+}
+
+/* アウトラインアイコンのスタイル */
+.material-icons-outlined {
+  font-size: 24px;
+  color: var(--app-primary);
+}
+
+/* ファイルボタンのアイコンのみ黒色 */
+#open-files-btn .material-icons-outlined {
+  color: var(--app-text);
+}
+
+.fab-label {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background-color: var(--app-text);
+  color: var(--app-card-background);
+  padding: var(--app-spacing-xs) var(--app-spacing-sm);
+  border-radius: var(--app-border-radius-sm);
+  font-size: var(--app-font-size-xs);
+  white-space: nowrap;
+  opacity: 0;
+  transition: all var(--app-transition);
+  pointer-events: none;
+  font-weight: var(--app-font-weight-medium);
+}
+
+.fab-btn:hover .fab-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ラベルの矢印 */
+.fab-label::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid var(--app-text);
+}
+
+/* 進捗コンテンツ */
+.progress-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100vh;
+  max-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+/* カードヘッダー */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--app-spacing-md);
+  padding-bottom: var(--app-spacing-md);
+  border-bottom: 1px solid var(--app-border-color);
+  background-color: var(--app-gray-100);
+  margin: calc(-1 * var(--app-spacing-md)) calc(-1 * var(--app-spacing-md)) var(--app-spacing-md) calc(-1 * var(--app-spacing-md));
+  padding: var(--app-spacing-md);
+  border-radius: var(--app-border-radius) var(--app-border-radius) 0 0;
+}
+
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--app-spacing-xs);
+}
+
+.project-title {
+  margin: 0;
+  font-size: var(--app-font-size-lg);
+  font-weight: var(--app-font-weight-bold);
+  color: var(--app-heading-color);
+  display: flex;
+  align-items: center;
+  gap: var(--app-spacing-sm);
+}
+
+.project-title .material-icons {
+  color: var(--app-primary);
+}
+
+.project-subtitle {
+  font-size: var(--app-font-size-sm);
+  color: var(--app-text-secondary);
+  margin: 0;
+}
+
+/* FAB用のレスポンシブ対応 */
+@media (max-width: 768px) {
+  .floating-action-bar {
+    bottom: 10px;
+    right: 50%;
+    transform: translateX(50%);
+    gap: var(--app-spacing-xs);
+  }
+  
+  .fab-btn {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .fab-btn .material-icons {
+    font-size: 20px;
+  }
+  
+  .fab-label {
+    bottom: 60px;
+    transform: translateX(-50%) translateY(10px);
+  }
+  
+  .fab-btn:hover .fab-label {
+    transform: translateX(-50%) translateY(-5px);
   }
 }

@@ -13,10 +13,9 @@ export class ScopeManagerTemplate {
   public static generateHtml(params: {
     webview: vscode.Webview;
     extensionUri: vscode.Uri;
-    activeTabId: string;
     activeProject: IProjectInfo | null;
   }): string {
-    const { webview, extensionUri, activeTabId, activeProject } = params;
+    const { webview, extensionUri, activeProject } = params;
 
     // nonce値を生成
     const nonce = HtmlTemplateGenerator.generateNonce();
@@ -71,6 +70,7 @@ export class ScopeManagerTemplate {
       <link href="${promptCardsStyleUri}" rel="stylesheet">
       <!-- ファイルブラウザのスタイルシートは削除済み -->
       <link href="${materialIconsUrl}" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
       <title>ブルーランプ</title>
       <style>
         /* VSCodeのネイティブドラッグ&ドロップメッセージを非表示にする */
@@ -188,39 +188,36 @@ export class ScopeManagerTemplate {
           
           <!-- 右側: コンテンツエリア -->
           <div class="content-area">
-            <!-- タブ付きカード -->
             <div class="card">
-              <div class="tabs">
-                <div class="project-display">
-                  <span class="project-name">${projectName}</span>
-                  <span class="project-path-display">${projectPath}</span>
-                </div>
-                <div class="tabs-container">
-                  <div class="tab ${activeTabId === 'scope-progress' ? 'active' : ''}" data-tab="scope-progress">進捗状況</div>
-                  <div class="tab ${activeTabId === 'files' ? 'active' : ''}" data-tab="files">ファイル</div>
-                  <div class="tab ${activeTabId === 'tools' ? 'active' : ''}" data-tab="tools">モックアップギャラリー</div>
+              <!-- 進捗状況コンテンツ（ヘッダーなしで直接表示） -->
+              <div class="progress-content">
+                <div class="card-body">
+                  <div class="markdown-content">
+                    <!-- ここにSCOPE_PROGRESS.mdの内容がマークダウン表示される -->
+                    <p>読み込み中...</p>
+                  </div>
                 </div>
               </div>
-              
-              <!-- 進捗状況タブコンテンツ -->
-              ${this._generateProgressTabContent(activeTabId)}
-
-              <!-- ファイルブラウザタブコンテンツ -->
-              <!-- ファイルブラウザタブコンテンツは削除されました -->
-
-              
-              <!-- 開発ツールタブコンテンツ (モックアップギャラリー表示用のプレースホルダ) -->
-              ${this._generateToolsTabContent(activeTabId)}
-
-              <!-- ファイルタブコンテンツ -->
-              ${this._generateFilesTabContent(activeTabId)}
             </div>
           </div>
         </div>
       </div>
       
-      <!-- 開発プロンプトモーダル -->
-      ${this._generatePromptModalContent()}
+      <!-- フローティングアクションバー -->
+      <div class="floating-action-bar" id="floating-action-bar">
+        <button class="fab-btn" id="open-files-btn" title="ファイルビューワーを開く">
+          <span class="material-icons-outlined">folder</span>
+          <span class="fab-label">ファイル</span>
+        </button>
+        <button class="fab-btn" id="open-gallery-btn" title="モックアップギャラリーを開く">
+          <span class="material-icons-outlined">palette</span>
+          <span class="fab-label">ギャラリー</span>
+        </button>
+        <button class="fab-btn primary" id="launch-bluelamp-btn" title="ブルーランプを起動">
+          <span class="material-icons">rocket_launch</span>
+          <span class="fab-label">ブルーランプ</span>
+        </button>
+      </div>
       
       <div id="error-container" style="display: none; position: fixed; bottom: 20px; right: 20px; background-color: var(--app-danger); color: white; padding: 10px; border-radius: 4px;"></div>
       
@@ -237,66 +234,4 @@ export class ScopeManagerTemplate {
     </html>`;
   }
 
-  /**
-   * 進捗状況タブのコンテンツを生成
-   */
-  private static _generateProgressTabContent(activeTabId: string): string {
-    return `
-      <div id="scope-progress-tab" class="tab-content ${activeTabId === 'scope-progress' ? 'active' : ''}">
-        <div class="card-body">
-          <div class="markdown-content">
-            <!-- ここにSCOPE_PROGRESS.mdの内容がマークダウン表示される -->
-            <p>読み込み中...</p>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-
-
-
-  /**
-   * ツールタブのコンテンツを生成
-   */
-  private static _generateToolsTabContent(activeTabId: string): string {
-    return `
-      <div id="tools-tab" class="tab-content ${activeTabId === 'tools' ? 'active' : ''}">
-        <!-- モックアップギャラリーを表示するための空のコンテナ -->
-      </div>
-    `;
-  }
-
-  /**
-   * ファイルタブのコンテンツを生成
-   */
-  private static _generateFilesTabContent(activeTabId: string): string {
-    return `
-      <div id="files-tab" class="tab-content ${activeTabId === 'files' ? 'active' : ''}">
-        <!-- マークダウンビューワーを表示するための空のコンテナ -->
-        <div class="files-container">
-          <div class="files-placeholder">
-            <span class="material-icons">description</span>
-            <h3>マークダウンビューワーを開いています...</h3>
-            <p>マークダウンビューワーが別ウィンドウで開かれます</p>
-            <div class="loading-indicator">
-              <div class="spinner"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * プロンプトモーダルのコンテンツを生成
-   */
-  private static _generatePromptModalContent(): string {
-    return `
-      <div class="toggle-share-btn" id="toggle-share-btn" style="display: flex;">
-        <span class="material-icons">terminal</span>
-        <span>ブルーランプを起動</span>
-      </div>
-    `;
-  }
 }

@@ -346,6 +346,10 @@ export class ScopeManagerPanel extends ProtectedPanel {
               await this._handleSelectEnvFile();
               break;
 
+            case 'openFileViewer':
+              await vscode.commands.executeCommand('appgenius-ai.openFileViewer', this._projectPath);
+              break;
+              
             case 'openMarkdownViewer':
               await this._handleOpenMarkdownViewer();
               break;
@@ -1034,20 +1038,8 @@ export class ScopeManagerPanel extends ProtectedPanel {
       // アクティブプロジェクト情報をクラスのプロパティに保存
       this._activeProject = activeProject;
       
-      // アクティブタブ情報を取得（重要な部分）
-      let activeTabId = 'scope-progress'; // デフォルト値
-      
-      if (activeProject && activeProject.metadata) {
-        // 1. メタデータからタブ情報を正確に抽出
-        if (activeProject.metadata.activeTab) {
-          activeTabId = activeProject.metadata.activeTab;
-          Logger.info(`ScopeManagerPanel: メタデータからアクティブタブを復元: ${activeTabId}`);
-        } else {
-          Logger.info('ScopeManagerPanel: メタデータにアクティブタブ情報がないためデフォルト(scope-progress)を使用');
-        }
-      } else {
-        Logger.info('ScopeManagerPanel: プロジェクトメタデータがないためデフォルトタブ(scope-progress)を使用');
-      }
+      // 進捗状況を常時表示するためアクティブタブ情報は不要
+      Logger.info('ScopeManagerPanel: 進捗状況を常時表示するためタブ管理は無効');
       
       // 2. プロジェクトパスの更新（HTMLレンダリング前）
       if (activeProject && activeProject.path && this._projectPath !== activeProject.path) {
@@ -1057,8 +1049,8 @@ export class ScopeManagerPanel extends ProtectedPanel {
       
       // 3. HTMLコンテンツを生成（アクティブタブ情報を明示的に渡す）
       const webview = this._panel.webview;
-      this._panel.webview.html = this._getHtmlForWebview(webview, activeTabId);
-      Logger.info(`ScopeManagerPanel: WebView HTMLを生成: アクティブタブID=${activeTabId}`);
+      this._panel.webview.html = this._getHtmlForWebview(webview);
+      Logger.info('ScopeManagerPanel: WebView HTMLを生成');
       
       // 4. メッセージ送信の順序を最適化（先にタブ状態を同期）
       // WebViewの初期化完了を待ってからメッセージを送信
@@ -1070,13 +1062,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
         }
         
         // 第1段階: 基本同期（タブ選択コマンドを最初に送信）
-        Logger.info(`ScopeManagerPanel: 基本同期メッセージを送信: タブID=${activeTabId}`);
-        
-        // a. まずタブ選択コマンドを送信
-        this._panel.webview.postMessage({
-          command: 'selectTab',
-          tabId: activeTabId
-        });
+        Logger.info('ScopeManagerPanel: 基本同期メッセージを送信');
         
         // b. 次にプロジェクト状態を同期（上書きされないようにタブ選択後）
         this._panel.webview.postMessage({
@@ -1095,10 +1081,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
         // DOMが完全に構築された後にタブ選択を再確認
         setTimeout(() => {
           // 最後にもう一度タブ選択コマンドを送信（確実な適用のため）
-          this._panel.webview.postMessage({
-            command: 'selectTab',
-            tabId: activeTabId
-          });
+          // 進捗状況を常時表示するためタブ選択は不要
 
           // 保存されている共有テキスト内容があれば復元
           const savedContent = this._getSharedTextContent();
@@ -1110,7 +1093,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
             });
           }
 
-          Logger.info(`ScopeManagerPanel: 最終確認のタブ選択メッセージを送信: アクティブタブ=${activeTabId}`);
+          Logger.info('ScopeManagerPanel: プロジェクト情報同期完了');
         }, 200); // UIの描画完了を確実に待つ
         
         Logger.info(`ScopeManagerPanel: プロジェクト情報の同期が完了: ${activeProject.name}`);
@@ -1123,14 +1106,12 @@ export class ScopeManagerPanel extends ProtectedPanel {
   /**
    * WebViewのHTMLを生成
    * @param webview VSCodeのWebviewインスタンス
-   * @param activeTabId アクティブなタブID（デフォルトは'scope-progress'）
    */
-  private _getHtmlForWebview(webview: vscode.Webview, activeTabId: string = 'scope-progress'): string {
+  private _getHtmlForWebview(webview: vscode.Webview): string {
     // テンプレートジェネレータに処理を委譲
     return ScopeManagerTemplate.generateHtml({
       webview,
       extensionUri: this._extensionUri,
-      activeTabId,
       activeProject: this._activeProject
     });
   }

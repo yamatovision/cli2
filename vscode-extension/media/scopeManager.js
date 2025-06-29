@@ -10,7 +10,6 @@
 
 // 外部モジュールのインポート
 import { showError, showSuccess } from './utils/uiHelpers.js';
-import tabManager from './components/tabManager/tabManager.js';
 import stateManager from './core/stateManager.js';
 import markdownViewer from './components/markdownViewer/markdownViewer.js';
 import projectNavigation from './components/projectNavigation/projectNavigation.js';
@@ -46,11 +45,6 @@ try {
    * StateManagerからのイベントリスナーを設定
    */
   function setupStateManagerEvents() {
-    // タブ状態が更新されたときのイベントを購読
-    document.addEventListener('tab-state-updated', (event) => {
-      tabManager.selectTab(event.detail.tabId, event.detail.saveToServer);
-    });
-    
     // マークダウンが更新されたときのイベントを購読
     document.addEventListener('markdown-updated', (event) => {
       // markdownViewerに直接処理を委譲
@@ -79,8 +73,27 @@ try {
       });
     }
 
-    // Note: マークダウンビューワーを開くボタンは削除されました
-    // 代わりにファイルタブをクリックしたら直接マークダウンビューワーが開きます
+    // FABボタンのイベント設定
+    const openFilesBtn = document.getElementById('open-files-btn');
+    if (openFilesBtn) {
+      openFilesBtn.addEventListener('click', () => {
+        vscode.postMessage({ command: 'openFileViewer' });
+      });
+    }
+
+    const openGalleryBtn = document.getElementById('open-gallery-btn');
+    if (openGalleryBtn) {
+      openGalleryBtn.addEventListener('click', () => {
+        vscode.postMessage({ command: 'openMockupGallery' });
+      });
+    }
+
+    const launchBluelampBtn = document.getElementById('launch-bluelamp-btn');
+    if (launchBluelampBtn) {
+      launchBluelampBtn.addEventListener('click', () => {
+        vscode.postMessage({ command: 'launchBluelamp' });
+      });
+    }
   }
 
   // ページ読み込み完了時の処理
@@ -104,31 +117,23 @@ try {
     setupStateManagerEvents();
 
     // 各コンポーネントの初期化（順序が重要）
-    // 1. ブルーランプ起動ボタンの初期化
-    initializeBluelampLaunchButton();
-
-    // 2. プロジェクトナビゲーションの初期化
+    // 1. プロジェクトナビゲーションの初期化
     projectNavigation.initializeNavigation();
 
-    // 3. マークダウン表示の初期化を委譲
+    // 2. マークダウン表示の初期化を委譲
     markdownViewer.init();
 
-    // タブコンテンツ領域を初期化
-    const progressContent = document.querySelector('#scope-progress-tab .markdown-content');
-    const requirementsContent = document.querySelector('#requirements-tab .markdown-content');
+    // 進捗コンテンツ領域を初期化
+    const progressContent = document.querySelector('.markdown-content');
     if (progressContent) progressContent.innerHTML = '';
-    if (requirementsContent) requirementsContent.innerHTML = '';
 
     // 保存されたプロジェクト状態を復元
     setTimeout(() => stateManager.restoreProjectState(), 100);
 
-    // 要件定義タブがアクティブなら明示的にファイル読み込みをリクエスト
-    const state = stateManager.getState();
-    if (state.activeTab === 'requirements') {
-      setTimeout(() => {
-        vscode.postMessage({ command: 'loadRequirementsFile' });
-      }, 200);
-    }
+    // 進捗ファイルの読み込みをリクエスト
+    setTimeout(() => {
+      vscode.postMessage({ command: 'loadProgressFile' });
+    }, 200);
   });
   
   // メッセージハンドラー
@@ -227,39 +232,16 @@ try {
         const fileName = filePath.split('/').pop();
         const isMarkdown = fileName.endsWith('.md');
         
-        // ファイル内容を取得するためにリクエスト送信
+        // ファイルビューワーを開く
         vscode.postMessage({
-          command: 'getFileContentForTab',
-          filePath: filePath,
-          isMarkdown: isMarkdown,
+          command: 'openFileViewer'
         });
         break;
       case 'openFileContentInTab':
-        // ファイル内容をタブで表示
-        if (message.filePath && message.content) {
-          const fileName = message.filePath.split('/').pop();
-          
-          // タブマネージャーを利用してタブを追加
-          if (typeof tabManager.addTab === 'function') {
-            // カスタムタブIDを作成
-            const tabId = `file-${fileName.replace(/\./g, '-')}`;
-            
-            // ファイルの内容をタブに表示するカスタムイベントを発行
-            const event = new CustomEvent('add-file-tab', {
-              detail: {
-                tabId: tabId,
-                title: fileName,
-                content: message.content,
-                isMarkdown: message.isMarkdown || false
-              }
-            });
-            document.dispatchEvent(event);
-            
-            // タブを作成し、選択する
-            tabManager.addTab(tabId, fileName);
-            tabManager.selectTab(tabId);
-          }
-        }
+        // ファイルビューワーで開く
+        vscode.postMessage({
+          command: 'openFileViewer'
+        });
         break;
       case 'updateProjectPath':
         // 直接Custom Eventを発行
@@ -385,28 +367,6 @@ try {
         document.dispatchEvent(projectsEvent);
         break;
 
-      case 'selectTab':
-        // タブ選択
-        tabManager.selectTab(message.tabId);
-        break;
-
-      case 'addFileTab':
-        // ファイルタブ追加
-        if (message.tabId && message.title && message.content) {
-          const addTabEvent = new CustomEvent('add-file-tab', {
-            detail: {
-              tabId: message.tabId,
-              title: message.title,
-              content: message.content,
-              isMarkdown: message.isMarkdown || false,
-              filePath: message.filePath
-            }
-          });
-          document.dispatchEvent(addTabEvent);
-          tabManager.addTab(message.tabId, message.title);
-          tabManager.selectTab(message.tabId);
-        }
-        break;
 
       case 'syncProjectState':
         // プロジェクト状態の同期
@@ -417,21 +377,4 @@ try {
     }
   });
 
-  /**
-   * ブルーランプ起動ボタンの初期化
-   */
-  function initializeBluelampLaunchButton() {
-    // 右下の「ブルーランプを起動」ボタン
-    const toggleShareBtn = document.getElementById('toggle-share-btn');
-    if (toggleShareBtn) {
-      toggleShareBtn.addEventListener('click', () => {
-        console.log('右下のブルーランプ起動ボタンがクリックされました');
-        // ターミナルモード選択ダイアログを表示
-        dialogManager.showBluelampLaunchDialog();
-      });
-      console.log('右下のブルーランプ起動ボタンの初期化が完了しました');
-    } else {
-      console.warn('右下のブルーランプ起動ボタンが見つかりません');
-    }
-  }
 })();
