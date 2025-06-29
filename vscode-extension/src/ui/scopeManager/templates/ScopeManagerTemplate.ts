@@ -198,7 +198,6 @@ export class ScopeManagerTemplate {
                 <div class="tabs-container">
                   <div class="tab ${activeTabId === 'scope-progress' ? 'active' : ''}" data-tab="scope-progress">進捗状況</div>
                   <div class="tab ${activeTabId === 'files' ? 'active' : ''}" data-tab="files">ファイル</div>
-                  <div class="tab ${activeTabId === 'claude-code' ? 'active' : ''}" data-tab="claude-code">ClaudeCode連携</div>
                   <div class="tab ${activeTabId === 'tools' ? 'active' : ''}" data-tab="tools">モックアップギャラリー</div>
                 </div>
               </div>
@@ -209,8 +208,6 @@ export class ScopeManagerTemplate {
               <!-- ファイルブラウザタブコンテンツ -->
               <!-- ファイルブラウザタブコンテンツは削除されました -->
 
-              <!-- ClaudeCode連携タブコンテンツ -->
-              ${this._generateClaudeCodeTabContent(activeTabId)}
               
               <!-- 開発ツールタブコンテンツ (モックアップギャラリー表示用のプレースホルダ) -->
               ${this._generateToolsTabContent(activeTabId)}
@@ -258,51 +255,6 @@ export class ScopeManagerTemplate {
 
 
 
-  /**
-   * ClaudeCode連携タブのコンテンツを生成
-   */
-  private static _generateClaudeCodeTabContent(activeTabId: string): string {
-    return `
-      <div id="claude-code-tab" class="tab-content ${activeTabId === 'claude-code' ? 'active' : ''}">
-        <div class="claude-share-container">
-          <!-- 左側：テキスト入力エリア -->
-          <div class="text-input-area">
-            <textarea class="share-textarea" placeholder="ここにClaudeCodeと共有したいテキストを入力..."></textarea>
-            <!-- ボタンエリア -->
-            <div class="action-buttons">
-              <button class="button button-secondary" id="clear-button">クリア</button>
-              <button class="button" id="share-to-claude">保存</button>
-            </div>
-            
-            <!-- 保存結果通知（成功時のみ表示） -->
-            <div class="save-notification" id="save-notification" style="display: none;">
-              <span class="material-icons success-icon">check_circle</span>
-              <span class="notification-text">保存完了</span>
-            </div>
-          </div>
-          
-          <!-- 右側：画像アップロードエリアと履歴 -->
-          <div class="image-upload-area">
-            <!-- ドロップゾーン -->
-            <div class="drop-zone" id="drop-zone">
-              <span class="material-icons">add_photo_alternate</span>
-              <p>画像をアップロード<br><span style="font-size: 12px; color: var(--app-text-secondary);">（ファイルをドラッグ＆ドロップ）</span></p>
-              <button class="button-secondary" id="file-select-btn">ブラウズ...</button>
-              <input type="file" id="file-input" accept="image/*" style="display: none;">
-            </div>
-            
-            <!-- 履歴表示エリア -->
-            <div class="history-container">
-              <h4>共有履歴</h4>
-              <div class="shared-history-list">
-                <!-- 履歴アイテムはJSで動的に生成 -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   /**
    * ツールタブのコンテンツを生成

@@ -59,37 +59,6 @@ try {
     });
   }
 
-  /**
-   * ClaudeCode連携エリアの初期化
-   * 注: 基本的な表示/非表示のトグル処理のみを担当し、
-   * 詳細機能はsharingPanel.jsに任せる簡易版
-   */
-  function initializeClaudeCodeShareArea() {
-    // トグルボタンとシェアエリア要素を取得
-    const toggleBtn = document.getElementById('toggle-share-btn');
-    const shareArea = document.getElementById('claude-code-share');
-    const minimizeBtn = document.getElementById('minimize-share-btn');
-    
-    if (!toggleBtn || !shareArea || !minimizeBtn) return;
-    
-    // 初期状態では非表示
-    shareArea.classList.add('collapsed');
-    
-    // トグルボタンのクリックイベント
-    toggleBtn.addEventListener('click', () => {
-      shareArea.classList.remove('collapsed');
-      toggleBtn.style.display = 'none';
-    });
-    
-    // 最小化ボタンのクリックイベント
-    minimizeBtn.addEventListener('click', () => {
-      shareArea.classList.add('collapsed');
-      toggleBtn.style.display = 'flex';
-    });
-
-    // 開発プロンプトカードを初期化 (promptCards.jsコンポーネントが担当)
-    promptCards.initializePromptCardsInModal();
-  }
   
   /**
    * イベントリスナーの設定
@@ -142,10 +111,7 @@ try {
     // 2. プロジェクトナビゲーションの初期化
     projectNavigation.initializeNavigation();
 
-    // 3. ClaudeCode連携エリアの初期化
-    initializeClaudeCodeShareArea();
-
-    // 4. マークダウン表示の初期化を委譲
+    // 3. マークダウン表示の初期化を委譲
     markdownViewer.init();
 
     // タブコンテンツ領域を初期化
