@@ -8,7 +8,6 @@ class ProjectNavigation {
     this.projectNav = document.querySelector('.project-nav');
     this.newProjectBtn = document.getElementById('new-project-btn');
     this.loadProjectBtn = document.getElementById('load-project-btn');
-    this.searchInput = document.querySelector('.search-input');
     this.projectDisplayName = document.querySelector('.project-display .project-name');
     this.projectPathElement = document.querySelector('.project-path-display');
     
@@ -32,11 +31,6 @@ class ProjectNavigation {
     // 既存プロジェクト読み込みボタン
     if (this.loadProjectBtn) {
       this.loadProjectBtn.addEventListener('click', () => this.loadExistingProject());
-    }
-    
-    // 検索フィルタリング
-    if (this.searchInput) {
-      this.searchInput.addEventListener('input', (e) => this.filterProjects(e.target.value));
     }
     
     // 保存された状態から復元
@@ -305,22 +299,6 @@ class ProjectNavigation {
    * プロジェクト一覧のフィルタリング
    * @param {string} query 検索文字列
    */
-  filterProjects(query) {
-    const items = this.projectList.querySelectorAll('.project-item');
-    const lowerCaseQuery = query.toLowerCase();
-    
-    items.forEach(item => {
-      const name = item.querySelector('.project-name')?.textContent || '';
-      const path = item.querySelector('.project-path')?.textContent || '';
-      
-      if (name.toLowerCase().includes(lowerCaseQuery) || 
-          path.toLowerCase().includes(lowerCaseQuery)) {
-        item.style.display = '';
-      } else {
-        item.style.display = 'none';
-      }
-    });
-  }
   
   /**
    * ナビゲーションの開閉

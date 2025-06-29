@@ -165,10 +165,9 @@ export class ScopeManagerTemplate {
               <span class="material-icons">chevron_left</span>
             </button>
             <div class="project-label">PRJ</div>
-            <div class="filter-bar">
-              <input type="text" class="search-input" placeholder="プロジェクト検索...">
+            <div class="logo-container">
+              <img src="${webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'images', 'appgenius-logo.png'))}" alt="AppGenius" class="app-logo">
             </div>
-            <h3 style="margin-top: 10px;">プロジェクト</h3>
             
             <div class="project-actions">
               <button class="button button-secondary" id="new-project-btn">
@@ -189,6 +188,13 @@ export class ScopeManagerTemplate {
           <!-- 右側: コンテンツエリア -->
           <div class="content-area">
             <div class="card">
+              <!-- タブバー -->
+              <div class="tabs">
+                <div class="project-display">
+                  <span class="project-name">${projectName}</span>
+                  <span class="project-path-display">${projectPath}</span>
+                </div>
+              </div>
               <!-- 進捗状況コンテンツ（ヘッダーなしで直接表示） -->
               <div class="progress-content">
                 <div class="card-body">

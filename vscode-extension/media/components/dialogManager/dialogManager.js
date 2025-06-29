@@ -512,10 +512,12 @@ class DialogManager {
       </div>
       <div class="dialog-content">
         <p>ターミナルの表示方法を選択してください：</p>
-        <div style="background-color: #f0f0f0; padding: 12px 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #ddd;">
-          <div style="font-size: 12px; color: #666; margin-bottom: 4px;">起動ディレクトリ:</div>
-          <div style="font-size: 14px; font-weight: 600; color: #333; word-break: break-all; font-family: monospace;">
-            ${window.currentProjectPath || 'プロジェクトが選択されていません'}
+        <div style="background-color: #f0f0f0; padding: 16px; border-radius: 8px; margin: 16px 0; border: 1px solid #ddd; display: flex; align-items: center; gap: 12px;">
+          <div style="border-left: 4px solid #4a69bd; padding-left: 12px; flex: 1;">
+            <div style="font-size: 14px; color: #666; margin-bottom: 6px;">現在のプロジェクト:</div>
+            <div style="font-size: 16px; font-weight: 600; color: #4a69bd;">
+              ${window.currentProjectName || 'プロジェクトが選択されていません'}
+            </div>
           </div>
         </div>
       </div>

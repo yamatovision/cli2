@@ -247,6 +247,7 @@ try {
       case 'updateProjectPath':
         // プロジェクトパスをwindowオブジェクトに保存（ダイアログで使用）
         window.currentProjectPath = message.path;
+        console.log('プロジェクトパスを設定:', window.currentProjectPath);
         
         // 直接Custom Eventを発行
         const pathEvent = new CustomEvent('project-path-updated', {
@@ -255,6 +256,10 @@ try {
         document.dispatchEvent(pathEvent);
         break;
       case 'updateProjectName':
+        // プロジェクト名をwindowオブジェクトに保存（ダイアログで使用）
+        window.currentProjectName = message.projectName;
+        console.log('プロジェクト名を設定:', window.currentProjectName);
+        
         // 直接Custom Eventを発行
         const event = new CustomEvent('project-name-updated', {
           detail: { name: message.projectName }
@@ -375,9 +380,27 @@ try {
       case 'syncProjectState':
         // プロジェクト状態の同期
         if (message.project) {
+          // プロジェクトパスをwindowオブジェクトに保存
+          if (message.project.path) {
+            window.currentProjectPath = message.project.path;
+            console.log('syncProjectStateでプロジェクトパスを設定:', window.currentProjectPath);
+          }
+          // プロジェクト名をwindowオブジェクトに保存
+          if (message.project.name) {
+            window.currentProjectName = message.project.name;
+            console.log('syncProjectStateでプロジェクト名を設定:', window.currentProjectName);
+          }
           stateManager.syncProjectState(message.project);
         }
         break;
+    }
+  });
+  
+  // プロジェクト名更新のイベントリスナー
+  document.addEventListener('project-name-updated', (event) => {
+    const projectNameElement = document.querySelector('.project-display .project-name');
+    if (projectNameElement && event.detail.name) {
+      projectNameElement.textContent = event.detail.name;
     }
   });
 

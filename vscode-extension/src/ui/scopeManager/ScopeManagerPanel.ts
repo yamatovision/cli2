@@ -324,6 +324,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
             case 'launchBluelamp':
               // ブルーランプCLI起動コマンド
               const bluelampSplitTerminal = message.splitTerminal === true ? true : false;
+              Logger.info(`【ブルーランプ起動】受信メッセージ:`, message);
               Logger.info(`【ブルーランプ起動】splitTerminal: ${message.splitTerminal} => ${bluelampSplitTerminal}`);
               await this._handleLaunchBluelamp(bluelampSplitTerminal);
               break;
@@ -667,25 +668,39 @@ export class ScopeManagerPanel extends ProtectedPanel {
       
       let terminal: vscode.Terminal;
       
-      if (useSplitTerminal) {
-        // 分割ターミナルモード
-        const activeTerminal = vscode.window.activeTerminal;
-        if (activeTerminal) {
-          // アクティブなターミナルがある場合は分割
-          terminal = vscode.window.createTerminal({
-            name: terminalName,
-            cwd: projectPath,
-            location: { parentTerminal: activeTerminal }
-          });
-        } else {
-          // アクティブなターミナルがない場合は通常作成
+      if (useSplitTerminal && vscode.window.activeTerminal) {
+        // 分割ターミナルモード（アクティブなターミナルがある場合）
+        try {
+          Logger.info('アクティブなターミナルを分割して新しいターミナルを作成します');
+          
+          // 既存のアクティブターミナルがフォーカスされた状態にする
+          vscode.window.activeTerminal.show(true);
+          
+          // 分割コマンドを実行
+          await vscode.commands.executeCommand('workbench.action.terminal.split');
+          
+          // 分割後のターミナルは自動的にアクティブになるため、それを使用
+          terminal = vscode.window.activeTerminal!;
+          
+          // 少し遅延してから操作（初期化時間を考慮）
+          await new Promise(resolve => setTimeout(resolve, 200));
+          
+          // 確実に分割されたターミナルが表示されるようにする
+          terminal.show(true);
+          
+          Logger.info('ターミナル分割に成功しました');
+        } catch (error) {
+          Logger.error('ターミナル分割中にエラーが発生しました', error as Error);
+          // エラーが発生した場合は通常のターミナルを作成
           terminal = vscode.window.createTerminal({
             name: terminalName,
             cwd: projectPath
           });
+          terminal.show(true);
         }
       } else {
-        // 新しいタブモード
+        // 新しいタブモードまたはアクティブなターミナルがない場合
+        Logger.info('新しいタブモードでターミナルを作成');
         terminal = vscode.window.createTerminal({
           name: terminalName,
           cwd: projectPath
