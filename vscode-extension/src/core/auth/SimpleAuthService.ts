@@ -749,7 +749,8 @@ export class SimpleAuthService {
       
       const response = await axios.post(`${this.API_BASE_URL}/auth/login`, {
         email,
-        password
+        password,
+        clientType: 'vscode'  // VSCode拡張機能からのログイン
       });
       
       if (response.data && response.data.success && response.data.data.accessToken) {
@@ -831,12 +832,14 @@ export class SimpleAuthService {
         // APIリクエスト（タイムアウト5秒、エラーはキャッチするが処理継続）
         try {
           await axios.post(`${this.API_BASE_URL}/auth/logout`, {
-            refreshToken: this._refreshToken
+            refreshToken: this._refreshToken,
+            clientType: 'vscode'  // VSCode拡張機能からのログアウト
           }, { timeout: 5000 });
           Logger.info('SimpleAuthService: サーバーログアウト成功');
         } catch (apiError) {
-          const isTimeout = apiError.code === 'ECONNABORTED' || (apiError.message && apiError.message.includes('timeout'));
-          Logger.warn(`SimpleAuthService: サーバーログアウトエラー${isTimeout ? '(タイムアウト)' : ''}`, apiError as Error);
+          const error = apiError as any;
+          const isTimeout = error.code === 'ECONNABORTED' || (error.message && error.message.includes('timeout'));
+          Logger.warn(`SimpleAuthService: サーバーログアウトエラー${isTimeout ? '(タイムアウト)' : ''}`, error as Error);
           
           // タイムアウトの場合は専用通知を表示
           if (isTimeout) {
@@ -1070,13 +1073,14 @@ export class SimpleAuthService {
         } catch (error) {
           const requestEndTime = Date.now();
           const duration = requestEndTime - requestStartTime;
-          Logger.error(`SimpleAuthService: リクエスト失敗 (所要時間: ${duration}ms)`, error);
+          Logger.error(`SimpleAuthService: リクエスト失敗 (所要時間: ${duration}ms)`, error as Error);
           
           // ETIMEDOUTエラーの詳細解析
-          if ((error as any).code === 'ETIMEDOUT' || (error.message && error.message.includes('ETIMEDOUT'))) {
+          const errorObj = error as any;
+          if (errorObj.code === 'ETIMEDOUT' || (errorObj.message && errorObj.message.includes('ETIMEDOUT'))) {
             const timeoutDetails: any = {
-              errorCode: (error as any).code,
-              errorMessage: error.message,
+              errorCode: errorObj.code,
+              errorMessage: errorObj.message,
               requestDuration: duration,
               configuredTimeout: 20000,
               timestamp: new Date().toISOString(),

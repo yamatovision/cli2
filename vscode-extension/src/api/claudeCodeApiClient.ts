@@ -57,8 +57,8 @@ export class ClaudeCodeApiClient {
   /**
    * API呼び出し用の設定を取得
    */
-  private async _getApiConfig() {
-    let authHeader = {};
+  private async _getApiConfig(): Promise<{ headers: Record<string, string> }> {
+    let authHeader: Record<string, string> = {};
 
     try {
       // SimpleAuthServiceから認証ヘッダーを取得

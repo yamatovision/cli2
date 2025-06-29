@@ -135,17 +135,17 @@ class CLIRuntime(Runtime):
         # Set up workspace
         if self.config.workspace_base is not None:
             logger.warning(
-                f'ワークスペースのベースパスが {self.config.workspace_base} に設定されています。'
-                'これはエージェントが実行されるパスとして使用されます。'
-                '注意: エージェントはこのディレクトリ内のファイルを編集できます！'
+                f'Workspace base path is set to {self.config.workspace_base}. '
+                'It will be used as the path for the agent to run in. '
+                'Be careful, the agent can EDIT files in this directory!'
             )
             self._workspace_path = self.config.workspace_base
         else:
             # Create a temporary directory for the workspace
             self._workspace_path = tempfile.mkdtemp(
-                prefix=f'bluelamp_workspace_{sid}_'
+                prefix=f'openhands_workspace_{sid}_'
             )
-            logger.info(f'一時ワークスペースを作成しました: {self._workspace_path}')
+            logger.info(f'Created temporary workspace at {self._workspace_path}')
 
         # Runtime tests rely on this being set correctly.
         self.config.workspace_mount_path_in_sandbox = self._workspace_path
@@ -160,9 +160,9 @@ class CLIRuntime(Runtime):
         self._powershell_session: WindowsPowershellSession | None = None
 
         logger.warning(
-            'CLIRuntimeを初期化しています。警告: サンドボックスは使用されません。'
-            'このランタイムはローカルシステム上で直接コマンドを実行します。'
-            '信頼できない環境では注意して使用してください。'
+            'Initializing CLIRuntime. WARNING: NO SANDBOX IS USED. '
+            'This runtime executes commands directly on the local system. '
+            'Use with caution in untrusted environments.'
         )
 
     async def connect(self) -> None:
@@ -189,7 +189,7 @@ class CLIRuntime(Runtime):
 
         self._runtime_initialized = True
         self.set_runtime_status(RuntimeStatus.RUNTIME_STARTED)
-        logger.info(f'CLIRuntimeが初期化されました。ワークスペース: {self._workspace_path}')
+        logger.info(f'CLIRuntime initialized with workspace at {self._workspace_path}')
 
     def add_env_vars(self, env_vars: dict[str, Any]) -> None:
         """
@@ -204,7 +204,7 @@ class CLIRuntime(Runtime):
 
         # We log only keys to avoid leaking sensitive values like tokens into logs.
         logger.info(
-            f'[CLIRuntime] このセッションの環境変数を設定しています: {list(env_vars.keys())}'
+            f'[CLIRuntime] Setting environment variables for this session: {list(env_vars.keys())}'
         )
 
         for key, value in env_vars.items():
@@ -437,7 +437,7 @@ class CLIRuntime(Runtime):
         """Run a command using subprocess."""
         if not self._runtime_initialized:
             return ErrorObservation(
-                f'ランタイムが初期化されていません。コマンド: {action.command}'
+                f'Runtime not initialized for command: {action.command}'
             )
 
         if action.is_input:
@@ -493,8 +493,7 @@ class CLIRuntime(Runtime):
             'Please disable the Jupyter plugin in AgentConfig.'
         )
         return ErrorObservation(
-            'IPythonセルの実行はCLIランタイムでは利用できません。\n'
-            'Pythonスクリプトを作成して実行するか、別の方法をお試しください。'
+            'Executing IPython cells is not implemented in CLIRuntime. '
         )
 
     def _sanitize_filename(self, filename: str) -> str:
@@ -509,18 +508,8 @@ class CLIRuntime(Runtime):
             )
         elif filename.startswith('/'):
             if not filename.startswith(self._workspace_path):
-                # ユーザーフレンドリーなエラーメッセージ
-                hint = (
-                    f"\n\n💡 ヒント: 現在の作業ディレクトリ外のファイルにアクセスしようとしています。\n"
-                    f"現在の作業ディレクトリ: {self._workspace_path}\n"
-                    f"要求されたパス: {filename}\n\n"
-                    f"解決方法:\n"
-                    f"1. 現在のディレクトリ内のファイルで作業を行う\n"
-                    f"2. 必要なファイルを現在のディレクトリにコピーする\n"
-                    f"3. 新しいセッションを適切なディレクトリから開始する"
-                )
                 raise LLMMalformedActionError(
-                    f'アクセスできないパス: {filename}{hint}'
+                    f'Invalid path: {filename}. You can only work with files in {self._workspace_path}.'
                 )
             actual_filename = filename
         else:
@@ -528,19 +517,12 @@ class CLIRuntime(Runtime):
 
         # Resolve the path to handle any '..' or '.' components
         resolved_path = os.path.realpath(actual_filename)
+        resolved_workspace = os.path.realpath(self._workspace_path)
 
         # Check if the resolved path is still within the workspace
-        if not resolved_path.startswith(self._workspace_path):
-            # パストラバーサル攻撃を防ぐためのエラー（日本語化）
-            hint = (
-                f"\n\n⚠️ セキュリティ警告: パストラバーサルが検出されました。\n"
-                f"要求されたパス: {filename}\n"
-                f"解決されたパス: {resolved_path}\n"
-                f"作業ディレクトリ: {self._workspace_path}\n\n"
-                f"'..' や '.' を使用した相対パスは、作業ディレクトリ内に収まる必要があります。"
-            )
+        if not resolved_path.startswith(resolved_workspace):
             raise LLMMalformedActionError(
-                f'不正なパストラバーサル: {filename}{hint}'
+                f'Invalid path traversal: {filename}. Path resolves outside the workspace. Resolved: {resolved_path}, Workspace: {resolved_workspace}'
             )
 
         return resolved_path
@@ -548,16 +530,13 @@ class CLIRuntime(Runtime):
     def read(self, action: FileReadAction) -> Observation:
         """Read a file using Python's standard library or OHEditor."""
         if not self._runtime_initialized:
-            return ErrorObservation('ランタイムが初期化されていません')
+            return ErrorObservation('Runtime not initialized')
 
         file_path = self._sanitize_filename(action.path)
 
         # Cannot read binary files
         if os.path.exists(file_path) and is_binary(file_path):
-            return ErrorObservation(
-                f'バイナリファイルは読み込めません: {action.path}\n'
-                f'テキストファイルのみ読み込み可能です。'
-            )
+            return ErrorObservation('ERROR_BINARY_FILE')
 
         # Use OHEditor for OH_ACI implementation source
         if action.impl_source == FileReadSource.OH_ACI:
@@ -594,7 +573,7 @@ class CLIRuntime(Runtime):
     def write(self, action: FileWriteAction) -> Observation:
         """Write to a file using Python's standard library."""
         if not self._runtime_initialized:
-            return ErrorObservation('ランタイムが初期化されていません')
+            return ErrorObservation('Runtime not initialized')
 
         file_path = self._sanitize_filename(action.path)
 
@@ -676,7 +655,7 @@ class CLIRuntime(Runtime):
     def edit(self, action: FileEditAction) -> Observation:
         """Edit a file using the OHEditor."""
         if not self._runtime_initialized:
-            return ErrorObservation('ランタイムが初期化されていません')
+            return ErrorObservation('Runtime not initialized')
 
         # Ensure the path is within the workspace
         file_path = self._sanitize_filename(action.path)
@@ -722,7 +701,7 @@ class CLIRuntime(Runtime):
     def copy_to(self, host_src: str, sandbox_dest: str, recursive: bool = False):
         """Copy a file or directory from the host to the sandbox."""
         if not self._runtime_initialized:
-            raise RuntimeError('ランタイムが初期化されていません')
+            raise RuntimeError('Runtime not initialized')
         if not os.path.exists(host_src):  # Source must exist on host
             raise FileNotFoundError(f"Source path '{host_src}' does not exist.")
 
@@ -796,7 +775,7 @@ class CLIRuntime(Runtime):
     def list_files(self, path: str | None = None) -> list[str]:
         """List files in the sandbox."""
         if not self._runtime_initialized:
-            raise RuntimeError('ランタイムが初期化されていません')
+            raise RuntimeError('Runtime not initialized')
 
         if path is None:
             dir_path = self._workspace_path
@@ -819,7 +798,7 @@ class CLIRuntime(Runtime):
     def copy_from(self, path: str) -> Path:
         """Zip all files in the sandbox and return a path in the local filesystem."""
         if not self._runtime_initialized:
-            raise RuntimeError('ランタイムが初期化されていません')
+            raise RuntimeError('Runtime not initialized')
 
         source_path = self._sanitize_filename(path)
 
@@ -867,7 +846,7 @@ class CLIRuntime(Runtime):
         """Delete any resources associated with a conversation."""
         # Look for temporary directories that might be associated with this conversation
         temp_dir = tempfile.gettempdir()
-        prefix = f'bluelamp_workspace_{conversation_id}_'
+        prefix = f'openhands_workspace_{conversation_id}_'
 
         for item in os.listdir(temp_dir):
             if item.startswith(prefix):

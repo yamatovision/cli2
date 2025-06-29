@@ -9,18 +9,12 @@ from openhands.utils.import_utils import get_impl
 
 
 class AgentConfig(BaseModel):
-    """Configuration for an agent.
-    
-    Note: The fields 'enable_prompt_extensions' and 'disabled_microagents' are deprecated
-    and no longer used for microagent functionality. They are kept for backward compatibility
-    to avoid breaking existing configurations and tests.
-    """
     llm_config: str | None = Field(default=None)
     """The name of the llm config to use. If specified, this will override global llm config."""
     classpath: str | None = Field(default=None)
     """The classpath of the agent to use. To be used for custom agents that are not defined in the openhands.agenthub package."""
-    system_prompt_filename: str = Field(default='orchestration_agent.j2')
-    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'orchestration_agent.j2' (BlueLamp Orchestration Agent)."""
+    system_prompt_filename: str = Field(default='system_prompt.j2')
+    """Filename of the system prompt template file within the agent's prompt directory. Defaults to 'system_prompt.j2'."""
     enable_browsing: bool = Field(default=True)
     """Whether to enable browsing tool.
     Note: If using CLIRuntime, browsing is not implemented and should be disabled."""
@@ -37,24 +31,16 @@ class AgentConfig(BaseModel):
     """Whether to enable think tool"""
     enable_finish: bool = Field(default=True)
     """Whether to enable finish tool"""
-    enable_delegate: bool = Field(default=True)
-    """Whether to enable agent delegation tool"""
     enable_prompt_extensions: bool = Field(default=True)
-    """DEPRECATED: This field is no longer used. Kept for backward compatibility."""
+    """Whether to enable prompt extensions"""
     enable_mcp: bool = Field(default=True)
     """Whether to enable MCP tools"""
     disabled_microagents: list[str] = Field(default_factory=list)
-    """DEPRECATED: This field is no longer used. Kept for backward compatibility."""
+    """A list of microagents to disable (by name, without .py extension, e.g. ["github", "lint"]). Default is None."""
     enable_history_truncation: bool = Field(default=True)
     """Whether history should be truncated to continue the session when hitting LLM context length limit."""
     enable_som_visual_browsing: bool = Field(default=True)
     """Whether to enable SoM (Set of Marks) visual browsing."""
-    enable_interruption: bool = Field(default=True)
-    """Whether to enable interruption (Ctrl+C) during LLM calls for immediate response."""
-    interruption_check_interval: float = Field(default=0.1)
-    """Interval in seconds between interruption checks during LLM calls."""
-    interruption_timeout: float = Field(default=300.0)
-    """Maximum time in seconds to wait for LLM response before automatic timeout."""
     condenser: CondenserConfig = Field(
         default_factory=lambda: NoOpCondenserConfig(type='noop')
     )
@@ -75,10 +61,10 @@ class AgentConfig(BaseModel):
         Example:
         Apply generic agent config with custom agent overrides, e.g.
             [agent]
-            enable_browsing = false
+            enable_prompt_extensions = false
             [agent.BrowsingAgent]
-            enable_browsing = true
-        results in browsing being true for BrowsingAgent but false for others.
+            enable_prompt_extensions = true
+        results in prompt_extensions being true for BrowsingAgent but false for others.
 
         Returns:
             dict[str, AgentConfig]: A mapping where the key "agent" corresponds to the default configuration
@@ -102,7 +88,7 @@ class AgentConfig(BaseModel):
             base_config = cls.model_validate(base_data)
             agent_mapping['agent'] = base_config
         except ValidationError as e:
-            logger.warning(f'無効なベースエージェント設定: {e}。デフォルトを使用します。')
+            logger.warning(f'Invalid base agent configuration: {e}. Using defaults.')
             # If base config fails, create a default one
             base_config = cls()
             # Still add it to the mapping
@@ -137,7 +123,7 @@ class AgentConfig(BaseModel):
                 agent_mapping[name] = custom_config
             except ValidationError as e:
                 logger.warning(
-                    f'エージェント設定 [{name}] が無効です: {e}。このセクションはスキップされます。'
+                    f'Invalid agent configuration for [{name}]: {e}. This section will be skipped.'
                 )
                 # Skip this custom section but continue with others
                 continue

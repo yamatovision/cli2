@@ -12,7 +12,7 @@ import { AppGeniusEventBus, AppGeniusEventType } from '../../services/AppGeniusE
 import { ProtectedPanel } from '../auth/ProtectedPanel';
 import { Feature } from '../../core/auth/roles';
 import { ClaudeCodeApiClient } from '../../api/claudeCodeApiClient';
-import { PromptServiceClient } from '../../services/PromptServiceClient';
+// import { PromptServiceClient } from '../../services/PromptServiceClient'; // 削除: ブルーランプCLI移行により不要
 import { SharedFile, FileSaveOptions } from '../../types/SharingTypes';
 import { IFileSystemService, FileSystemService } from './services/FileSystemService';
 import { IProjectService, ProjectService } from './services/ProjectService';
@@ -49,7 +49,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
   private _progressFilePath: string = '';
   private _fileWatcher: vscode.Disposable | null = null;
   private _tempShareDir: string = '';
-  private _promptServiceClient: PromptServiceClient;
+  // private _promptServiceClient: PromptServiceClient; // 削除: ブルーランプCLI移行により不要
   private _sharingService: ISharingService; // 共有サービス
   private _activeProject: IProjectInfo | null = null; // 現在選択中のプロジェクト
   private _fileSystemService: IFileSystemService; // FileSystemServiceのインスタンス
@@ -177,7 +177,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
     this._extensionUri = extensionUri;
     this._extensionPath = context.extensionPath; // 拡張機能のファイルシステムパスを保存
     this._fileManager = FileOperationManager.getInstance();
-    this._promptServiceClient = PromptServiceClient.getInstance();
+    // this._promptServiceClient = PromptServiceClient.getInstance(); // 削除: ブルーランプCLI移行により不要
     
     // FileSystemServiceのインスタンスを取得
     this._fileSystemService = FileSystemService.getInstance();
@@ -324,6 +324,12 @@ export class ScopeManagerPanel extends ProtectedPanel {
               const splitTerminalValue = message.splitTerminal === true ? true : false;
               Logger.info(`【メッセージ変換】splitTerminal: ${message.splitTerminal} => ${splitTerminalValue}`);
               await this._handleLaunchPromptFromURL(message.url, message.index, message.name, splitTerminalValue);
+              break;
+            case 'launchBluelamp':
+              // ブルーランプCLI起動コマンド
+              const bluelampSplitTerminal = message.splitTerminal === true ? true : false;
+              Logger.info(`【ブルーランプ起動】splitTerminal: ${message.splitTerminal} => ${bluelampSplitTerminal}`);
+              await this._handleLaunchBluelamp(bluelampSplitTerminal);
               break;
             case 'saveSharedTextContent':
               await this._handleSaveSharedTextContent(message.content);
@@ -548,7 +554,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
       await this._fileSystemService.ensureDirectoryExists(this._tempShareDir);
       
       // 関連サービスにプロジェクトパスを設定
-      this._promptServiceClient.setProjectPath(projectPath);
+      // this._promptServiceClient.setProjectPath(projectPath); // 削除: ブルーランプCLI移行により不要
       this._sharingService.setProjectBasePath(projectPath);
       
       // ファイルウォッチャーと進捗ファイルを設定
@@ -678,48 +684,90 @@ export class ScopeManagerPanel extends ProtectedPanel {
    */
   private async _handleLaunchPromptFromURL(url: string, index: number, name?: string, splitTerminal?: boolean): Promise<void> {
     try {
-      // フロントエンドから送信されたURLとインデックスをそのまま使用
-      // プロンプトの内容を取得して一時ファイルに保存（プロジェクトパスを指定）
-      const promptFilePath = await this._promptServiceClient.fetchAndSavePrompt(url, index, this._projectPath);
+      // レガシー機能: プロンプトファイル取得（ブルーランプCLI移行により非推奨）
+      // const promptFilePath = await this._promptServiceClient.fetchAndSavePrompt(url, index, this._projectPath);
+      throw new Error('レガシー機能: プロンプトファイル取得は非推奨です。ブルーランプCLI機能を使用してください。');
       
-      // ClaudeCodeを起動
-      const launcher = ClaudeCodeLauncherService.getInstance();
-      
-      const useSplitTerminal = splitTerminal === true;
-      
-      // UIのダイアログで「分割ターミナルで表示」が選択された場合のみtrueになる
-      const success = await launcher.launchClaudeCodeWithPrompt(
-        this._projectPath,
-        promptFilePath,
-        {
-          deletePromptFile: true, // 使用後に一時ファイルを削除
-          splitTerminal: useSplitTerminal, // UIから指定された分割モードを使用
-          promptType: name // プロンプト名をターミナルタイトルに反映
-        }
-      );
-      
-      if (success) {
-        Logger.info(`ClaudeCode起動成功, 分割モード: ${useSplitTerminal ? '有効' : '無効'}`);
-        
-        // 成功通知をUIに送信（デバッグ用）
-        this._panel.webview.postMessage({
-          command: 'launchResult',
-          success: true,
-          splitTerminal: useSplitTerminal,
-          message: `ClaudeCodeを起動しました (${useSplitTerminal ? '分割ターミナル' : '新しいタブ'})`
-        });
-      } else {
-        this._showError('ClaudeCodeの起動に失敗しました');
-      }
+      // レガシー機能: ClaudeCode起動（ブルーランプCLI移行により非推奨）
+      Logger.warn('レガシー機能: ClaudeCode起動は非推奨です。ブルーランプCLI機能を使用してください。');
+      this._showError('この機能は非推奨です。ブルーランプCLI機能を使用してください。');
     } catch (error) {
       Logger.error('プロンプト起動中にエラーが発生しました', error as Error);
       this._showError(`プロンプトの取得または起動に失敗しました: ${(error as Error).message}`);
     }
   }
 
+  /**
+   * ブルーランプCLIを起動する
+   * @param splitTerminal ターミナル分割モードを使用するかどうか
+   */
+  private async _handleLaunchBluelamp(splitTerminal?: boolean): Promise<void> {
+    try {
+      Logger.info(`ブルーランプCLI起動開始, 分割モード: ${splitTerminal ? '有効' : '無効'}`);
+      
+      // プロジェクトパスを取得
+      const projectPath = this._projectPath || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
+      
+      if (!projectPath) {
+        this._showError('プロジェクトが選択されていません');
+        return;
+      }
+      
+      // ターミナルを作成
+      const terminalName = 'ブルーランプ';
+      const useSplitTerminal = splitTerminal === true;
+      
+      let terminal: vscode.Terminal;
+      
+      if (useSplitTerminal) {
+        // 分割ターミナルモード
+        const activeTerminal = vscode.window.activeTerminal;
+        if (activeTerminal) {
+          // アクティブなターミナルがある場合は分割
+          terminal = vscode.window.createTerminal({
+            name: terminalName,
+            cwd: projectPath,
+            location: { parentTerminal: activeTerminal }
+          });
+        } else {
+          // アクティブなターミナルがない場合は通常作成
+          terminal = vscode.window.createTerminal({
+            name: terminalName,
+            cwd: projectPath
+          });
+        }
+      } else {
+        // 新しいタブモード
+        terminal = vscode.window.createTerminal({
+          name: terminalName,
+          cwd: projectPath
+        });
+      }
+      
+      // ターミナルを表示
+      terminal.show();
+      
+      // ブルーランプコマンドを実行
+      terminal.sendText('ブルーランプ');
+      
+      Logger.info(`ブルーランプCLI起動成功, プロジェクトパス: ${projectPath}, 分割モード: ${useSplitTerminal ? '有効' : '無効'}`);
+      
+      // 成功通知をUIに送信
+      this._panel.webview.postMessage({
+        command: 'bluelampLaunchResult',
+        success: true,
+        splitTerminal: useSplitTerminal,
+        projectPath: projectPath,
+        message: `ブルーランプを起動しました (${useSplitTerminal ? '分割ターミナル' : '新しいタブ'})`
+      });
+      
+    } catch (error) {
+      Logger.error('ブルーランプCLI起動中にエラーが発生しました', error as Error);
+      this._showError(`ブルーランプの起動に失敗しました: ${(error as Error).message}`);
+    }
+  }
+
   // レガシー共有メソッドは削除されました
-
-
 
   /**
    * モックアップギャラリーを開く - 共通メソッドに統合
@@ -791,7 +839,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
       }
 
       // コマンドを実行する前にグローバル状態を更新するのが重要
-      global.__lastSelectedProjectPath = this._projectPath;
+      (global as any).__lastSelectedProjectPath = this._projectPath;
 
       // vscode.commandsを使用してマークダウンビューワーを開く
       // プロジェクトパスを明示的に渡す - 現在のアクティブなパスを使用

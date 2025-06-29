@@ -167,17 +167,7 @@ class Agent(ABC):
             f'Setting {len(mcp_tools)} MCP tools for agent {self.name}: {[tool["function"]["name"] for tool in mcp_tools]}'
         )
         for tool in mcp_tools:
-            # Ensure tool has required keys
-            if 'type' not in tool:
-                tool['type'] = 'function'
-            if 'function' not in tool:
-                logger.warning(f'Tool missing function key: {tool}')
-                continue
-            # Create ChatCompletionToolParam with explicit parameters
-            _tool = ChatCompletionToolParam(
-                type=tool.get('type', 'function'),  # type: ignore[arg-type]
-                function=tool['function']  # type: ignore[arg-type]
-            )
+            _tool = ChatCompletionToolParam(**tool)
             if _tool['function']['name'] in self.mcp_tools:
                 logger.warning(
                     f'Tool {_tool["function"]["name"]} already exists, skipping'

@@ -83,7 +83,36 @@ const SimpleUserSchema = new mongoose.Schema({
     default: null
   },
   
-  // アクティブセッション情報
+  // アクティブセッション情報（複数クライアント対応）
+  activeSessions: [{
+    clientType: {
+      type: String,
+      enum: ['vscode', 'portal', 'cli'],
+      required: true
+    },
+    sessionId: {
+      type: String,
+      required: true
+    },
+    loginTime: {
+      type: Date,
+      default: Date.now
+    },
+    lastActivity: {
+      type: Date,
+      default: Date.now
+    },
+    ipAddress: {
+      type: String,
+      default: null
+    },
+    userAgent: {
+      type: String,
+      default: null
+    }
+  }],
+  
+  // 旧バージョン互換性のための単一セッション（非推奨）
   activeSession: {
     sessionId: {
       type: String,
@@ -112,7 +141,30 @@ const SimpleUserSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'disabled'],
     default: 'active'
-  }
+  },
+  
+  // ===== CLI認証情報 =====
+  
+  // CLI用APIキー配列
+  cliApiKeys: [{
+    key: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsedAt: {
+      type: Date,
+      default: null
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    }
+  }]
 }, {
   timestamps: true,
   
@@ -183,6 +235,15 @@ SimpleUserSchema.statics.findByRefreshToken = function(token) {
   });
 };
 
+// CLI APIキーでユーザーを検索
+SimpleUserSchema.statics.findByCliApiKey = function(apiKey) {
+  return this.findOne({
+    'cliApiKeys.key': apiKey,
+    'cliApiKeys.isActive': true,
+    status: 'active'
+  });
+};
+
 // リフレッシュトークン更新メソッド
 SimpleUserSchema.methods.updateRefreshToken = function(token) {
   this.refreshToken = token;
@@ -200,7 +261,76 @@ SimpleUserSchema.methods.setApiKey = function(apiKeyId) {
   return this.save();
 };
 
-// セッション管理メソッド
+// セッション管理メソッド（新バージョン：クライアントタイプ別）
+SimpleUserSchema.methods.hasActiveSessionForClient = function(clientType) {
+  // activeSessionsが存在しない場合は空配列として扱う
+  if (!this.activeSessions || !Array.isArray(this.activeSessions)) {
+    return false;
+  }
+  return this.activeSessions.some(session => session.clientType === clientType);
+};
+
+SimpleUserSchema.methods.getActiveSessionForClient = function(clientType) {
+  // activeSessionsが存在しない場合は空配列として扱う
+  if (!this.activeSessions || !Array.isArray(this.activeSessions)) {
+    return null;
+  }
+  return this.activeSessions.find(session => session.clientType === clientType);
+};
+
+SimpleUserSchema.methods.setActiveSessionForClient = function(clientType, sessionId, ipAddress, userAgent) {
+  // activeSessionsが存在しない場合は初期化
+  if (!this.activeSessions || !Array.isArray(this.activeSessions)) {
+    this.activeSessions = [];
+  }
+  
+  // 既存の同じクライアントタイプのセッションを削除
+  this.activeSessions = this.activeSessions.filter(session => session.clientType !== clientType);
+  
+  // 新しいセッションを追加
+  this.activeSessions.push({
+    clientType: clientType,
+    sessionId: sessionId,
+    loginTime: new Date(),
+    lastActivity: new Date(),
+    ipAddress: ipAddress || null,
+    userAgent: userAgent || null
+  });
+  
+  return this.save();
+};
+
+SimpleUserSchema.methods.clearActiveSessionForClient = function(clientType) {
+  // activeSessionsが存在しない場合は初期化
+  if (!this.activeSessions || !Array.isArray(this.activeSessions)) {
+    this.activeSessions = [];
+    return this.save();
+  }
+  
+  this.activeSessions = this.activeSessions.filter(session => session.clientType !== clientType);
+  return this.save();
+};
+
+SimpleUserSchema.methods.validateSessionForClient = function(clientType, sessionId) {
+  const session = this.getActiveSessionForClient(clientType);
+  return session && session.sessionId === sessionId;
+};
+
+SimpleUserSchema.methods.updateSessionActivityForClient = function(clientType) {
+  // activeSessionsが存在しない場合は初期化
+  if (!this.activeSessions || !Array.isArray(this.activeSessions)) {
+    this.activeSessions = [];
+  }
+  
+  const session = this.getActiveSessionForClient(clientType);
+  if (session) {
+    session.lastActivity = new Date();
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
+// 旧バージョン互換性メソッド（非推奨）
 SimpleUserSchema.methods.hasActiveSession = function() {
   return !!(this.activeSession && this.activeSession.sessionId);
 };
@@ -230,6 +360,44 @@ SimpleUserSchema.methods.clearActiveSession = function() {
 SimpleUserSchema.methods.updateSessionActivity = function() {
   if (this.activeSession && this.activeSession.sessionId) {
     this.activeSession.lastActivity = new Date();
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
+// CLI APIキー管理メソッド
+SimpleUserSchema.methods.generateCliApiKey = function() {
+  const crypto = require('crypto');
+  const key = 'CLI_' + crypto.randomBytes(32).toString('hex');
+  
+  // 既存のキーをすべて無効化
+  this.cliApiKeys.forEach(apiKey => {
+    apiKey.isActive = false;
+  });
+  
+  // 新しいキーを追加
+  this.cliApiKeys.push({
+    key: key,
+    createdAt: new Date(),
+    isActive: true
+  });
+  
+  return this.save().then(() => key);
+};
+
+SimpleUserSchema.methods.deactivateCliApiKey = function(key) {
+  const apiKey = this.cliApiKeys.find(k => k.key === key);
+  if (apiKey) {
+    apiKey.isActive = false;
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
+SimpleUserSchema.methods.updateCliApiKeyUsage = function(key) {
+  const apiKey = this.cliApiKeys.find(k => k.key === key && k.isActive);
+  if (apiKey) {
+    apiKey.lastUsedAt = new Date();
     return this.save();
   }
   return Promise.resolve(this);

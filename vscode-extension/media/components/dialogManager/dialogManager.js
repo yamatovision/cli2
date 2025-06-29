@@ -455,6 +455,78 @@ class DialogManager {
   }
   
   /**
+   * ブルーランプ起動用ターミナルモード選択ダイアログを表示
+   */
+  showBluelampLaunchDialog() {
+    // 既存のダイアログがあれば削除
+    const existingDialog = document.getElementById('bluelamp-launch-dialog');
+    if (existingDialog) {
+      existingDialog.remove();
+    }
+    
+    // モーダルオーバーレイとダイアログを作成
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.id = 'bluelamp-launch-overlay';
+    
+    const dialog = document.createElement('div');
+    dialog.id = 'bluelamp-launch-dialog';
+    dialog.className = 'dialog';
+    
+    dialog.innerHTML = `
+      <div class="dialog-header">
+        <div class="dialog-title">ブルーランプを起動</div>
+        <button class="dialog-close">×</button>
+      </div>
+      <div class="dialog-content">
+        <p>ターミナルの表示方法を選択してください：</p>
+      </div>
+      <div class="dialog-footer">
+        <button id="bluelamp-split-terminal-btn" class="dialog-button primary-button">
+          <span class="material-icons" style="font-size: 18px; margin-right: 8px;">vertical_split</span>
+          分割ターミナルで起動
+        </button>
+        <button id="bluelamp-new-tab-terminal-btn" class="dialog-button">
+          <span class="material-icons" style="font-size: 18px; margin-right: 8px;">tab</span>
+          新しいタブで起動
+        </button>
+      </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    // 閉じるボタンのイベント
+    const closeButton = dialog.querySelector('.dialog-close');
+    closeButton.addEventListener('click', () => {
+      overlay.remove();
+    });
+    
+    // ボタンのイベントリスナーを設定
+    document.getElementById('bluelamp-split-terminal-btn').addEventListener('click', () => {
+      // 分割ターミナルモードでブルーランプを起動
+      this.vscode.postMessage({
+        command: 'launchBluelamp',
+        splitTerminal: true
+      });
+      
+      // ダイアログを閉じる
+      overlay.remove();
+    });
+    
+    document.getElementById('bluelamp-new-tab-terminal-btn').addEventListener('click', () => {
+      // 新しいタブモードでブルーランプを起動
+      this.vscode.postMessage({
+        command: 'launchBluelamp',
+        splitTerminal: false
+      });
+      
+      // ダイアログを閉じる
+      overlay.remove();
+    });
+  }
+
+  /**
    * デバッグメッセージを表示
    * @param {string} message メッセージ内容
    * @param {number} [duration=3000] 表示時間（ミリ秒）

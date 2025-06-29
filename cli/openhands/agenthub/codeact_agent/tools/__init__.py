@@ -1,6 +1,6 @@
 from .bash import create_cmd_run_tool
+from .bluelamp_delegate import create_bluelamp_delegate_tools
 from .browser import BrowserTool
-from .delegate import DelegateTool
 from .finish import FinishTool
 from .ipython import IPythonTool
 from .llm_based_edit import LLMBasedFileEditTool
@@ -9,8 +9,8 @@ from .think import ThinkTool
 
 __all__ = [
     'BrowserTool',
+    'create_bluelamp_delegate_tools',
     'create_cmd_run_tool',
-    'DelegateTool',
     'FinishTool',
     'IPythonTool',
     'LLMBasedFileEditTool',

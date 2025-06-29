@@ -58,6 +58,23 @@ exports.getUsers = async (req, res) => {
       users = [await SimpleUser.findById(userId, '-password -refreshToken')];
     }
     
+    // 管理者の場合、各ユーザーのCLI APIキー情報を含める
+    if (currentUser.isAdmin()) {
+      users = users.map(user => {
+        const userObj = user.toObject();
+        // アクティブなCLI APIキーのみ含める
+        userObj.cliApiKeys = userObj.cliApiKeys ? userObj.cliApiKeys.filter(key => key.isActive) : [];
+        return userObj;
+      });
+    } else {
+      // 一般ユーザーにはCLI APIキー情報を含めない
+      users = users.map(user => {
+        const userObj = user.toObject();
+        delete userObj.cliApiKeys;
+        return userObj;
+      });
+    }
+    
     return res.status(200).json({
       success: true,
       data: users
@@ -839,6 +856,145 @@ exports.incrementClaudeCodeLaunchCount = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'ClaudeCode起動カウンターの更新中にエラーが発生しました',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * CLI APIキー発行
+ * @route POST /api/simple/users/:userId/cli-api-key
+ */
+exports.generateCliApiKey = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // 管理者権限チェック
+    if (!req.user.isAdmin() && req.user._id.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: '権限がありません'
+      });
+    }
+    
+    // ユーザーを取得
+    const user = await SimpleUser.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'ユーザーが見つかりません'
+      });
+    }
+    
+    // 新しいAPIキーを生成
+    const newKey = await user.generateCliApiKey();
+    
+    console.log(`CLI APIキー発行: ユーザー=${user.name}, キー=${newKey}`);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        key: newKey,
+        createdAt: new Date()
+      }
+    });
+  } catch (error) {
+    console.error('CLI APIキー発行エラー:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'APIキーの発行中にエラーが発生しました',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * CLI APIキー一覧取得
+ * @route GET /api/simple/users/:userId/cli-api-key
+ */
+exports.getCliApiKeys = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // 管理者権限チェック
+    if (!req.user.isAdmin() && req.user._id.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: '権限がありません'
+      });
+    }
+    
+    // ユーザーを取得
+    const user = await SimpleUser.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'ユーザーが見つかりません'
+      });
+    }
+    
+    // アクティブなキーのみ返す
+    const activeKeys = user.cliApiKeys.filter(key => key.isActive);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        keys: activeKeys
+      }
+    });
+  } catch (error) {
+    console.error('CLI APIキー取得エラー:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'APIキーの取得中にエラーが発生しました',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * CLI APIキー無効化
+ * @route DELETE /api/simple/users/:userId/cli-api-key/:key
+ */
+exports.deactivateCliApiKey = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const apiKey = req.params.key;
+    
+    // 管理者権限チェック
+    if (!req.user.isAdmin()) {
+      return res.status(403).json({
+        success: false,
+        message: '権限がありません'
+      });
+    }
+    
+    // ユーザーを取得
+    const user = await SimpleUser.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'ユーザーが見つかりません'
+      });
+    }
+    
+    // APIキーを無効化
+    await user.deactivateCliApiKey(apiKey);
+    
+    console.log(`CLI APIキー無効化: ユーザー=${user.name}, キー=${apiKey}`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'APIキーを無効化しました'
+    });
+  } catch (error) {
+    console.error('CLI APIキー無効化エラー:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'APIキーの無効化中にエラーが発生しました',
       error: error.message
     });
   }

@@ -69,13 +69,13 @@ ColorType = Literal[
 ]
 
 LOG_COLORS: Mapping[str, ColorType] = {
-    'ACTION': 'cyan',
-    'USER_ACTION': 'light_cyan',
-    'OBSERVATION': 'cyan',
-    'USER_OBSERVATION': 'light_cyan',
+    'ACTION': 'green',
+    'USER_ACTION': 'light_red',
+    'OBSERVATION': 'yellow',
+    'USER_OBSERVATION': 'light_green',
     'DETAIL': 'cyan',
     'ERROR': 'red',
-    'PLAN': 'light_cyan',
+    'PLAN': 'light_magenta',
 }
 
 
@@ -283,7 +283,7 @@ def get_console_handler(log_level: int = logging.INFO) -> logging.StreamHandler:
     """Returns a console handler for logging."""
     console_handler = logging.StreamHandler()
     console_handler.setLevel(log_level)
-    formatter_str = '\033[96m%(asctime)s - %(name)s:%(levelname)s\033[0m: %(filename)s:%(lineno)s - %(message)s'
+    formatter_str = '\033[92m%(asctime)s - %(name)s:%(levelname)s\033[0m: %(filename)s:%(lineno)s - %(message)s'
     console_handler.setFormatter(ColoredFormatter(formatter_str, datefmt='%H:%M:%S'))
     return console_handler
 
@@ -330,11 +330,6 @@ def json_log_handler(
 # Set up logging
 logging.basicConfig(level=logging.ERROR)
 
-# Fix openhands_aci file_cache logger level to prevent DEBUG spam
-# This is needed because openhands_aci.editor.file_cache sets level=DEBUG
-file_cache_logger = logging.getLogger('openhands_aci.editor.file_cache')
-file_cache_logger.setLevel(logging.WARNING)
-
 
 def log_uncaught_exceptions(
     ex_cls: type[BaseException], ex: BaseException, tb: TracebackType | None
@@ -355,30 +350,28 @@ def log_uncaught_exceptions(
 
 
 sys.excepthook = log_uncaught_exceptions
-openhands_logger = logging.getLogger('bluelamp')
+bluelamp_logger = logging.getLogger('bluelamp')
 current_log_level = logging.INFO
 
 if LOG_LEVEL in logging.getLevelNamesMapping():
     current_log_level = logging.getLevelNamesMapping()[LOG_LEVEL]
-openhands_logger.setLevel(current_log_level)
+bluelamp_logger.setLevel(current_log_level)
 
 if DEBUG:
-    openhands_logger.addFilter(StackInfoFilter())
+    bluelamp_logger.addFilter(StackInfoFilter())
 
 if current_log_level == logging.DEBUG:
     LOG_TO_FILE = True
-    # デバッグモードメッセージを非表示
-    # openhands_logger.debug('デバッグモードが有効になりました。')
+    bluelamp_logger.debug('DEBUG mode enabled.')
 
 if LOG_JSON:
-    openhands_logger.addHandler(json_log_handler(current_log_level))
+    bluelamp_logger.addHandler(json_log_handler(current_log_level))
 else:
-    openhands_logger.addHandler(get_console_handler(current_log_level))
+    bluelamp_logger.addHandler(get_console_handler(current_log_level))
 
-openhands_logger.addFilter(SensitiveDataFilter(openhands_logger.name))
-openhands_logger.propagate = False
-# ロギング初期化メッセージを非表示
-# openhands_logger.debug('ロギングが初期化されました')
+bluelamp_logger.addFilter(SensitiveDataFilter(bluelamp_logger.name))
+bluelamp_logger.propagate = False
+bluelamp_logger.debug('Logging initialized')
 
 LOG_DIR = os.path.join(
     # parent dir of openhands/core (i.e., root of the repo)
@@ -387,11 +380,10 @@ LOG_DIR = os.path.join(
 )
 
 if LOG_TO_FILE:
-    openhands_logger.addHandler(
+    bluelamp_logger.addHandler(
         get_file_handler(LOG_DIR, current_log_level)
     )  # default log to project root
-    # ファイルロギングメッセージを非表示
-    # openhands_logger.debug(f'ファイルへのロギング: {LOG_DIR}')
+    bluelamp_logger.debug(f'Logging to file in: {LOG_DIR}')
 
 # Exclude LiteLLM from logging output as it can leak keys
 logging.getLogger('LiteLLM').disabled = True
@@ -444,7 +436,7 @@ class LlmFileHandler(logging.FileHandler):
                 try:
                     os.unlink(file_path)
                 except Exception as e:
-                    openhands_logger.error(
+                    bluelamp_logger.error(
                         'Failed to delete %s. Reason: %s', file_path, e
                     )
         filename = f'{self.filename}_{self.message_counter:03}.log'
@@ -462,7 +454,7 @@ class LlmFileHandler(logging.FileHandler):
         self.stream = self._open()
         super().emit(record)
         self.stream.close()
-        openhands_logger.debug('Logging to %s', self.baseFilename)
+        bluelamp_logger.debug('Logging to %s', self.baseFilename)
         self.message_counter += 1
 
 
@@ -486,6 +478,9 @@ def _setup_llm_logger(name: str, log_level: int) -> logging.Logger:
 
 llm_prompt_logger = _setup_llm_logger('prompt', current_log_level)
 llm_response_logger = _setup_llm_logger('response', current_log_level)
+
+# Backward compatibility alias - defined before the class that uses it
+openhands_logger = bluelamp_logger
 
 
 class OpenHandsLoggerAdapter(logging.LoggerAdapter):

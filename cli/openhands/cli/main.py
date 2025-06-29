@@ -1,7 +1,10 @@
 import asyncio
 import logging
 import os
+import signal
 import sys
+import threading
+import time
 
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML
@@ -14,6 +17,7 @@ from openhands.cli.commands import (
     handle_commands,
 )
 from openhands.cli.settings import modify_llm_settings_basic
+from openhands.cli.branding import get_message
 from openhands.cli.tui import (
     UsageMetrics,
     display_agent_running_message,
@@ -65,8 +69,20 @@ from openhands.mcp import add_mcp_tools_to_agent
 from openhands.memory.condenser.impl.llm_summarizing_condenser import (
     LLMSummarizingCondenserConfig,
 )
+from openhands.microagent.microagent import BaseMicroagent
 from openhands.runtime.base import Runtime
 from openhands.storage.settings.file_settings_store import FileSettingsStore
+
+
+def setup_signal_handlers():
+    """Setup signal handlers for immediate termination."""
+    def signal_handler(signum, frame):
+        print_formatted_text(HTML(f'\n<blue>{get_message("ctrl_c_exit")}</blue>'))
+        sys.exit(0)
+    
+    # Register signal handlers
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
 
 async def cleanup_session(
@@ -76,32 +92,25 @@ async def cleanup_session(
     controller: AgentController,
 ) -> None:
     """Clean up all resources from the current session."""
-
-    event_stream = runtime.event_stream
-    end_state = controller.get_state()
-    end_state.save_to_session(
-        event_stream.sid,
-        event_stream.file_store,
-        event_stream.user_id,
-    )
+    
+    try:
+        event_stream = runtime.event_stream
+        end_state = controller.get_state()
+        end_state.save_to_session(
+            event_stream.sid,
+            event_stream.file_store,
+            event_stream.user_id,
+        )
+    except Exception:
+        pass
 
     try:
-        current_task = asyncio.current_task(loop)
-        pending = [task for task in asyncio.all_tasks(loop) if task is not current_task]
-
-        if pending:
-            done, pending_set = await asyncio.wait(set(pending), timeout=2.0)
-            pending = list(pending_set)
-
-        for task in pending:
-            task.cancel()
-
+        # Clean up resources
         agent.reset()
         runtime.close()
         await controller.close()
-
-    except Exception as e:
-        logger.error(f'セッションクリーンアップ中にエラーが発生しました: {e}')
+    except Exception:
+        pass
 
 
 async def run_session(
@@ -114,11 +123,11 @@ async def run_session(
     session_name: str | None = None,
     skip_banner: bool = False,
 ) -> bool:
+    reload_microagents = False
     new_session_requested = False
 
     sid = generate_sid(config, session_name)
     is_loaded = asyncio.Event()
-    is_paused = asyncio.Event()  # Event to track agent pause requests
     always_confirm_mode = False  # Flag to enable always confirm mode
 
     # Show runtime initialization message
@@ -150,17 +159,21 @@ async def run_session(
     usage_metrics = UsageMetrics()
 
     async def prompt_for_next_task(agent_state: str) -> None:
-        nonlocal new_session_requested
+        nonlocal reload_microagents, new_session_requested
         while True:
+            
+                
             next_message = await read_prompt_input(
                 agent_state, multiline=config.cli_multiline_input
             )
+
 
             if not next_message.strip():
                 continue
 
             (
                 close_repl,
+                reload_microagents,
                 new_session_requested,
             ) = await handle_commands(
                 next_message,
@@ -176,37 +189,28 @@ async def run_session(
                 return
 
     async def on_event_async(event: Event) -> None:
-        nonlocal is_paused, always_confirm_mode, controller
+        nonlocal reload_microagents, always_confirm_mode
+        
+            
         display_event(event, config)
         update_usage_metrics(event, usage_metrics)
 
         if isinstance(event, AgentStateChangedObservation):
-            if event.agent_state == AgentState.FINISHED:
-                # 委譲されたエージェントの場合、自動的にオーケストレーションに戻る
-                if hasattr(config, 'is_delegated_agent') and config.is_delegated_agent:
-                    print_formatted_text('')
-                    print_formatted_text(HTML('<blue>委譲タスクが完了しました。オーケストレーションに戻ります...</blue>'))
-                    # CLIを終了せずに、オーケストレーションに戻ることを通知
-                    return
+            if event.agent_state in [
+                AgentState.AWAITING_USER_INPUT,
+                AgentState.FINISHED,
+            ]:
 
-                # メインエージェント（オーケストレーション）の場合は次のタスクを待つ
-                print_formatted_text('')
-                print_formatted_text(HTML('<green>タスクが完了しました。</green>'))
-                # 次のタスクの入力を待つ（CLIは終了しない）
-                await prompt_for_next_task(AgentState.AWAITING_USER_INPUT)
-
-            if event.agent_state == AgentState.AWAITING_USER_INPUT:
-                # If the agent is paused, do not prompt for input as it's already handled by PAUSED state change
-                if is_paused.is_set():
-                    return
-
+                # Reload microagents after initialization of repo.md
+                if reload_microagents:
+                    microagents: list[BaseMicroagent] = (
+                        runtime.get_microagents_from_selected_repo(None)
+                    )
+                    memory.load_user_workspace_microagents(microagents)
+                    reload_microagents = False
                 await prompt_for_next_task(event.agent_state)
 
             if event.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
-                # If the agent is paused, do not prompt for confirmation
-                # The confirmation step will re-run after the agent has been resumed
-                if is_paused.is_set():
-                    return
 
                 if always_confirm_mode:
                     event_stream.add_event(
@@ -231,15 +235,12 @@ async def run_session(
                 if confirmation_status == 'always':
                     always_confirm_mode = True
 
-            if event.agent_state == AgentState.PAUSED:
-                is_paused.clear()  # Revert the event state before prompting for user input
-                await prompt_for_next_task(event.agent_state)
 
             if event.agent_state == AgentState.RUNNING:
                 display_agent_running_message()
-                loop.create_task(
-                    process_agent_pause(is_paused, event_stream)
-                )  # Create a task to track agent pause requests from the user
+                # Start monitoring for ESC key press
+                is_paused = asyncio.Event()
+                asyncio.create_task(process_agent_pause(is_paused, event_stream))
 
     def on_event(event: Event) -> None:
         loop.create_task(on_event_async(event))
@@ -256,6 +257,7 @@ async def run_session(
             selected_repository=config.sandbox.selected_repo,
         )
 
+    # when memory is created, it will load the microagents from the selected repository
     memory = create_memory(
         runtime=runtime,
         event_stream=event_stream,
@@ -288,7 +290,7 @@ async def run_session(
     if not skip_banner:
         display_banner(session_id=sid)
 
-    welcome_message = '何を作りたいですか？'  # from the application
+    welcome_message = get_message('build_prompt')  # from the application
     initial_message = ''  # from the user
 
     if task_content:
@@ -296,18 +298,16 @@ async def run_session(
 
     # If we loaded a state, we are resuming a previous session
     if initial_state is not None:
-        logger.info(f'セッションを再開しています: {sid}')
+        logger.info(f'Resuming session: {sid}')
+        print_formatted_text(HTML(f'<grey>{get_message("session_resumed", sid=sid)}</grey>'))
 
         if initial_state.last_error:
             # If the last session ended in an error, provide a message.
-            initial_message = (
-                '注意: 前回のセッションはエラーで終了しました。'
-                '軌道修正しましょう。タスクを再開せず、私に聞いてください。'
-            )
+            initial_message = get_message('session_error_recovery')
         else:
             # If we are resuming, we already have a task
             initial_message = ''
-            welcome_message += '\n前回の会話を読み込んでいます。'
+            welcome_message += f'\n{get_message("loading_previous")}'
 
     # Show OpenHands welcome
     display_welcome_message(welcome_message)
@@ -341,7 +341,7 @@ async def run_setup_flow(config: OpenHandsConfig, settings_store: FileSettingsSt
     display_banner(session_id='setup')
 
     print_formatted_text(
-        HTML('<grey>設定が見つかりません。初期設定を開始します...</grey>\n')
+        HTML(f'<grey>{get_message("no_settings")}</grey>\n')
     )
 
     # Use the existing settings modification function for basic setup
@@ -455,31 +455,31 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 
 def main():
+    # Setup signal handlers first
+    setup_signal_handlers()
+    
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
+    
+    # Set up logging for debug
+    logger.setLevel(logging.INFO)
+    
     try:
         loop.run_until_complete(main_with_loop(loop))
     except KeyboardInterrupt:
-        print('キーボード割り込みを受信しました。終了しています...')
+        # KeyboardInterrupt is handled by signal handler
+        pass
     except ConnectionRefusedError as e:
-        print(f'接続が拒否されました: {e}')
+        print(get_message('error_connection', error=str(e)))
         sys.exit(1)
     except Exception as e:
-        print(f'エラーが発生しました: {e}')
+        import traceback
+        print(get_message('error_generic', error=str(e)))
+        traceback.print_exc()
         sys.exit(1)
     finally:
-        try:
-            # Cancel all running tasks
-            pending = asyncio.all_tasks(loop)
-            for task in pending:
-                task.cancel()
-
-            # Wait for all tasks to complete with a timeout
-            loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-            loop.close()
-        except Exception as e:
-            print(f'クリーンアップ中にエラーが発生しました: {e}')
-            sys.exit(1)
+        loop.close()
+        
 
 
 if __name__ == '__main__':

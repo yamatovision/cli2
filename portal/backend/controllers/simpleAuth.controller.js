@@ -31,7 +31,7 @@ exports.login = async (req, res) => {
     });
     console.log("=============================================================");
     
-    const { email, password } = req.body;
+    const { email, password, clientType = 'portal' } = req.body;
     
     // 必須パラメータの検証
     if (!email || !password) {
@@ -41,6 +41,18 @@ exports.login = async (req, res) => {
         message: 'メールアドレスとパスワードは必須です'
       });
     }
+    
+    // クライアントタイプの検証
+    const validClientTypes = ['vscode', 'portal', 'cli'];
+    if (!validClientTypes.includes(clientType)) {
+      console.log("シンプル認証コントローラー: 無効なクライアントタイプ", clientType);
+      return res.status(400).json({
+        success: false,
+        message: '無効なクライアントタイプです'
+      });
+    }
+    
+    console.log("ログイン試行: クライアントタイプ=" + clientType);
     
     // ユーザーを検索
     console.log("シンプル認証コントローラー: ユーザー検索", email);
@@ -79,32 +91,25 @@ exports.login = async (req, res) => {
     
     console.log("シンプル認証コントローラー: パスワード検証に成功");
     
-    // アクティブセッションの確認
-    console.log("シンプル認証コントローラー: アクティブセッション確認");
-    const hasActiveSession = await SessionService.hasActiveSession(user._id);
+    // クライアントタイプ別のアクティブセッションの確認
+    console.log("シンプル認証コントローラー: クライアントタイプ別アクティブセッション確認");
+    const hasActiveSessionForClient = await SessionService.hasActiveSessionForClient(user._id, clientType);
     
-    if (hasActiveSession) {
-      // 既存セッションがある場合は、通常のログインをブロック
-      console.log("シンプル認証コントローラー: 既存のアクティブセッションを検出");
-      const sessionInfo = await SessionService.getUserSession(user._id);
+    if (hasActiveSessionForClient) {
+      // 同じクライアントタイプで既存セッションがある場合の処理
+      console.log("シンプル認証コントローラー: 同じクライアントタイプで既存のアクティブセッションを検出");
+      const sessionInfo = await SessionService.getUserSessionForClient(user._id, clientType);
       
-      return res.status(409).json({
-        success: false,
-        code: 'ACTIVE_SESSION_EXISTS',
-        message: 'このアカウントは別の場所で使用中です',
-        sessionInfo: {
-          loginTime: sessionInfo.loginTime,
-          lastActivity: sessionInfo.lastActivity,
-          ipAddress: sessionInfo.ipAddress
-        }
-      });
+      // 新規ログイン時は既存セッションを即座に無効化（シングルセッション制御）
+      console.log(`シンプル認証コントローラー: 既存セッション（${sessionInfo ? sessionInfo.sessionId : 'unknown'}）を新規ログインのため無効化`);
+      await SessionService.clearSessionForClient(user._id, clientType);
     }
     
     // セッション作成
     const ipAddress = req.ip || req.connection.remoteAddress;
     const userAgent = req.headers['user-agent'];
-    const sessionId = await SessionService.createSession(user._id, ipAddress, userAgent);
-    console.log("シンプル認証コントローラー: 新規セッション作成", sessionId);
+    const sessionId = await SessionService.createSessionForClient(user._id, clientType, ipAddress, userAgent);
+    console.log("シンプル認証コントローラー: 新規セッション作成", { sessionId, clientType });
     
     // Simple認証専用のアクセストークンを生成（セッションIDを含む）
     console.log("シンプル認証コントローラー: トークン生成開始");
@@ -241,9 +246,14 @@ exports.refreshToken = async (req, res) => {
       
       console.log('refreshToken: ユーザー見つかりました', { id: user._id, role: user.role });
       
-      // ヘルパーを使用して新しいアクセストークンを生成
-      console.log('refreshToken: 新しいアクセストークン生成');
-      const newAccessToken = authHelper.generateAccessToken(user._id, user.role, user.accountStatus);
+      // 既存のセッション情報を取得してトークンに含める（portalクライアント用）
+      console.log('refreshToken: 既存セッション情報を取得');
+      const activeSession = await SessionService.getUserSessionForClient(user._id, 'portal');
+      const sessionId = activeSession ? activeSession.sessionId : null;
+      
+      // ヘルパーを使用して新しいアクセストークンを生成（セッションIDを含む）
+      console.log('refreshToken: 新しいアクセストークン生成', { sessionId });
+      const newAccessToken = authHelper.generateAccessToken(user._id, user.role, user.accountStatus, sessionId);
       
       // ヘルパーを使用して新しいリフレッシュトークンを生成
       console.log('refreshToken: 新しいリフレッシュトークン生成');
@@ -306,7 +316,7 @@ exports.refreshToken = async (req, res) => {
  */
 exports.logout = async (req, res) => {
   try {
-    const { refreshToken } = req.body;
+    const { refreshToken, clientType = 'portal' } = req.body;
     
     if (!refreshToken) {
       return res.status(400).json({
@@ -322,9 +332,9 @@ exports.logout = async (req, res) => {
       user.refreshToken = null;
       await user.save();
       
-      // セッションもクリア
-      await SessionService.clearSession(user._id);
-      console.log("シンプル認証コントローラー: セッションをクリアしました", user._id);
+      // クライアントタイプ別のセッションをクリア
+      await SessionService.clearSessionForClient(user._id, clientType);
+      console.log("シンプル認証コントローラー: クライアントタイプ別セッションをクリアしました", { userId: user._id, clientType });
     }
     
     // CORS対応ヘッダー設定
@@ -789,6 +799,84 @@ exports.forceLogin = async (req, res) => {
       success: false,
       message: '強制ログイン処理中にエラーが発生しました',
       error: error.message
+    });
+  }
+};
+
+/**
+ * CLI APIキー認証
+ * @route POST /api/simple/auth/cli-verify
+ */
+exports.cliVerify = async (req, res) => {
+  try {
+    console.log("=============================================================");
+    console.log("CLI認証: APIキー検証リクエスト受信");
+    console.log("ヘッダー:", req.headers);
+    console.log("=============================================================");
+    
+    // APIキーの取得（ヘッダーから）
+    const apiKey = req.headers['x-api-key'];
+    
+    if (!apiKey) {
+      console.log("CLI認証: APIキーが提供されていません");
+      return res.status(401).json({
+        success: false,
+        error: 'API key is required'
+      });
+    }
+    
+    // APIキーの形式チェック
+    if (!apiKey.startsWith('CLI_')) {
+      console.log("CLI認証: 不正なAPIキー形式");
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid API key format'
+      });
+    }
+    
+    // ユーザーを検索
+    console.log("CLI認証: APIキーでユーザー検索");
+    const user = await SimpleUser.findByCliApiKey(apiKey);
+    
+    if (!user) {
+      console.log("CLI認証: 有効なユーザーが見つかりません");
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid API key'
+      });
+    }
+    
+    // ユーザーステータスチェック
+    if (user.status !== 'active') {
+      console.log("CLI認証: ユーザーが無効化されています");
+      return res.status(403).json({
+        success: false,
+        error: 'User is disabled'
+      });
+    }
+    
+    // APIキーの最終使用日時を更新
+    await user.updateCliApiKeyUsage(apiKey);
+    
+    console.log("============ CLI認証: 認証成功 ============");
+    console.log(`認証成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}`);
+    console.log("=========================================");
+    
+    // レスポンス
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('CLI認証エラー:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Authentication failed'
     });
   }
 };

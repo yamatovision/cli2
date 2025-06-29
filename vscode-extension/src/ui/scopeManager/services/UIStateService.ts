@@ -346,7 +346,7 @@ export class UIStateService implements IUIStateService {
             <!-- サイドバー部分 -->
             <aside class="app-sidebar">
                 <div class="sidebar-section prompt-section">
-                    <h3 class="sidebar-title">開発プロンプト</h3>
+                    <h3 class="sidebar-title">ブルーランプを起動</h3>
                     <div class="prompt-cards" id="prompt-cards">
                         <!-- プロンプトカードはJSで動的生成 -->
                     </div>

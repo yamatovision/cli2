@@ -11,8 +11,10 @@ if TYPE_CHECKING:
 
 import openhands.agenthub.codeact_agent.function_calling as codeact_function_calling
 from openhands.agenthub.codeact_agent.tools.bash import create_cmd_run_tool
+from openhands.agenthub.codeact_agent.tools.bluelamp_delegate import (
+    create_bluelamp_delegate_tools,
+)
 from openhands.agenthub.codeact_agent.tools.browser import BrowserTool
-from openhands.agenthub.codeact_agent.tools.delegate import DelegateTool
 from openhands.agenthub.codeact_agent.tools.finish import FinishTool
 from openhands.agenthub.codeact_agent.tools.ipython import IPythonTool
 from openhands.agenthub.codeact_agent.tools.llm_based_edit import LLMBasedFileEditTool
@@ -81,12 +83,6 @@ class CodeActAgent(Agent):
         - config (AgentConfig): The configuration for this agent
         """
         super().__init__(llm, config)
-        
-        # LLMに割り込み設定を適用
-        if hasattr(llm, '_enable_interruption'):
-            llm._enable_interruption = config.enable_interruption
-            llm._check_interval = config.interruption_check_interval
-        
         self.pending_actions: deque['Action'] = deque()
         self.reset()
         self.tools = self._get_tools()
@@ -126,8 +122,6 @@ class CodeActAgent(Agent):
             tools.append(ThinkTool)
         if self.config.enable_finish:
             tools.append(FinishTool)
-        if self.config.enable_delegate:
-            tools.append(DelegateTool)
         if self.config.enable_browsing:
             if sys.platform == 'win32':
                 logger.warning('Windows runtime does not support browsing yet')
@@ -143,6 +137,14 @@ class CodeActAgent(Agent):
                     use_short_description=use_short_tool_desc
                 )
             )
+
+        # Add BlueLamp delegate tools if this is BlueLampOrchestrator
+        # Check if the agent is registered as BlueLampOrchestrator
+        if hasattr(self, '__class__') and getattr(self.__class__, '__name__', '') == 'CodeActAgent':
+            # This is the BlueLampOrchestrator (registered as CodeActAgent)
+            # Add all 16 BlueLamp delegate tools
+            tools.extend(create_bluelamp_delegate_tools())
+
         return tools
 
     def reset(self) -> None:

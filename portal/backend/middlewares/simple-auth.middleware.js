@@ -44,7 +44,22 @@ exports.verifySimpleToken = async (req, res, next) => {
     // キャッシュが有効期間内なら、結果を再利用
     req.userId = cachedVerification.userId;
     req.userRole = cachedVerification.userRole;
-    return next();
+    
+    // req.userオブジェクトも設定（isAdminメソッドのため）
+    const SimpleUser = require('../models/simpleUser.model');
+    SimpleUser.findById(cachedVerification.userId)
+      .then(user => {
+        if (user) {
+          req.user = user;
+        }
+        next();
+      })
+      .catch(err => {
+        console.error('ユーザー情報取得エラー:', err);
+        next();
+      });
+    
+    return;
   }
   
   // デバッグ: トークンの内容をデコード（署名検証なし）
@@ -81,7 +96,22 @@ exports.verifySimpleToken = async (req, res, next) => {
     
     // セッションが含まれている場合は、セッションの有効性を確認
     if (decoded.sessionId) {
-      const isValidSession = await SessionService.validateSession(decoded.id, decoded.sessionId);
+      // クライアントタイプを推定（現在はportalがデフォルト）
+      const clientType = 'portal'; // TODO: リクエストから取得するか、トークンに含める
+      
+      console.log('verifySimpleToken: セッション検証開始', {
+        userId: decoded.id,
+        sessionId: decoded.sessionId,
+        clientType
+      });
+      
+      const isValidSession = await SessionService.validateSessionForClient(decoded.id, clientType, decoded.sessionId);
+      
+      console.log('verifySimpleToken: セッション検証結果', {
+        userId: decoded.id,
+        sessionId: decoded.sessionId,
+        isValid: isValidSession
+      });
       
       if (!isValidSession) {
         // キャッシュから削除
@@ -104,7 +134,7 @@ exports.verifySimpleToken = async (req, res, next) => {
       }
       
       // セッションアクティビティを更新（非同期で実行）
-      SessionService.updateSessionActivity(decoded.id).catch(err => {
+      SessionService.updateSessionActivityForClient(decoded.id, clientType).catch(err => {
         console.error('セッションアクティビティ更新エラー:', err);
       });
     }
@@ -115,6 +145,21 @@ exports.verifySimpleToken = async (req, res, next) => {
       userRole: decoded.role || 'User',
       timestamp: now
     });
+    
+    // ユーザー情報をreqに設定
+    req.userId = decoded.id;
+    req.userRole = decoded.role || 'User';
+    
+    // req.userオブジェクトも設定（isAdminメソッドのため）
+    const SimpleUser = require('../models/simpleUser.model');
+    try {
+      const user = await SimpleUser.findById(decoded.id);
+      if (user) {
+        req.user = user;
+      }
+    } catch (err) {
+      console.error('ユーザー情報取得エラー:', err);
+    }
     
     next();
   } catch (error) {

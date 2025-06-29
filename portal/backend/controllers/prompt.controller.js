@@ -1,9 +1,7 @@
 const Prompt = require('../models/prompt.model');
 const PromptVersion = require('../models/promptVersion.model');
-const Project = require('../models/project.model');
 const promptService = require('../services/prompt.service');
 const crypto = require('crypto');
-const projectController = require('./project.controller');
 
 /**
  * プロンプトコントローラー
@@ -77,6 +75,8 @@ const promptController = {
       ];
       
       // プロジェクトがある場合はプロジェクトメンバーかどうかもチェック
+      // Project関連のコードをコメントアウト
+      /*
       if (project) {
         filters.projectId = project;
         
@@ -92,6 +92,7 @@ const promptController = {
           }
         }
       }
+      */
       
       // アーカイブされていないものだけ表示
       filters.isArchived = { $ne: true };
@@ -180,6 +181,8 @@ const promptController = {
       const { title, content, type, category, tags, projectId, isPublic } = req.body;
       
       // プロジェクトへのアクセス権限チェック
+      // Project関連のコードをコメントアウト
+      /*
       if (projectId) {
         const project = await Project.findById(projectId);
         if (!project) {
@@ -195,6 +198,7 @@ const promptController = {
           return res.status(403).json({ message: 'このプロジェクトにプロンプトを追加する権限がありません' });
         }
       }
+      */
       
       // シンプル化したプロンプト作成
       const newPrompt = new Prompt({
@@ -247,13 +251,16 @@ const promptController = {
       const isOwner = prompt.ownerId.toString() === req.userId;
       const isAdmin = req.userRole === 'admin' || req.userRole === 'Admin' || req.userRole === 'SuperAdmin';
       
+      // Project関連のコードをコメントアウト - isProjectEditorは常にfalse
       let isProjectEditor = false;
+      /*
       if (prompt.projectId) {
         const project = await Project.findById(prompt.projectId);
         isProjectEditor = project && project.members.some(
           member => member.userId.toString() === req.userId && ['owner', 'editor'].includes(member.role)
         );
       }
+      */
       
       if (!isOwner && !isAdmin && !isProjectEditor) {
         return res.status(403).json({ message: 'このプロンプトを更新する権限がありません' });
@@ -360,13 +367,16 @@ const promptController = {
       const isOwner = prompt.ownerId.toString() === req.userId;
       const isAdmin = req.userRole === 'admin' || req.userRole === 'Admin' || req.userRole === 'SuperAdmin';
       
+      // Project関連のコードをコメントアウト - isProjectEditorは常にfalse
       let isProjectEditor = false;
+      /*
       if (prompt.projectId) {
         const project = await Project.findById(prompt.projectId);
         isProjectEditor = project && project.members.some(
           member => member.userId.toString() === req.userId && ['owner', 'editor'].includes(member.role)
         );
       }
+      */
       
       if (!isOwner && !isAdmin && !isProjectEditor) {
         return res.status(403).json({ message: 'このプロンプトの新バージョンを作成する権限がありません' });
@@ -414,13 +424,16 @@ const promptController = {
       const isPublic = prompt.isPublic;
       const isAdmin = req.userRole === 'admin' || req.userRole === 'Admin' || req.userRole === 'SuperAdmin';
       
+      // Project関連のコードをコメントアウト - isProjectMemberは常にfalse
       let isProjectMember = false;
+      /*
       if (prompt.projectId) {
         const project = await Project.findById(prompt.projectId);
         isProjectMember = project && project.members.some(
           member => member.userId.toString() === req.userId
         );
       }
+      */
       
       if (!isOwner && !isAdmin && !isPublic && !isProjectMember) {
         return res.status(403).json({ message: 'このプロンプトのバージョン履歴にアクセスする権限がありません' });
@@ -458,13 +471,16 @@ const promptController = {
       const isPublic = prompt.isPublic;
       const isAdmin = req.userRole === 'admin' || req.userRole === 'Admin' || req.userRole === 'SuperAdmin';
       
+      // Project関連のコードをコメントアウト - isProjectMemberは常にfalse
       let isProjectMember = false;
+      /*
       if (prompt.projectId) {
         const project = await Project.findById(prompt.projectId);
         isProjectMember = project && project.members.some(
           member => member.userId.toString() === req.userId
         );
       }
+      */
       
       if (!isOwner && !isAdmin && !isPublic && !isProjectMember) {
         return res.status(403).json({ message: 'このプロンプトバージョンにアクセスする権限がありません' });

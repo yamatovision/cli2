@@ -442,13 +442,13 @@ export class ScopeManagerTemplate {
   private static _generatePromptModalContent(): string {
     return `
       <div class="toggle-share-btn" id="toggle-share-btn" style="display: flex;">
-        <span class="material-icons">description</span>
-        <span>開発プロンプト</span>
+        <span class="material-icons">terminal</span>
+        <span>ブルーランプを起動</span>
       </div>
       
       <div class="claude-code-share-area" id="claude-code-share">
         <div class="claude-code-share-header">
-          <h3>開発プロンプト</h3>
+          <h3>ブルーランプを起動</h3>
           <div>
             <button class="button button-secondary" id="minimize-share-btn">
               <span class="material-icons">expand_more</span>

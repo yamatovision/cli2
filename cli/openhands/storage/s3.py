@@ -1,8 +1,8 @@
 import os
 from typing import Any, TypedDict
 
-import boto3  # type: ignore[import-untyped]
-import botocore  # type: ignore[import-untyped]
+import boto3
+import botocore
 
 from openhands.storage.files import FileStore
 

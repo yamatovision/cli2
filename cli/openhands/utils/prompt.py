@@ -60,6 +60,7 @@ class PromptManager:
         )
         self.user_template: Template = self._load_template('user_prompt')
         self.additional_info_template: Template = self._load_template('additional_info')
+        self.microagent_info_template: Template = self._load_template('microagent_info')
 
     def _load_system_template(self, system_prompt_filename: str) -> Template:
         """Load the system prompt template using the specified filename."""
@@ -108,10 +109,12 @@ class PromptManager:
         repository_info: RepositoryInfo | None,
         runtime_info: RuntimeInfo | None,
         conversation_instructions: ConversationInstructions | None,
+        repo_instructions: str = '',
     ) -> str:
         """Renders the additional info template with the stored repository/runtime info."""
         return self.additional_info_template.render(
             repository_info=repository_info,
+            repository_instructions=repo_instructions,
             runtime_info=runtime_info,
             conversation_instructions=conversation_instructions,
         ).strip()
@@ -126,8 +129,9 @@ class PromptManager:
             triggered_agents: A list of MicroagentKnowledge objects containing information
                               about triggered microagents.
         """
-        # Microagent info template removed - returning empty string
-        return ''
+        return self.microagent_info_template.render(
+            triggered_agents=triggered_agents
+        ).strip()
 
     def add_turns_left_reminder(self, messages: list[Message], state: State) -> None:
         latest_user_message = next(

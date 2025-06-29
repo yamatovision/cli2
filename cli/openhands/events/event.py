@@ -14,11 +14,11 @@ class EventSource(str, Enum):
 
 class FileEditSource(str, Enum):
     LLM_BASED_EDIT = 'llm_based_edit'
-    OH_ACI = 'oh_aci'  # bluelamp-aci
+    OH_ACI = 'oh_aci'  # openhands-aci
 
 
 class FileReadSource(str, Enum):
-    OH_ACI = 'oh_aci'  # bluelamp-aci
+    OH_ACI = 'oh_aci'  # openhands-aci
     DEFAULT = 'default'
 
 

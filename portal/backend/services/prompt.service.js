@@ -1,6 +1,6 @@
 const Prompt = require('../models/prompt.model');
 const PromptVersion = require('../models/promptVersion.model');
-const Project = require('../models/project.model');
+// const Project = require('../models/project.model'); // Removed: project.model.js has been deleted
 
 /**
  * プロンプトサービス

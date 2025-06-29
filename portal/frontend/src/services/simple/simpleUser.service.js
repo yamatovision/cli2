@@ -228,3 +228,52 @@ export const incrementClaudeCodeLaunchCount = async (userId) => {
     throw new Error('接続エラーが発生しました');
   }
 };
+
+// CLI APIキーを生成
+export const generateCliApiKey = async (userId) => {
+  try {
+    const response = await axios.post(
+      `${API_SIMPLE_URL}/users/${userId}/cli-api-key`, 
+      {}, 
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw new Error('接続エラーが発生しました');
+  }
+};
+
+// CLI APIキーを取得
+export const getCliApiKeys = async (userId) => {
+  try {
+    const response = await axios.get(
+      `${API_SIMPLE_URL}/users/${userId}/cli-api-key`, 
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw new Error('接続エラーが発生しました');
+  }
+};
+
+// CLI APIキーを無効化
+export const deactivateCliApiKey = async (userId, apiKey) => {
+  try {
+    const response = await axios.delete(
+      `${API_SIMPLE_URL}/users/${userId}/cli-api-key/${encodeURIComponent(apiKey)}`, 
+      { headers: authHeader() }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw error.response.data;
+    }
+    throw new Error('接続エラーが発生しました');
+  }
+};

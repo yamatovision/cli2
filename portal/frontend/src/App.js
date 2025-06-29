@@ -20,9 +20,7 @@ import {
   Home as HomeIcon, 
   ExitToApp as LogoutIcon,
   Dashboard as DashboardIcon,
-  Description as PromptIcon,
-  People as PeopleIcon,
-  AdminPanelSettings as AdminIcon
+  Description as PromptIcon
 } from '@mui/icons-material';
 
 // コンポーネント
@@ -31,15 +29,6 @@ import Dashboard from './components/dashboard/Dashboard';
 import PromptList from './components/prompts/PromptList';
 import PromptDetail from './components/prompts/PromptDetail';
 import PromptForm from './components/prompts/PromptForm';
-import UserList from './components/users/UserList';
-import UserDetail from './components/users/UserDetail';
-
-// 管理者ダッシュボード
-import AdminDashboard from './components/admin/AdminDashboard';
-import UsageLimits from './components/admin/UsageLimits';
-
-// シンプルモード
-import SimpleApp from './components/simple/SimpleApp';
 
 // 新しい認証システム
 import { AuthProvider, useAuth } from './auth/AuthContext';
@@ -72,9 +61,6 @@ const MainApp = () => {
   const { user, isAuthenticated, loading, logout } = useAuth();
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const navigate = useNavigate();
-
-  // シンプルモードへのリダイレクト
-  const isSimplePath = window.location.pathname.startsWith('/simple');
 
   // ログアウト処理 - window.locationではなくnavigateを使用
   const handleLogout = async () => {
@@ -114,25 +100,6 @@ const MainApp = () => {
     return currentPath !== '/login';
   };
 
-  // シンプルパスはメインダッシュボードにリダイレクト
-  if (isSimplePath) {
-    // /simple/loginと/simple/registerは例外
-    const currentPath = window.location.pathname;
-    if (currentPath === '/simple/login' || currentPath === '/simple/register') {
-      return (
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
-            <SimpleApp />
-          </Router>
-        </ThemeProvider>
-      );
-    } else {
-      // それ以外は標準ダッシュボードにリダイレクト
-      window.location.href = '/dashboard';
-      return null;
-    }
-  }
 
   return (
     <>
@@ -224,40 +191,6 @@ const MainApp = () => {
                         <PromptIcon />
                       </IconButton>
                     </Tooltip>
-                    {user?.role === 'SuperAdmin' || user?.role === 'Admin' ? (
-                      <Tooltip title="ユーザー管理" arrow>
-                        <IconButton
-                          color="inherit"
-                          onClick={() => navigate('/users', { replace: true })}
-                          size="large"
-                          sx={{ 
-                            backgroundColor: window.location.pathname.startsWith('/users') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.25)'
-                            }
-                          }}
-                        >
-                          <PeopleIcon />
-                        </IconButton>
-                      </Tooltip>
-                    ) : null}
-                    {user?.role === 'SuperAdmin' || user?.role === 'Admin' ? (
-                      <Tooltip title="管理者画面" arrow>
-                        <IconButton
-                          color="inherit"
-                          onClick={() => navigate('/admin', { replace: true })}
-                          size="large"
-                          sx={{ 
-                            backgroundColor: window.location.pathname.startsWith('/admin') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.25)'
-                            }
-                          }}
-                        >
-                          <AdminIcon />
-                        </IconButton>
-                      </Tooltip>
-                    ) : null}
                   </Box>
                   
                   <Tooltip title="ログアウト" arrow>
@@ -325,45 +258,6 @@ const MainApp = () => {
               </AuthGuard>
             } />
             
-            {/* ユーザー管理ルート */}
-            <Route path="/users" element={
-              <AuthGuard>
-                <UserList />
-              </AuthGuard>
-            } />
-            
-            <Route path="/users/new" element={
-              <AuthGuard>
-                <UserDetail />
-              </AuthGuard>
-            } />
-            
-            <Route path="/users/:id" element={
-              <AuthGuard>
-                <UserDetail />
-              </AuthGuard>
-            } />
-            
-            
-            {/* 組織関連ルート、ワークスペース関連ルートを削除 */}
-            
-            {/* シンプル化のため使用量ダッシュボードも削除 */}
-            
-            {/* 管理者ダッシュボード */}
-            <Route path="/admin" element={
-              <AuthGuard>
-                <AdminDashboard />
-              </AuthGuard>
-            } />
-            
-            <Route path="/admin/usage-limits" element={
-              <AuthGuard>
-                <UsageLimits />
-              </AuthGuard>
-            } />
-            
-            {/* シンプルモードへのリダイレクト - SimpleAppコンポーネントで処理 */}
-            <Route path="/simple/*" element={null} />
             
             <Route path="/" element={
               // 認証コンテキストを使用
@@ -411,29 +305,6 @@ const MainApp = () => {
 
 // メインアプリをラップするためのApp関数
 const App = () => {
-  // シンプルモードへのリダイレクト
-  const isSimplePath = window.location.pathname.startsWith('/simple');
-
-  // シンプルモードの場合は標準ダッシュボードにリダイレクト
-  if (isSimplePath) {
-    // /simple/loginと/simple/registerは例外
-    const currentPath = window.location.pathname;
-    if (currentPath === '/simple/login' || currentPath === '/simple/register') {
-      return (
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
-            <SimpleApp />
-          </Router>
-        </ThemeProvider>
-      );
-    } else {
-      // それ以外は標準ダッシュボードにリダイレクト
-      window.location.href = '/dashboard';
-      return null;
-    }
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />

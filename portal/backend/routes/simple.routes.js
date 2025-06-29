@@ -24,6 +24,9 @@ router.post('/auth/logout', rateLimitMiddleware.authRateLimit, simpleAuthControl
 // 認証チェックエンドポイント（シンプル版）- レート制限とミドルウェアを適用
 router.get('/auth/check', rateLimitMiddleware.authRateLimit, simpleAuthMiddleware.verifySimpleToken, simpleAuthController.checkAuth);
 
+// CLI APIキー認証エンドポイント
+router.post('/auth/cli-verify', rateLimitMiddleware.authRateLimit, simpleAuthController.cliVerify);
+
 // ユーザーのAPIキーを取得するエンドポイント
 router.get('/user/apikey', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getUserApiKey);
 
@@ -57,6 +60,11 @@ router.delete('/users/:id', simpleAuthMiddleware.verifySimpleToken, simpleAuthMi
 router.put('/users/change-password', simpleAuthMiddleware.verifySimpleToken, simpleUserController.changePassword);
 // ClaudeCode起動カウンターインクリメント
 router.post('/users/:id/increment-claude-code-launch', simpleAuthMiddleware.verifySimpleToken, simpleUserController.incrementClaudeCodeLaunchCount);
+
+// ===== CLI APIキー管理エンドポイント =====
+router.post('/users/:userId/cli-api-key', simpleAuthMiddleware.verifySimpleToken, simpleUserController.generateCliApiKey);
+router.get('/users/:userId/cli-api-key', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getCliApiKeys);
+router.delete('/users/:userId/cli-api-key/:key', simpleAuthMiddleware.verifySimpleToken, simpleUserController.deactivateCliApiKey);
 
 // ===== 組織系エンドポイント =====
 router.get('/organizations', simpleAuthMiddleware.verifySimpleToken, simpleOrganizationController.getOrganizations);

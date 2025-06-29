@@ -23,6 +23,7 @@ from openhands.integrations.provider import (
 )
 from openhands.mcp import add_mcp_tools_to_agent
 from openhands.memory.memory import Memory
+from openhands.microagent.microagent import BaseMicroagent
 from openhands.runtime import get_runtime_cls
 from openhands.runtime.base import Runtime
 from openhands.runtime.impl.remote.remote_runtime import RemoteRuntime
@@ -470,7 +471,12 @@ class AgentSession:
             memory.set_runtime_info(self.runtime, custom_secrets_descriptions)
             memory.set_conversation_instructions(conversation_instructions)
 
-            # No longer loading microagents - feature removed
+            # loads microagents from repo/.openhands/microagents
+            microagents: list[BaseMicroagent] = await call_sync_from_async(
+                self.runtime.get_microagents_from_selected_repo,
+                selected_repository or None,
+            )
+            memory.load_user_workspace_microagents(microagents)
 
             if selected_repository and repo_directory:
                 memory.set_repository_info(selected_repository, repo_directory)

@@ -3,6 +3,7 @@
 # CLI Settings are handled separately in cli_settings.py
 
 import asyncio
+import logging
 import sys
 import threading
 import time
@@ -27,13 +28,20 @@ from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Frame, TextArea
 
 from openhands import __version__
+from openhands.cli.branding import (
+    BLUELAMP_BANNER,
+    STYLE_DICT,
+    MESSAGES,
+    COMMAND_DESCRIPTIONS,
+    get_message,
+    get_color,
+)
 from openhands.core.config import OpenHandsConfig
 from openhands.core.schema import AgentState
-from openhands.events import EventSource, EventStream
+from openhands.events import EventSource
 from openhands.events.action import (
     Action,
     ActionConfirmationStatus,
-    ChangeAgentStateAction,
     CmdRunAction,
     MessageAction,
 )
@@ -47,30 +55,20 @@ from openhands.events.observation import (
 )
 from openhands.llm.metrics import Metrics
 
+# Get logger for debug output
+logger = logging.getLogger(__name__)
+
 ENABLE_STREAMING = False  # FIXME: this doesn't work
 
 # Global TextArea for streaming output
 streaming_output_text_area: TextArea | None = None
 
-# Color and styling constants
-COLOR_CYAN = '#00FFFF'
-COLOR_GREY = '#808080'
-DEFAULT_STYLE = Style.from_dict(
-    {
-        'cyan': COLOR_CYAN,
-        'grey': COLOR_GREY,
-        'prompt': f'{COLOR_CYAN} bold',
-    }
-)
+# Color and styling constants - BlueLamp theme
+COLOR_GOLD = get_color('primary')  # Map old gold to primary blue
+COLOR_GREY = get_color('grey')
+DEFAULT_STYLE = Style.from_dict(STYLE_DICT)
 
-COMMANDS = {
-    '/exit': 'Exit the application',
-    '/help': 'Display available commands',
-    '/status': 'Display conversation details and usage metrics',
-    '/new': 'Create a new conversation',
-    '/settings': 'Display and modify current settings',
-    '/resume': 'Resume the agent when paused',
-}
+COMMANDS = COMMAND_DESCRIPTIONS
 
 print_lock = threading.Lock()
 
@@ -90,7 +88,7 @@ class CustomDiffLexer(Lexer):
         def get_line(lineno: int) -> StyleAndTextTuples:
             line = lines[lineno]
             if line.startswith('+'):
-                return [('ansicyan', line)]
+                return [('ansigreen', line)]
             elif line.startswith('-'):
                 return [('ansired', line)]
             elif line.startswith('[') or line.startswith('('):
@@ -131,35 +129,24 @@ def display_initialization_animation(text: str, is_loaded: asyncio.Event) -> Non
 
 
 def display_banner(session_id: str) -> None:
-    """Display the BlueLamp banner."""
-    print_formatted_text(
-        HTML(r"""<cyan>
-    ____  __            __
-   / __ )/ /_  _____  / /   ____ _____ ___  ____
-  / __  / / / / / _ \/ /   / __ `/ __ `__ \/ __ \
- / /_/ / / /_/ /  __/ /___/ /_/ / / / / / / /_/ /
-/_____/_/\__,_/\___/_____/\__,_/_/ /_/ /_/ .___/
-                                         /_/
+    print_formatted_text(HTML(BLUELAMP_BANNER), style=DEFAULT_STYLE)
+    print_formatted_text('')
+    print_formatted_text(HTML(f'<grey>{get_message("session_id", sid=session_id)}</grey>'))
+    print_formatted_text('')
 
-    ブルーランプ - 要件定義アシスタント
-    </cyan>"""),
-        style=DEFAULT_STYLE,
-    )
-    print_formatted_text(
-        HTML(f'<grey>セッションID: {session_id}</grey>\n'), style=DEFAULT_STYLE
-    )
+
 def display_welcome_message(message: str = '') -> None:
     print_formatted_text(
-        HTML("<cyan>さあ、開発を始めましょう！</cyan>\n"), style=DEFAULT_STYLE
+        HTML(f"<blue>{get_message('lets_start')}</blue>\n"), style=DEFAULT_STYLE
     )
     if message:
         print_formatted_text(
-            HTML(f'{message} <grey>ヘルプは /help を入力してください</grey>'),
+            HTML(f'{message} <grey>ヘルプは /help と入力してください</grey>'),
             style=DEFAULT_STYLE,
         )
     else:
         print_formatted_text(
-            HTML('何を作りたいですか？ <grey>ヘルプは /help を入力してください</grey>'),
+            HTML(f'{get_message("build_prompt")} <grey>ヘルプは /help と入力してください</grey>'),
             style=DEFAULT_STYLE,
         )
 
@@ -169,7 +156,7 @@ def display_initial_user_prompt(prompt: str) -> None:
         FormattedText(
             [
                 ('', '\n'),
-                (COLOR_CYAN, '> '),
+                (COLOR_GOLD, '> '),
                 ('', prompt),
             ]
         )
@@ -227,7 +214,7 @@ def display_error(error: str) -> None:
                 style='ansired',
                 wrap_lines=True,
             ),
-            title='エラー',
+            title='Error',
             style='ansired',
         )
         print_formatted_text('')
@@ -242,8 +229,8 @@ def display_command(event: CmdRunAction) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='コマンド',
-        style='ansicyan',
+        title='Command',
+        style='ansiblue',
     )
     print_formatted_text('')
     print_container(container)
@@ -270,7 +257,7 @@ def display_command_output(output: str) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='コマンド出力',
+        title='Command Output',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -285,7 +272,7 @@ def display_file_edit(event: FileEditObservation) -> None:
             wrap_lines=True,
             lexer=CustomDiffLexer(),
         ),
-        title='ファイル編集',
+        title='File Edit',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -301,7 +288,7 @@ def display_file_read(event: FileReadObservation) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='ファイル読み込み',
+        title='File Read',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -321,7 +308,7 @@ def initialize_streaming_output():
     )
     container = Frame(
         streaming_output_text_area,
-        title='ストリーミング出力',
+        title='Streaming Output',
         style=f'fg:{COLOR_GREY}',
     )
     print_formatted_text('')
@@ -343,8 +330,8 @@ def display_help() -> None:
     # Version header and introduction
     print_formatted_text(
         HTML(
-            f'\n<grey>BlueLamp CLI v{__version__}</grey>\n'
-            '<cyan>BlueLamp CLI lets you interact with the OpenHands agent from the command line.</cyan>\n'
+            f'\n<grey>OpenHands CLI v{__version__}</grey>\n'
+            '<gold>OpenHands CLI lets you interact with the OpenHands agent from the command line.</gold>\n'
         )
     )
 
@@ -372,7 +359,7 @@ def display_help() -> None:
     print_formatted_text(HTML('Interactive commands:'))
     commands_html = ''
     for command, description in COMMANDS.items():
-        commands_html += f'<cyan><b>{command}</b></cyan> - <grey>{description}</grey>\n'
+        commands_html += f'<gold><b>{command}</b></gold> - <grey>{description}</grey>\n'
     print_formatted_text(HTML(commands_html))
 
     # Footer
@@ -400,14 +387,14 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
     total_tokens_str = f'{usage_metrics.metrics.accumulated_token_usage.prompt_tokens + usage_metrics.metrics.accumulated_token_usage.completion_tokens:,}'
 
     labels_and_values = [
-        ('   総コスト (USD):', cost_str),
+        ('   Total Cost (USD):', cost_str),
         ('', ''),
-        ('   入力トークン数:', input_tokens_str),
-        ('      キャッシュヒット:', cache_read_str),
-        ('      キャッシュ書き込み:', cache_write_str),
-        ('   出力トークン数:', output_tokens_str),
+        ('   Total Input Tokens:', input_tokens_str),
+        ('      Cache Hits:', cache_read_str),
+        ('      Cache Writes:', cache_write_str),
+        ('   Total Output Tokens:', output_tokens_str),
         ('', ''),
-        ('   総トークン数:', total_tokens_str),
+        ('   Total Tokens:', total_tokens_str),
     ]
 
     # Calculate max widths for alignment
@@ -428,7 +415,7 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='使用状況',
+        title='Usage Metrics',
         style=f'fg:{COLOR_GREY}',
     )
 
@@ -447,13 +434,13 @@ def get_session_duration(session_init_time: float) -> str:
 def display_shutdown_message(usage_metrics: UsageMetrics, session_id: str) -> None:
     duration_str = get_session_duration(usage_metrics.session_init_time)
 
-    print_formatted_text(HTML('<grey>現在の会話を終了しています...</grey>'))
+    print_formatted_text(HTML('<grey>Closing current conversation...</grey>'))
     print_formatted_text('')
     display_usage_metrics(usage_metrics)
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>会話時間: {duration_str}</grey>'))
+    print_formatted_text(HTML(f'<grey>Conversation duration: {duration_str}</grey>'))
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>会話を終了しました: {session_id}</grey>'))
+    print_formatted_text(HTML(f'<grey>Closed conversation {session_id}</grey>'))
     print_formatted_text('')
 
 
@@ -461,8 +448,8 @@ def display_status(usage_metrics: UsageMetrics, session_id: str) -> None:
     duration_str = get_session_duration(usage_metrics.session_init_time)
 
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>会話ID: {session_id}</grey>'))
-    print_formatted_text(HTML(f'<grey>稼働時間: {duration_str}</grey>'))
+    print_formatted_text(HTML(f'<grey>Conversation ID: {session_id}</grey>'))
+    print_formatted_text(HTML(f'<grey>Uptime:          {duration_str}</grey>'))
     print_formatted_text('')
     display_usage_metrics(usage_metrics)
 
@@ -470,24 +457,17 @@ def display_status(usage_metrics: UsageMetrics, session_id: str) -> None:
 def display_agent_running_message() -> None:
     print_formatted_text('')
     print_formatted_text(
-        HTML('<cyan>BlueLamp実行中...</cyan> <grey>(ESC で一時停止・新規指示)</grey>')
+        HTML(f'<blue>{get_message("agent_running")}</blue> <grey>(ESCキーで中断・Ctrl+Cで終了)</grey>')
     )
 
 
 def display_agent_state_change_message(agent_state: str) -> None:
-    if agent_state == AgentState.PAUSED:
+    if agent_state == AgentState.FINISHED:
         print_formatted_text('')
-        print_formatted_text(
-            HTML(
-                '<cyan>エージェント一時停止中...</cyan> <grey>(Enter /resume to continue)</grey>'
-            )
-        )
-    elif agent_state == AgentState.FINISHED:
-        print_formatted_text('')
-        print_formatted_text(HTML('<cyan>タスク完了...</cyan>'))
+        print_formatted_text(HTML(f'<blue>{get_message("agent_finished")}</blue>'))
     elif agent_state == AgentState.AWAITING_USER_INPUT:
         print_formatted_text('')
-        print_formatted_text(HTML('<cyan>ブルーランプはあなたの発言を待っています...</cyan>'))
+        print_formatted_text(HTML(f'<blue>{get_message("agent_waiting")}</blue>'))
 
 
 # Common input functions
@@ -503,17 +483,13 @@ class CommandCompleter(Completer):
     ) -> Generator[Completion, None, None]:
         text = document.text_before_cursor.lstrip()
         if text.startswith('/'):
-            available_commands = dict(COMMANDS)
-            if self.agent_state != AgentState.PAUSED:
-                available_commands.pop('/resume', None)
-
-            for command, description in available_commands.items():
+            for command, description in COMMANDS.items():
                 if command.startswith(text):
                     yield Completion(
                         command,
                         start_position=-len(text),
                         display_meta=description,
-                        style='bg:ansidarkgray fg:cyan',
+                        style='bg:ansidarkgray fg:blue',
                     )
 
 
@@ -535,20 +511,31 @@ async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
             def _(event: KeyPressEvent) -> None:
                 event.current_buffer.validate_and_handle()
 
+            @kb.add('c-c')
+            def _(event: KeyPressEvent) -> None:
+                event.app.exit(exception=KeyboardInterrupt())
+
             with patch_stdout():
                 print_formatted_text('')
                 message = await prompt_session.prompt_async(
                     HTML(
-                        '<cyan>Enter your message and press Ctrl-D to finish:</cyan>\n'
+                        '<gold>Enter your message and press Ctrl-D to finish:</gold>\n'
                     ),
                     multiline=True,
                     key_bindings=kb,
                 )
         else:
+            kb = KeyBindings()
+            
+            @kb.add('c-c')
+            def _(event: KeyPressEvent) -> None:
+                event.app.exit(exception=KeyboardInterrupt())
+            
             with patch_stdout():
                 print_formatted_text('')
                 message = await prompt_session.prompt_async(
-                    HTML('<cyan>> </cyan>'),
+                    HTML('<gold>> </gold>'),
+                    key_bindings=kb,
                 )
         return message if message is not None else ''
     except (KeyboardInterrupt, EOFError):
@@ -558,11 +545,18 @@ async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
 async def read_confirmation_input() -> str:
     try:
         prompt_session = create_prompt_session()
+        
+        kb = KeyBindings()
+        
+        @kb.add('c-c')
+        def _(event: KeyPressEvent) -> None:
+            event.app.exit(exception=KeyboardInterrupt())
 
         with patch_stdout():
             print_formatted_text('')
             confirmation: str = await prompt_session.prompt_async(
-                HTML('<cyan>Proceed with action? (y)はい/(n)いいえ/(a)常に > </cyan>'),
+                HTML('<gold>Proceed with action? (y)es/(n)o/(a)lways > </gold>'),
+                key_bindings=kb,
             )
 
             confirmation = '' if confirmation is None else confirmation.strip().lower()
@@ -579,36 +573,65 @@ async def read_confirmation_input() -> str:
         return 'no'
 
 
-async def process_agent_pause(done: asyncio.Event, event_stream: EventStream) -> None:
+async def process_agent_pause(is_paused: asyncio.Event, event_stream) -> None:
+    """Monitor for ESC key press during agent execution."""
+    from openhands.events import EventSource
+    from openhands.events.action import ChangeAgentStateAction
+    from openhands.core.schema import AgentState
+    
+    # Wait for key press
+    done = asyncio.Event()
     input = create_input()
-
-    def keys_ready() -> None:
-        for key_press in input.read_keys():
-            if key_press.key == Keys.Escape:
-                print_formatted_text('')
-                print_formatted_text(HTML('<cyan>エージェントを一時停止しています...</cyan>'))
-                print_formatted_text(HTML('<yellow>新しい指示を入力してください:</yellow>'))
-                # is_pausedフラグを設定してから状態変更
-                done.set()  # まずprocess_agent_pauseを終了
-                event_stream.add_event(
-                    ChangeAgentStateAction(AgentState.PAUSED),
-                    EventSource.USER,
-                )
-            elif (
-                key_press.key == Keys.ControlC
-                or key_press.key == Keys.ControlD
-            ):
-                print_formatted_text('')
-                print_formatted_text(HTML('<red>プログラムを終了しています...</red>'))
-                done.set()  # まずprocess_agent_pauseを終了
-                event_stream.add_event(
-                    ChangeAgentStateAction(AgentState.FINISHED),
-                    EventSource.USER,
-                )
-
-    with input.raw_mode():
-        with input.attach(keys_ready):
-            await done.wait()
+    
+    async def check_key() -> None:
+        async for key_press in input.read_keys():
+                if (
+                    key_press.key == Keys.ControlP
+                    or key_press.key == Keys.ControlC
+                    or key_press.key == Keys.ControlD
+                    or key_press.key == Keys.Escape
+                ):
+                    print_formatted_text('')
+                    if key_press.key == Keys.ControlC:
+                        print_formatted_text(HTML(f'<blue>{get_message("ctrl_c_exit")}</blue>'))
+                        import sys
+                        sys.exit(0)
+                    elif key_press.key == Keys.Escape:
+                        print_formatted_text(HTML(f'<blue>{get_message("esc_cancel")}</blue>'))
+                        print_formatted_text('')
+                        # Immediately change agent state to AWAITING_USER_INPUT
+                        event_stream.add_event(
+                            ChangeAgentStateAction(AgentState.AWAITING_USER_INPUT),
+                            EventSource.USER,
+                        )
+                    else:
+                        print_formatted_text(HTML(f'<blue>{get_message("pausing_agent")}</blue>'))
+                        event_stream.add_event(
+                            ChangeAgentStateAction(AgentState.PAUSED),
+                            EventSource.USER,
+                        )
+                    done.set()
+                    break
+    
+    try:
+        with input.raw_mode():
+            # Start monitoring keys
+            check_task = asyncio.create_task(check_key())
+            
+            # Wait for done or is_paused
+            await asyncio.wait(
+                [done.wait(), is_paused.wait()],
+                return_when=asyncio.FIRST_COMPLETED
+            )
+            
+            # Cancel the check task if still running
+            check_task.cancel()
+            try:
+                await check_task
+            except asyncio.CancelledError:
+                pass
+    finally:
+        input.close()
 
 
 def cli_confirm(
@@ -647,7 +670,7 @@ def cli_confirm(
     def _(event: KeyPressEvent) -> None:
         event.app.exit(result=selected[0])
 
-    style = Style.from_dict({'selected': COLOR_CYAN, 'unselected': ''})
+    style = Style.from_dict({'selected': COLOR_GOLD, 'unselected': ''})
 
     layout = Layout(
         HSplit(

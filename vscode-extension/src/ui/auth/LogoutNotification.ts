@@ -8,7 +8,7 @@ import { SimpleAuthService } from '../../core/auth/SimpleAuthService';
  */
 export class LogoutNotification {
   private static instance: LogoutNotification;
-  private _authService: SimpleAuthService;
+  private _authService!: SimpleAuthService;
   private _disposables: vscode.Disposable[] = [];
   
   // ログアウト理由の定義

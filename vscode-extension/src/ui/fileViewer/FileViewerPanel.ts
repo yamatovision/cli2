@@ -19,8 +19,8 @@ export class FileViewerPanel {
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
-  private _fileSystemService: FileSystemServiceImpl;
-  private _projectService: ProjectServiceImpl;
+  private _fileSystemService!: FileSystemServiceImpl;
+  private _projectService!: ProjectServiceImpl;
   private _currentProjectPath: string = '';
   private _currentFilePath: string = '';
   private _fileWatcher: vscode.Disposable | null = null;

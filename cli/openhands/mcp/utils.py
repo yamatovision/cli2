@@ -204,6 +204,21 @@ async def add_mcp_tools_to_agent(agent: 'Agent', runtime: Runtime, memory: 'Memo
 
     extra_stdio_servers = []
 
+    # Add microagent MCP tools if available
+    microagent_mcp_configs = memory.get_microagent_mcp_tools()
+    for mcp_config in microagent_mcp_configs:
+        if mcp_config.sse_servers:
+            logger.warning(
+                'Microagent MCP config contains SSE servers, it is not yet supported.'
+            )
+
+        if mcp_config.stdio_servers:
+            for stdio_server in mcp_config.stdio_servers:
+                # Check if this stdio server is already in the config
+                if stdio_server not in extra_stdio_servers:
+                    extra_stdio_servers.append(stdio_server)
+                    logger.info(f'Added microagent stdio server: {stdio_server.name}')
+
     # Add the runtime as another MCP server
     updated_mcp_config = runtime.get_mcp_config(extra_stdio_servers)
 

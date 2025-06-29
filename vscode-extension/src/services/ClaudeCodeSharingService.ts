@@ -280,6 +280,7 @@ export class ClaudeCodeSharingService {
     
     // 画像を共有
     return this.shareImage(buffer, format, {
+      type: 'image' as const,
       ...options,
       title: fileName
     });

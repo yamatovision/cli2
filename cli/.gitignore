@@ -1,0 +1,262 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.bak
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*venv/
+frontend/.env
+
+# IDE
+.vscode/**/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# VS Code extensions/forks
+.cursorignore
+.rooignore
+.clineignore
+.windsurfignore
+.cursorrules
+.roorules
+.clinerules
+.windsurfrules
+.cursor/rules
+.roo/rules
+.cline/rules
+.windsurf/rules
+
+# OS
+.DS_Store
+**/.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+logs/debug/sessions/*.json
+logs/debug/archived/*.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+cli/OpenHands/logs/
+OpenHands-main/logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+**/node_modules/
+jspm_packages/
+frontend/.pnp
+frontend/bun.lockb
+frontend/yarn.lock
+.pnp.js
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.appgenius_temp/
+
+# VSCode extension specific
+out/
+*.vsix
+test_script/auth_token.txt
+
+# Testing
+frontend/coverage
+test_results*
+/_test_files_tmp/
+
+# Production builds
+frontend/build
+frontend/dist
+
+# Claude specific
+.claude_ui_data/
+.claude_data/
+**/.claude/settings.local.json
+
+# Configuration files (these contain sensitive settings)
+config.toml
+config.toml_
+config.toml.bak
+
+# Specific sensitive files
+docs/deployment/deploy.md
+.vqc8x9d3gsb4j
+.vqqst6288n0o
+
+# Agent workspace
+.envrc
+/workspace
+/_test_workspace
+/debug
+cache
+
+# Evaluation data
+evaluation/evaluation_outputs
+evaluation/outputs
+evaluation/swe_bench/eval_workspace*
+evaluation/SWE-bench/data
+evaluation/webarena/scripts/webarena_env.sh
+evaluation/bird/data
+evaluation/gaia/data
+evaluation/gorilla/data
+evaluation/toolqa/data
+evaluation/scienceagentbench/benchmark
+evaluation/commit0_bench/repos
+
+# OpenHands resolver
+output/
+
+# SWE-bench evaluation
+image_build_logs
+run_instance_logs
+runtime_*.tar
+
+# Docker build
+containers/runtime/Dockerfile
+containers/runtime/project.tar.gz
+containers/runtime/code
+
+# Python specific
+.python-version
+.pdm.toml
+__pypackages__/
+celerybeat-schedule
+celerybeat.pid
+*.sage.py
+.spyderproject
+.spyproject
+.ropeproject
+/site
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cython_debug/
+
+# Documentation
+docs/_build/
+
+# Jupyter
+.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# Translations
+*.mo
+*.pot
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# PyBuilder
+.pybuilder/
+target/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt

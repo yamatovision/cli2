@@ -401,9 +401,11 @@ export class ProjectServiceImpl implements IProjectService {
         if (existingProject) {
           // 既存のプロジェクトが見つかった場合は、アクティブに設定
           projectId = existingProject.id;
-          await this._projectManagementService.updateProject(projectId, {
-            updatedAt: Date.now()
-          });
+          if (projectId) {
+            await this._projectManagementService.updateProject(projectId, {
+              updatedAt: Date.now()
+            });
+          }
           Logger.info(`ProjectService: 既存プロジェクトをアクティブに更新: ID=${projectId}, 名前=${projectName}`);
         } else {
           // 新規プロジェクトとして登録
@@ -570,7 +572,8 @@ export class ProjectServiceImpl implements IProjectService {
           if (existingProjectWithPath) {
             // パスが同じプロジェクトが見つかった場合は更新
             projectId = existingProjectWithPath.id;
-            await this._projectManagementService.updateProject(projectId, {
+            if (projectId) {
+              await this._projectManagementService.updateProject(projectId, {
               name: name,
               updatedAt: Date.now(),
               metadata: {
@@ -578,6 +581,7 @@ export class ProjectServiceImpl implements IProjectService {
                 activeTab: activeTab || existingProjectWithPath.metadata?.activeTab || 'scope-progress'
               }
             });
+            }
             Logger.info(`ProjectService: 既存プロジェクトを更新: ID=${projectId}, 名前=${name}, アクティブタブ=${activeTab || existingProjectWithPath.metadata?.activeTab || 'scope-progress'}`);
           } else {
             // 新規プロジェクトとして登録

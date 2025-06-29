@@ -1,35 +1,8 @@
-# BlueLamp Configuration for OpenHands
-
 [core]
-# workspace_baseを指定しない場合、現在のディレクトリが使用される
-# workspace_base="./workspace"
-log_level="WARNING"
-log_dir="./logs"
-max_iterations=500
-cache_dir="./cache"
-confirmation_mode=true    # ユーザー確認モード有効
-headless_mode=false      # TUIモード（停止機能有効）
+workspace_base = "/tmp/openhands_workspace"
 
-[runtime]
-runtime="cli"
+[security]
+confirmation_mode = false
 
-[agent]
-# デフォルトエージェント（要件定義エージェントとして動作）
-default_agent="CodeActAgent"
-
-[agent.CodeActAgent]
-# 要件定義エージェントのプロンプトを使用
-system_prompt_filename="requirements_engineer.j2"
-
-# 最小限のツールのみ有効化
-enable_browsing=false      # ブラウジング無効
-enable_jupyter=false       # Jupyter無効
-enable_cmd=true           # bashコマンド有効
-enable_file_editor=true   # ファイル編集有効
-enable_mcp=false          # MCP無効
-enable_think=true         # 思考ツール有効
-enable_finish=true        # 終了ツール有効
-
-[llm]
-model="claude-sonnet-4-20250514"
-api_key="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"
+[condenser]
+type = "noop"

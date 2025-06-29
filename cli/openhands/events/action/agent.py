@@ -22,6 +22,7 @@ class ChangeAgentStateAction(Action):
 
 class AgentFinishTaskCompleted(Enum):
     FALSE = 'false'
+    PARTIAL = 'partial'
     TRUE = 'true'
 
 
@@ -85,6 +86,7 @@ class AgentRejectAction(Action):
 class AgentDelegateAction(Action):
     agent: str
     inputs: dict
+    thought: str = ''
     action: str = ActionType.DELEGATE
 
     @property

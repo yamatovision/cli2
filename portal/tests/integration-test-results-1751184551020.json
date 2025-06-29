@@ -1,0 +1,79 @@
+[
+  {
+    "test": "データベース接続",
+    "success": true,
+    "details": "MongoDB接続成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:09.562Z"
+  },
+  {
+    "test": "テストユーザークリーンアップ",
+    "success": true,
+    "details": "テストユーザーを削除",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:09.677Z"
+  },
+  {
+    "test": "ユーザー登録",
+    "success": true,
+    "details": "ユーザー test-integration@example.com の登録成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:09.939Z"
+  },
+  {
+    "test": "ログイン",
+    "success": true,
+    "details": "ユーザー test-integration@example.com のログイン成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.149Z"
+  },
+  {
+    "test": "認証チェック",
+    "success": true,
+    "details": "ユーザー認証確認成功: test-integration@example.com",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.193Z"
+  },
+  {
+    "test": "重複ログイン",
+    "success": true,
+    "details": "古いセッションが自動クリアされ、新規ログイン成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.671Z"
+  },
+  {
+    "test": "強制ログイン",
+    "success": true,
+    "details": "強制ログイン成功: 前セッション終了",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.868Z"
+  },
+  {
+    "test": "トークンリフレッシュ",
+    "success": true,
+    "details": "リフレッシュトークンによる新規アクセストークン取得成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.910Z"
+  },
+  {
+    "test": "セッション情報確認",
+    "success": true,
+    "details": "test-integration@example.com: アクティブセッション 1個, レガシーセッション あり",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.924Z"
+  },
+  {
+    "test": "ログアウト",
+    "success": true,
+    "details": "ログアウト成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.986Z"
+  },
+  {
+    "test": "セッション情報確認",
+    "success": true,
+    "details": "test-integration@example.com: アクティブセッション 0個, レガシーセッション あり",
+    "error": null,
+    "timestamp": "2025-06-29T08:09:10.998Z"
+  }
+]

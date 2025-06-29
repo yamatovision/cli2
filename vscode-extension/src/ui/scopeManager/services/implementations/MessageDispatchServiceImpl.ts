@@ -391,7 +391,7 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
         
         // PanelServiceが設定されている場合はそれを使用
         if (this._panelService && typeof this._panelService.initializePanel === 'function') {
-          const projectPath = message.projectPath || this._projectService.getActiveProjectPath();
+          const projectPath = message.projectPath || this._projectService?.getActiveProjectPath();
           await this._panelService.initializePanel(projectPath);
           
           // 初期化後にログ出力（デバッグ用）
@@ -401,8 +401,8 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
           Logger.warn('MessageDispatchServiceImpl: PanelServiceが利用できないため従来の方法で初期化');
           
           // プロジェクト一覧を更新
-          const allProjects = await this._projectService.getAllProjects();
-          const activeProject = this._projectService.getActiveProject();
+          const allProjects = await this._projectService?.getAllProjects();
+          const activeProject = this._projectService?.getActiveProject();
           
           this.sendMessage(panel, {
             command: 'updateProjects',
@@ -431,7 +431,7 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
             // ProjectServiceからの情報を使用して進捗ファイルパスを取得
             let progressFilePath;
             try {
-              progressFilePath = this._projectService.getProgressFilePath();
+              progressFilePath = this._projectService?.getProgressFilePath();
               Logger.info(`MessageDispatchServiceImpl: ProjectServiceから進捗ファイルパスを取得: ${progressFilePath}`);
             } catch {
               progressFilePath = path.join(activeProject.path, 'docs', 'SCOPE_PROGRESS.md');
@@ -551,7 +551,7 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
         Logger.info(`MessageDispatchServiceImpl: createProjectメッセージを受信 - ProjectServiceを利用して処理します: ${name}`);
         
         // ProjectServiceを使用してプロジェクトを作成
-        const projectId = await this._projectService.createProject(name, description);
+        const projectId = await this._projectService?.createProject(name, description);
         
         Logger.info(`MessageDispatchServiceImpl: プロジェクト作成に成功: ${name}, ID=${projectId}`);
         this.showSuccess(panel, `プロジェクト「${name}」を作成しました`);
@@ -576,7 +576,7 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
         Logger.info(`MessageDispatchServiceImpl: removeProjectメッセージを受信 - ProjectServiceを利用して処理します: ${name}, path=${path}, id=${id || '不明'}`);
         
         // ProjectServiceを使用してプロジェクトを削除
-        const result = await this._projectService.removeProject(name, path, id);
+        const result = await this._projectService?.removeProject(name, path, id);
         
         if (result) {
           Logger.info(`MessageDispatchServiceImpl: プロジェクト削除に成功: ${name}`);
@@ -615,13 +615,13 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
       // 2. メッセージにプロジェクトパスがない場合は、アクティブなプロジェクトパスを取得
       else if (this._projectService) {
         // アクティブなプロジェクトオブジェクトを取得
-        const activeProject = this._projectService.getActiveProject();
+        const activeProject = this._projectService?.getActiveProject();
         if (activeProject && activeProject.path) {
           projectPath = activeProject.path;
           Logger.info(`MessageDispatchServiceImpl: アクティブプロジェクト(${activeProject.name})から取得したパス: ${projectPath}`);
         } else {
           // フォールバック: getActiveProjectPathを使用
-          projectPath = this._projectService.getActiveProjectPath();
+          projectPath = this._projectService?.getActiveProjectPath();
           Logger.info(`MessageDispatchServiceImpl: getActiveProjectPathから取得したパス: ${projectPath}`);
         }
       }
@@ -807,7 +807,7 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
           }
           // 2. ProjectServiceから取得
           else if (this._projectService) {
-            projectPath = this._projectService.getActiveProjectPath();
+            projectPath = this._projectService?.getActiveProjectPath();
             Logger.info(`MessageDispatchServiceImpl: ProjectServiceからプロジェクトパスを取得: ${projectPath}`);
           }
           // 3. VSCodeワークスペースから取得

@@ -15,10 +15,10 @@ import { ClaudeCodeApiClient } from '../api/claudeCodeApiClient';
  */
 export class ClaudeCodeIntegrationService {
   private static instance: ClaudeCodeIntegrationService;
-  private _launcher: ClaudeCodeLauncherService;
-  private _apiClient: ClaudeCodeApiClient;
-  private _authService: SimpleAuthService;
-  private _eventBus: AppGeniusEventBus;
+  private _launcher!: ClaudeCodeLauncherService;
+  private _apiClient!: ClaudeCodeApiClient;
+  private _authService!: SimpleAuthService;
+  private _eventBus!: AppGeniusEventBus;
   private _disposables: vscode.Disposable[] = [];
 
   /**

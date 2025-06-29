@@ -29,7 +29,7 @@ const PromptSchema = new Schema({
   }],
   ownerId: {
     type: Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'SimpleUser', // Changed from 'User' to 'SimpleUser'
     required: true
   },
   isPublic: {

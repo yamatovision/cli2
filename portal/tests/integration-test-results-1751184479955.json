@@ -1,0 +1,72 @@
+[
+  {
+    "test": "データベース接続",
+    "success": true,
+    "details": "MongoDB接続成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.162Z"
+  },
+  {
+    "test": "テストユーザークリーンアップ",
+    "success": true,
+    "details": "テストユーザーを削除",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.251Z"
+  },
+  {
+    "test": "ユーザー登録",
+    "success": true,
+    "details": "ユーザー test-integration@example.com の登録成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.421Z"
+  },
+  {
+    "test": "ログイン",
+    "success": true,
+    "details": "ユーザー test-integration@example.com のログイン成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.575Z"
+  },
+  {
+    "test": "認証チェック",
+    "success": true,
+    "details": "ユーザー認証確認成功: test-integration@example.com",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.613Z"
+  },
+  {
+    "test": "重複ログイン",
+    "success": false,
+    "details": "重複ログインテスト失敗",
+    "error": "Request failed with status code 409",
+    "timestamp": "2025-06-29T08:07:59.730Z"
+  },
+  {
+    "test": "強制ログイン",
+    "success": true,
+    "details": "強制ログイン成功: 前セッション終了",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.873Z"
+  },
+  {
+    "test": "トークンリフレッシュ",
+    "success": true,
+    "details": "リフレッシュトークンによる新規アクセストークン取得成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.912Z"
+  },
+  {
+    "test": "セッション情報確認",
+    "success": true,
+    "details": "test-integration@example.com: アクティブセッション 1個, レガシーセッション あり",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:59.925Z"
+  },
+  {
+    "test": "ログアウト",
+    "success": false,
+    "details": "ログアウト失敗",
+    "error": "Request failed with status code 500",
+    "timestamp": "2025-06-29T08:07:59.933Z"
+  }
+]

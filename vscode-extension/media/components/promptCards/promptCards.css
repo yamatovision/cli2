@@ -1,4 +1,49 @@
-/* プロンプトカードスタイル */
+/* ブルーランプ起動ボタンスタイル */
+
+.bluelamp-launch-button {
+  background: linear-gradient(135deg, var(--app-primary), var(--app-primary-dark, #0066cc));
+  border: none;
+  border-radius: var(--app-border-radius);
+  padding: var(--app-spacing-lg);
+  cursor: pointer;
+  transition: all var(--app-transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  color: white;
+  margin: var(--app-spacing-md) auto;
+  max-width: 300px;
+  min-height: 120px;
+  justify-content: center;
+}
+
+.bluelamp-launch-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 123, 255, 0.3);
+  background: linear-gradient(135deg, var(--app-primary-dark, #0066cc), var(--app-primary));
+}
+
+.bluelamp-launch-button .material-icons {
+  font-size: 48px;
+  margin-bottom: var(--app-spacing-sm);
+  color: white;
+}
+
+.bluelamp-launch-button h3 {
+  font-weight: var(--app-font-weight-medium);
+  margin: var(--app-spacing-xs) 0;
+  color: white;
+  font-size: var(--app-font-size-lg);
+}
+
+.bluelamp-launch-button p {
+  font-size: var(--app-font-size-sm);
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+/* レガシープロンプトカードスタイル（互換性のため保持） */
 
 .prompt-grid {
   display: grid;

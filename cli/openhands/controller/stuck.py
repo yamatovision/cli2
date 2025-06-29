@@ -22,10 +22,8 @@ class StuckDetector:
         'SyntaxError: incomplete input',
     ]
 
-    def __init__(self, state: State, min_pattern_steps: int = 8, enable_progress_detection: bool = True):
+    def __init__(self, state: State):
         self.state = state
-        self.min_pattern_steps = min_pattern_steps  # Configurable minimum steps for pattern detection
-        self.enable_progress_detection = enable_progress_detection  # Enable/disable progress detection
 
     def is_stuck(self, headless_mode: bool = True) -> bool:
         """Checks if the agent is stuck in a loop.
@@ -88,35 +86,25 @@ class StuckDetector:
                 break
 
         # scenario 1: same action, same observation
-        logger.debug('DEBUG: Checking scenario 1 - repeating action observation')
         if self._is_stuck_repeating_action_observation(last_actions, last_observations):
-            logger.warning('DEBUG: Stuck detected in scenario 1 - repeating action observation')
             return True
 
         # scenario 2: same action, errors
-        logger.debug('DEBUG: Checking scenario 2 - repeating action error')
         if self._is_stuck_repeating_action_error(last_actions, last_observations):
-            logger.warning('DEBUG: Stuck detected in scenario 2 - repeating action error')
             return True
 
         # scenario 3: monologue
-        logger.debug('DEBUG: Checking scenario 3 - monologue')
         if self._is_stuck_monologue(filtered_history):
-            logger.warning('DEBUG: Stuck detected in scenario 3 - monologue')
             return True
 
         # scenario 4: action, observation pattern on the last six steps
         if len(filtered_history) >= 6:
-            logger.debug('DEBUG: Checking scenario 4 - action observation pattern')
             if self._is_stuck_action_observation_pattern(filtered_history):
-                logger.warning('DEBUG: Stuck detected in scenario 4 - action observation pattern')
                 return True
 
         # scenario 5: context window error loop
         if len(filtered_history) >= 10:
-            logger.debug('DEBUG: Checking scenario 5 - context window error')
             if self._is_stuck_context_window_error(filtered_history):
-                logger.warning('DEBUG: Stuck detected in scenario 5 - context window error')
                 return True
 
         return False
@@ -304,94 +292,44 @@ class StuckDetector:
     def _is_stuck_action_observation_pattern(
         self, filtered_history: list[Event]
     ) -> bool:
-        # scenario 4: action, observation pattern detection with improved logic
-        # Use configurable minimum steps to reduce false positives
-        min_steps = self.min_pattern_steps
-        if len(filtered_history) < min_steps:
-            return False
-            
-        last_actions: list[Event] = []
-        last_observations: list[Event] = []
+        # scenario 4: action, observation pattern on the last six steps
+        # check if the agent repeats the same (Action, Observation)
+        # every other step in the last six steps
+        last_six_actions: list[Event] = []
+        last_six_observations: list[Event] = []
 
-        # Collect more steps for better pattern detection
+        # the end of history is most interesting
         for event in reversed(filtered_history):
-            if isinstance(event, Action) and len(last_actions) < min_steps:
-                last_actions.append(event)
-            elif isinstance(event, Observation) and len(last_observations) < min_steps:
-                last_observations.append(event)
+            if isinstance(event, Action) and len(last_six_actions) < 6:
+                last_six_actions.append(event)
+            elif isinstance(event, Observation) and len(last_six_observations) < 6:
+                last_six_observations.append(event)
 
-            if len(last_actions) == min_steps and len(last_observations) == min_steps:
+            if len(last_six_actions) == 6 and len(last_six_observations) == 6:
                 break
 
-        if len(last_actions) < min_steps or len(last_observations) < min_steps:
-            return False
+        # this pattern is every other step, like:
+        # (action_1, obs_1), (action_2, obs_2), (action_1, obs_1), (action_2, obs_2),...
+        if len(last_six_actions) == 6 and len(last_six_observations) == 6:
+            actions_equal = (
+                # action_0 == action_2 == action_4
+                self._eq_no_pid(last_six_actions[0], last_six_actions[2])
+                and self._eq_no_pid(last_six_actions[0], last_six_actions[4])
+                # action_1 == action_3 == action_5
+                and self._eq_no_pid(last_six_actions[1], last_six_actions[3])
+                and self._eq_no_pid(last_six_actions[1], last_six_actions[5])
+            )
+            observations_equal = (
+                # obs_0 == obs_2 == obs_4
+                self._eq_no_pid(last_six_observations[0], last_six_observations[2])
+                and self._eq_no_pid(last_six_observations[0], last_six_observations[4])
+                # obs_1 == obs_3 == obs_5
+                and self._eq_no_pid(last_six_observations[1], last_six_observations[3])
+                and self._eq_no_pid(last_six_observations[1], last_six_observations[5])
+            )
 
-        # Check for alternating pattern with improved logic
-        # Pattern: (A1,O1), (A2,O2), (A1,O1), (A2,O2), (A1,O1), (A2,O2), (A1,O1), (A2,O2)
-        pattern_detected = True
-        
-        # Check if actions alternate in pairs
-        for i in range(0, min_steps, 2):
-            if i + 2 < min_steps:
-                # Compare action at position i with action at position i+2
-                if not self._eq_no_pid(last_actions[i], last_actions[i + 2]):
-                    pattern_detected = False
-                    break
-                    
-        # Check if observations show progress (different content over time)
-        if pattern_detected and self.enable_progress_detection:
-            logger.debug('DEBUG: Checking for progress detection...')
-            progress_detected = False
-            
-            # Check all observations for any signs of progress
-            # Compare observations of the same type (same command) across time
-            for i in range(min_steps - 1):
-                for j in range(i + 1, min_steps):
-                    obs1 = last_observations[i]
-                    obs2 = last_observations[j]
-                    
-                    # Only compare observations from the same type of command
-                    if (isinstance(obs1, CmdOutputObservation) and 
-                        isinstance(obs2, CmdOutputObservation) and
-                        hasattr(obs1, 'command') and hasattr(obs2, 'command') and
-                        obs1.command == obs2.command):
-                        
-                        if self._observations_show_progress(obs1, obs2):
-                            progress_detected = True
-                            logger.debug(f'DEBUG: Progress detected between observations {i} and {j}')
-                            logger.debug(f'DEBUG: Command: {obs1.command}')
-                            logger.debug(f'DEBUG: obs1.content: {getattr(obs1, "content", "N/A")}')
-                            logger.debug(f'DEBUG: obs2.content: {getattr(obs2, "content", "N/A")}')
-                            break
-                            
-                if progress_detected:
-                    break
-                    
-            if progress_detected:
-                logger.info('Progress detected in command outputs - not considering as stuck')
-                pattern_detected = False
-            else:
-                logger.debug('DEBUG: No progress detected - considering as stuck')
-
-        if pattern_detected:
-            logger.warning('Action, Observation pattern detected (improved detection)')
-            # DEBUG: 詳細なパターン情報をログ出力
-            logger.debug(f'DEBUG: Last {min_steps} actions: {[type(a).__name__ for a in last_actions]}')
-            logger.debug(f'DEBUG: Last {min_steps} observations: {[type(o).__name__ for o in last_observations]}')
-            logger.debug(f'DEBUG: Action pattern: {[str(a)[:100] for a in last_actions]}')
-            logger.debug(f'DEBUG: Observation pattern: {[str(o)[:100] for o in last_observations]}')
-            return True
-            
-        return False
-        
-    def _observations_show_progress(self, obs1: Observation, obs2: Observation) -> bool:
-        """Check if two observations show that the agent is making progress."""
-        if isinstance(obs1, CmdOutputObservation) and isinstance(obs2, CmdOutputObservation):
-            # If content is different, agent might be exploring or making progress
-            if obs1.content != obs2.content:
-                return True
-            # If exit codes are different, something changed
-            if obs1.exit_code != obs2.exit_code:
+            if actions_equal and observations_equal:
+                logger.warning('Action, Observation pattern detected')
                 return True
         return False
 

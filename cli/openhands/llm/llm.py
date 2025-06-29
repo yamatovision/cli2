@@ -1,9 +1,7 @@
 import copy
 import os
-import threading
 import time
 import warnings
-from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from typing import Any, Callable
 
@@ -15,21 +13,18 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import litellm
 
-from litellm import ChatCompletionMessageToolCall, PromptTokensDetails
+from litellm import ChatCompletionMessageToolCall, ModelInfo, PromptTokensDetails
 from litellm import Message as LiteLLMMessage
 from litellm import completion as litellm_completion
 from litellm import completion_cost as litellm_completion_cost
-from litellm.types.router import ModelInfo
-from litellm.types.utils import ModelInfo as UtilsModelInfo
 from litellm.exceptions import (
     RateLimitError,
 )
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
-from openhands.core.exceptions import LLMNoResponseError, UserCancelledError
+from openhands.core.exceptions import LLMNoResponseError
 from openhands.core.logger import openhands_logger as logger
-from openhands.utils.shutdown_listener import should_exit
 from openhands.core.message import Message
 from openhands.llm.debug_mixin import DebugMixin
 from openhands.llm.fn_call_converter import (
@@ -136,13 +131,8 @@ class LLM(RetryMixin, DebugMixin):
         self.cost_metric_supported: bool = True
         self.config: LLMConfig = copy.deepcopy(config)
 
-        self.model_info: UtilsModelInfo | None = None
+        self.model_info: ModelInfo | None = None
         self.retry_listener = retry_listener
-        
-        # 割り込み制御用の初期化
-        self._cancellation_event = threading.Event()
-        self._enable_interruption = True  # デフォルトで有効
-        self._check_interval = 0.1  # 100ms間隔
         if self.config.log_completions:
             if self.config.log_completions_folder is None:
                 raise RuntimeError(
@@ -208,45 +198,6 @@ class LLM(RetryMixin, DebugMixin):
         )
 
         self._completion_unwrapped = self._completion
-
-    def _start_cancellation_monitor(self):
-        """別スレッドで割り込み監視を開始（Ctrl+Cシグナル検出）"""
-        def monitor():
-            while not self._cancellation_event.is_set():
-                if should_exit():
-                    self._cancellation_event.set()
-                    logger.info("🛑 LLM呼び出しが中断されました")
-                    break
-                time.sleep(self._check_interval)
-        
-        monitor_thread = threading.Thread(target=monitor, daemon=True)
-        monitor_thread.start()
-        return monitor_thread
-
-    def _completion_with_interruption(self, *args, **kwargs):
-        """割り込み可能なcompletion"""
-        self._cancellation_event.clear()
-        monitor_thread = self._start_cancellation_monitor()
-        
-        try:
-            # 既存のcompletionをFutureで実行
-            with ThreadPoolExecutor(max_workers=1) as executor:
-                future = executor.submit(self._completion_unwrapped, *args, **kwargs)
-                
-                # 100ms間隔で割り込みチェック
-                while not future.done():
-                    if self._cancellation_event.is_set():
-                        logger.info("🛑 LLM request cancelled by user")
-                        raise UserCancelledError("LLM request cancelled by user")
-                    time.sleep(self._check_interval)
-                
-                return future.result()
-                
-        except UserCancelledError:
-            logger.info("LLM request cancelled by user")
-            raise
-        finally:
-            self._cancellation_event.set()
 
         @self.retry_decorator(
             num_retries=self.config.num_retries,
@@ -330,9 +281,8 @@ class LLM(RetryMixin, DebugMixin):
             # NOTE: this setting is global; unlike drop_params, it cannot be overridden in the litellm completion partial
             litellm.modify_params = self.config.modify_params
 
-            # Always remove extra_body for Anthropic models as they don't support it
-            # Also remove for non-litellm_proxy models
-            if 'anthropic' in self.config.model.lower() or 'claude' in self.config.model.lower() or 'litellm_proxy' not in self.config.model:
+            # if we're not using litellm proxy, remove the extra_body
+            if 'litellm_proxy' not in self.config.model:
                 kwargs.pop('extra_body', None)
 
             # Record start time for latency measurement
@@ -449,11 +399,7 @@ class LLM(RetryMixin, DebugMixin):
 
         Check the complete documentation at https://litellm.vercel.app/docs/completion
         """
-        # 割り込み機能の有効/無効に応じて適切なcompletionを返す
-        if self._enable_interruption:
-            return self._completion_with_interruption
-        else:
-            return self._completion
+        return self._completion
 
     def init_model_info(self) -> None:
         if self._tried_model_info:
@@ -785,7 +731,7 @@ class LLM(RetryMixin, DebugMixin):
         if not self.cost_metric_supported:
             return 0.0
 
-        extra_kwargs: dict[str, Any] = {}
+        extra_kwargs = {}
         if (
             self.config.input_cost_per_token is not None
             and self.config.output_cost_per_token is not None
@@ -809,28 +755,17 @@ class LLM(RetryMixin, DebugMixin):
         try:
             if cost is None:
                 try:
-                    if 'custom_cost_per_token' in extra_kwargs:
-                        cost = litellm_completion_cost(
-                            completion_response=response, 
-                            custom_cost_per_token=extra_kwargs['custom_cost_per_token']
-                        )
-                    else:
-                        cost = litellm_completion_cost(completion_response=response)
+                    cost = litellm_completion_cost(
+                        completion_response=response, **extra_kwargs
+                    )
                 except Exception as e:
                     logger.debug(f'Error getting cost from litellm: {e}')
 
             if cost is None:
                 _model_name = '/'.join(self.config.model.split('/')[1:])
-                if 'custom_cost_per_token' in extra_kwargs:
-                    cost = litellm_completion_cost(
-                        completion_response=response, 
-                        model=_model_name,
-                        custom_cost_per_token=extra_kwargs['custom_cost_per_token']
-                    )
-                else:
-                    cost = litellm_completion_cost(
-                        completion_response=response, model=_model_name
-                    )
+                cost = litellm_completion_cost(
+                    completion_response=response, model=_model_name, **extra_kwargs
+                )
                 logger.debug(
                     f'Using fallback model name {_model_name} to get cost: {cost}'
                 )

@@ -100,43 +100,16 @@ app.get('/api', (req, res) => {
     message: "AppGenius Portal API",
     version: "1.0.0",
     endpoints: [
-      { path: "/api/auth", description: "認証API" },
-      { path: "/api/users", description: "ユーザー管理API" },
       { path: "/api/prompts", description: "プロンプト管理API" },
-      { path: "/api/proxy", description: "APIプロキシ" },
-      { path: "/api/projects", description: "プロジェクト管理API" },
-      { path: "/api/organizations", description: "組織管理API" },
-      { path: "/api/workspaces", description: "ワークスペース管理API" },
-      { path: "/api/admin", description: "管理者API" },
       { path: "/api/simple", description: "シンプル版API" }
     ]
   });
 });
 
 // ルートの設定
-// 標準認証システムを無効化し、シンプル認証システムのみを使用する (2025/3/24)
-// 以下のコメントアウトされた行はすべて標準認証システムに依存していたため無効化
-
-// app.use('/api/auth', require('./routes/auth.routes')); // 標準認証ルート - 無効化
-// app.use('/api/users', require('./routes/user.routes')); // 標準ユーザー管理 - 無効化
-app.use('/api/prompts', require('./routes/prompt.routes')); // プロンプト管理は残す
-// app.use('/api/projects', require('./routes/project.routes')); // 標準プロジェクト管理 - 無効化
-app.use('/api/proxy', require('./routes/api-proxy.routes')); // APIプロキシは残す
-
-// 組織・ワークスペース管理APIルート - 無効化
-// app.use('/api/organizations', require('./routes/organization.routes'));
-// app.use('/api/workspaces', require('./routes/workspace.routes'));
-// app.use('/api/admin', require('./routes/admin.routes'));
-
-// 組織ユーザー管理APIルート - 無効化
-// app.use('/api', require('./routes/invitation.routes'));
-// app.use('/api', require('./routes/apiKey.routes'));
-
-// システム設定管理APIルート - 無効化
-// app.use('/api', require('./routes/adminConfig.routes'));
-
-// シンプル版API
-app.use('/api/simple', require('./routes/simple.routes'));
+// シンプル認証システムのみを使用する (2025/3/24)
+app.use('/api/prompts', require('./routes/prompt.routes')); // プロンプト管理
+app.use('/api/simple', require('./routes/simple.routes')); // シンプル版API
 
 // エラーログ
 app.use((err, req, res, next) => {

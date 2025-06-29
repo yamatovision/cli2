@@ -17,14 +17,12 @@ const ApiUsageSchema = new mongoose.Schema({
   // 組織ID（オプション）
   organizationId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Organization',
     index: true
   },
 
   // ワークスペースID（オプション）
   workspaceId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Workspace',
     index: true
   },
 
@@ -478,23 +476,9 @@ ApiUsageSchema.statics.getOrganizationWorkspaceUsage = async function(organizati
       }
     },
     {
-      $lookup: {
-        from: "workspaces",
-        localField: "_id",
-        foreignField: "_id",
-        as: "workspace"
-      }
-    },
-    {
-      $unwind: {
-        path: "$workspace",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
       $project: {
         workspaceId: "$_id",
-        workspaceName: "$workspace.name",
+        workspaceName: null,
         inputTokens: 1,
         outputTokens: 1,
         totalTokens: 1,

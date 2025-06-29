@@ -16,6 +16,67 @@ class SessionService {
   }
 
   /**
+   * クライアントタイプ別のセッション情報を取得
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @returns {Promise<Object|null>} セッション情報
+   */
+  static async getUserSessionForClient(userId, clientType) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      if (!user) {
+        return null;
+      }
+      return user.getActiveSessionForClient(clientType);
+    } catch (error) {
+      console.error('セッション情報取得エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * クライアントタイプ別にアクティブなセッションを持っているか確認
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @returns {Promise<boolean>} アクティブセッションの有無
+   */
+  static async hasActiveSessionForClient(userId, clientType) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      return user ? user.hasActiveSessionForClient(clientType) : false;
+    } catch (error) {
+      console.error('アクティブセッション確認エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * クライアントタイプ別の新しいセッションを作成
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @param {string} ipAddress - IPアドレス
+   * @param {string} userAgent - ユーザーエージェント
+   * @returns {Promise<string>} セッションID
+   */
+  static async createSessionForClient(userId, clientType, ipAddress, userAgent) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      if (!user) {
+        throw new Error('ユーザーが見つかりません');
+      }
+
+      const sessionId = this.generateSessionId();
+      await user.setActiveSessionForClient(clientType, sessionId, ipAddress, userAgent);
+      
+      return sessionId;
+    } catch (error) {
+      console.error('セッション作成エラー:', error);
+      throw error;
+    }
+  }
+
+  // 旧バージョン互換性メソッド（非推奨）
+  /**
    * ユーザーの現在のセッション情報を取得
    * @param {string} userId - ユーザーID
    * @returns {Promise<Object|null>} セッション情報
@@ -108,6 +169,67 @@ class SessionService {
     }
   }
 
+  /**
+   * クライアントタイプ別のセッションの有効性を検証
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @param {string} sessionId - セッションID
+   * @returns {Promise<boolean>} セッションが有効かどうか
+   */
+  static async validateSessionForClient(userId, clientType, sessionId) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      if (!user) {
+        return false;
+      }
+      return user.validateSessionForClient(clientType, sessionId);
+    } catch (error) {
+      console.error('セッション検証エラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * クライアントタイプ別のセッションをクリア
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @returns {Promise<void>}
+   */
+  static async clearSessionForClient(userId, clientType) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      if (!user) {
+        throw new Error('ユーザーが見つかりません');
+      }
+
+      await user.clearActiveSessionForClient(clientType);
+    } catch (error) {
+      console.error('セッションクリアエラー:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * クライアントタイプ別のセッションのアクティビティを更新
+   * @param {string} userId - ユーザーID
+   * @param {string} clientType - クライアントタイプ (vscode/portal/cli)
+   * @returns {Promise<void>}
+   */
+  static async updateSessionActivityForClient(userId, clientType) {
+    try {
+      const user = await SimpleUser.findById(userId);
+      if (!user) {
+        throw new Error('ユーザーが見つかりません');
+      }
+
+      await user.updateSessionActivityForClient(clientType);
+    } catch (error) {
+      console.error('セッションアクティビティ更新エラー:', error);
+      throw error;
+    }
+  }
+
+  // 旧バージョン互換性メソッド（非推奨）
   /**
    * セッションの有効性を検証
    * @param {string} userId - ユーザーID

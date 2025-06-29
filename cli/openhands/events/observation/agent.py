@@ -70,6 +70,7 @@ class RecallObservation(Observation):
     # workspace context
     repo_name: str = ''
     repo_directory: str = ''
+    repo_instructions: str = ''
     runtime_hosts: dict[str, int] = field(default_factory=dict)
     additional_agent_instructions: str = ''
     date: str = ''
@@ -112,7 +113,7 @@ class RecallObservation(Observation):
                 [
                     f'recall_type={self.recall_type}',
                     f'repo_name={self.repo_name}',
-
+                    f'repo_instructions={self.repo_instructions[:20]}...',
                     f'runtime_hosts={self.runtime_hosts}',
                     f'additional_agent_instructions={self.additional_agent_instructions[:20]}...',
                     f'date={self.date}'

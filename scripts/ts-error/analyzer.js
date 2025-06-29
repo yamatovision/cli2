@@ -90,6 +90,12 @@ const collectTypeScriptErrors = () => {
       name: 'portal/backend',
       path: path.join(projectRoot, 'portal/backend'),
       hasTypeScript: false
+    },
+    {
+      name: 'cli',
+      path: path.join(projectRoot, 'cli'),
+      hasTypeScript: true,
+      command: 'npx tsc --noEmit --skipLibCheck --allowJs --jsx react-jsx'
     }
   ];
 
@@ -186,7 +192,8 @@ const main = () => {
     projects: {
       'vscode-extension': errors.filter(e => e.project === 'vscode-extension').length,
       'portal/frontend': errors.filter(e => e.project === 'portal/frontend').length,
-      'portal/backend': errors.filter(e => e.project === 'portal/backend').length
+      'portal/backend': errors.filter(e => e.project === 'portal/backend').length,
+      'cli': errors.filter(e => e.project === 'cli').length
     }
   };
   

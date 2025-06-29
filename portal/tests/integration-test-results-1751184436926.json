@@ -1,0 +1,37 @@
+[
+  {
+    "test": "データベース接続",
+    "success": true,
+    "details": "MongoDB接続成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:16.417Z"
+  },
+  {
+    "test": "テストユーザークリーンアップ",
+    "success": true,
+    "details": "テストユーザーを削除",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:16.517Z"
+  },
+  {
+    "test": "ユーザー登録",
+    "success": true,
+    "details": "ユーザー test-integration@example.com の登録成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:16.689Z"
+  },
+  {
+    "test": "ログイン",
+    "success": true,
+    "details": "ユーザー test-integration@example.com のログイン成功",
+    "error": null,
+    "timestamp": "2025-06-29T08:07:16.893Z"
+  },
+  {
+    "test": "認証チェック",
+    "success": false,
+    "details": "認証チェック失敗",
+    "error": "Request failed with status code 401",
+    "timestamp": "2025-06-29T08:07:16.909Z"
+  }
+]

@@ -41,7 +41,7 @@ declare global {
 	var _appgenius_simple_auth_service: any;
 	// 認証トークンをグローバルに保持
 	// eslint-disable-next-line no-var
-	var _appgenius_auth_token: string;
+	var _appgenius_auth_token: string | undefined;
 	// 認証状態をグローバルに保持
 	// eslint-disable-next-line no-var
 	var _appgenius_auth_state: any;

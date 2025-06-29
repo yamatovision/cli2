@@ -11,7 +11,6 @@ from litellm import (
 
 from openhands.agenthub.codeact_agent.tools import (
     BrowserTool,
-    DelegateTool,
     FinishTool,
     IPythonTool,
     LLMBasedFileEditTool,
@@ -111,59 +110,18 @@ def response_to_actions(
                     )
                 action = IPythonRunCellAction(code=arguments['code'])
             elif tool_call.function.name == 'delegate_to_browsing_agent':
-                # Ensure inputs is a dict
-                inputs = arguments if isinstance(arguments, dict) else {'task': str(arguments)}
                 action = AgentDelegateAction(
                     agent='BrowsingAgent',
-                    inputs=inputs,
-                )
-
-            # ================================================
-            # AgentDelegateAction
-            # ================================================
-            elif tool_call.function.name == DelegateTool['function']['name']:
-                if 'agent' not in arguments:
-                    raise FunctionCallValidationError(
-                        f'Missing required argument "agent" in tool call {tool_call.function.name}'
-                    )
-                if 'inputs' not in arguments:
-                    raise FunctionCallValidationError(
-                        f'Missing required argument "inputs" in tool call {tool_call.function.name}'
-                    )
-                
-                # Handle inputs - if it's a string, try to parse it as JSON
-                inputs = arguments['inputs']
-                if isinstance(inputs, str):
-                    try:
-                        inputs = json.loads(inputs)
-                    except json.JSONDecodeError:
-                        # If JSON parsing fails, create a dict with the string as 'task'
-                        inputs = {'task': inputs}
-                
-                action = AgentDelegateAction(
-                    agent=arguments['agent'],
-                    inputs=inputs,
+                    inputs=arguments,
                 )
 
             # ================================================
             # AgentFinishAction
             # ================================================
             elif tool_call.function.name == FinishTool['function']['name']:
-                from openhands.events.action.agent import AgentFinishTaskCompleted
-                
-                # Convert boolean to enum
-                task_completed_bool = arguments.get('task_completed', None)
-                task_completed_enum = None
-                if task_completed_bool is not None:
-                    task_completed_enum = (
-                        AgentFinishTaskCompleted.TRUE 
-                        if task_completed_bool 
-                        else AgentFinishTaskCompleted.FALSE
-                    )
-                
                 action = AgentFinishAction(
                     final_thought=arguments.get('message', ''),
-                    task_completed=task_completed_enum,
+                    task_completed=arguments.get('task_completed', None),
                 )
 
             # ================================================
@@ -262,6 +220,90 @@ def response_to_actions(
                 action = MCPAction(
                     name=tool_call.function.name,
                     arguments=arguments,
+                )
+
+            # ================================================
+            # BlueLamp Delegate Actions (16 agents)
+            # ================================================
+            elif tool_call.function.name == 'delegate_to_requirements_engineer':
+                action = AgentDelegateAction(
+                    agent='RequirementsEngineer',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_ui_ux_designer':
+                action = AgentDelegateAction(
+                    agent='UIUXDesigner',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_data_modeling_engineer':
+                action = AgentDelegateAction(
+                    agent='DataModelingEngineer',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_system_architect':
+                action = AgentDelegateAction(
+                    agent='SystemArchitect',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_implementation_consultant':
+                action = AgentDelegateAction(
+                    agent='ImplementationConsultant',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_environment_setup':
+                action = AgentDelegateAction(
+                    agent='EnvironmentSetup',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_prototype_implementation':
+                action = AgentDelegateAction(
+                    agent='PrototypeImplementation',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_backend_implementation':
+                action = AgentDelegateAction(
+                    agent='BackendImplementation',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_test_quality_verification':
+                action = AgentDelegateAction(
+                    agent='TestQualityVerification',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_api_integration':
+                action = AgentDelegateAction(
+                    agent='APIIntegration',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_debug_detective':
+                action = AgentDelegateAction(
+                    agent='DebugDetective',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_deploy_specialist':
+                action = AgentDelegateAction(
+                    agent='DeploySpecialist',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_github_manager':
+                action = AgentDelegateAction(
+                    agent='GitHubManager',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_typescript_manager':
+                action = AgentDelegateAction(
+                    agent='TypeScriptManager',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_feature_extension':
+                action = AgentDelegateAction(
+                    agent='FeatureExtension',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_refactoring_expert':
+                action = AgentDelegateAction(
+                    agent='RefactoringExpert',
+                    inputs=arguments,
                 )
             else:
                 raise FunctionCallNotExistsError(

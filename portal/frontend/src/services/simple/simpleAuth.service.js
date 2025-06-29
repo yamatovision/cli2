@@ -7,8 +7,8 @@ import authHeader from '../../utils/auth-header';
 // apiConfig.jsは削除予定のため、使用しない
 
 // API基本URL 
-// バックエンドは/api/simpleでルーティングされているため、完全なパスを指定
-const SIMPLE_API_URL = '/api/simple';
+// axiosのbaseURLが既に/apiを含むため、/simpleのみを指定
+const SIMPLE_API_URL = '/simple';
 
 // リフレッシュ中かどうかのフラグ（重複防止）
 let isRefreshing = false;
@@ -35,7 +35,59 @@ const onRefreshed = (token) => {
  */
 export const getCurrentUserFromStorage = () => {
   try {
-    return JSON.parse(localStorage.getItem('simpleUser'));
+    // メインの保存場所から取得を試行
+    let userData = localStorage.getItem('simpleUser');
+    if (userData) {
+      return JSON.parse(userData);
+    }
+    
+    // メインが失敗した場合、バックアップから復旧を試行
+    console.log('simpleAuth.getCurrentUserFromStorage: メインデータなし、バックアップから復旧を試行');
+    
+    // セッションストレージから復旧
+    const sessionBackup = sessionStorage.getItem('backup-user-session');
+    if (sessionBackup) {
+      const backupData = JSON.parse(sessionBackup);
+      console.log('simpleAuth.getCurrentUserFromStorage: セッションストレージから復旧成功');
+      
+      // メインの場所にも復旧
+      try {
+        localStorage.setItem('simpleUser', sessionBackup);
+        console.log('simpleAuth.getCurrentUserFromStorage: メインストレージに復旧データを保存');
+      } catch (restoreError) {
+        console.warn('simpleAuth.getCurrentUserFromStorage: メインストレージ復旧失敗:', restoreError);
+      }
+      
+      return backupData;
+    }
+    
+    // 個別キーから復旧を試行
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    const userStr = localStorage.getItem('user');
+    
+    if (accessToken && refreshToken && userStr) {
+      console.log('simpleAuth.getCurrentUserFromStorage: 個別キーから復旧を試行');
+      const user = JSON.parse(userStr);
+      const reconstructedData = {
+        accessToken,
+        refreshToken,
+        user
+      };
+      
+      // メインの場所にも復旧
+      try {
+        localStorage.setItem('simpleUser', JSON.stringify(reconstructedData));
+        console.log('simpleAuth.getCurrentUserFromStorage: 個別キーから復旧してメインストレージに保存');
+      } catch (restoreError) {
+        console.warn('simpleAuth.getCurrentUserFromStorage: 復旧データの保存失敗:', restoreError);
+      }
+      
+      return reconstructedData;
+    }
+    
+    console.log('simpleAuth.getCurrentUserFromStorage: 復旧可能なデータが見つかりません');
+    return null;
   } catch (error) {
     console.error('simpleAuth.getCurrentUserFromStorage: エラー発生', error);
     return null;
@@ -163,10 +215,11 @@ export const login = async (email, password) => {
     lastAuthCheckTime = 0;
     cachedAuthResponse = null;
     
-    // ログイン実行
+    // ログイン実行（クライアントタイプを追加）
     const response = await axios.post(`${SIMPLE_API_URL}/auth/login`, {
       email,
-      password
+      password,
+      clientType: 'portal'  // Webポータルからのログイン
     }, config);
     
     console.log('simpleAuth.login: レスポンス受信', response.status);
@@ -175,8 +228,44 @@ export const login = async (email, password) => {
     if (response.data.success && response.data.data.accessToken) {
       // 信頼性を高めるために同期的に処理
       try {
-        // ローカルストレージに保存
-        localStorage.setItem('simpleUser', JSON.stringify(response.data.data));
+        console.log('simpleAuth.login: 保存前のデータ確認', response.data.data);
+        
+        // ローカルストレージに保存（複数回試行で確実性を向上）
+        let saveAttempts = 0;
+        const maxSaveAttempts = 3;
+        let saveSuccessful = false;
+        
+        while (saveAttempts < maxSaveAttempts && !saveSuccessful) {
+          try {
+            localStorage.setItem('simpleUser', JSON.stringify(response.data.data));
+            
+            // 即座に検証
+            const verifyData = localStorage.getItem('simpleUser');
+            if (verifyData) {
+              const parsedData = JSON.parse(verifyData);
+              if (parsedData && parsedData.accessToken === response.data.data.accessToken) {
+                saveSuccessful = true;
+                console.log(`simpleAuth.login: simpleUser保存成功（試行${saveAttempts + 1}回目）`);
+              }
+            }
+            
+            if (!saveSuccessful) {
+              saveAttempts++;
+              console.warn(`simpleAuth.login: 保存検証失敗、再試行中（${saveAttempts}/${maxSaveAttempts}）`);
+              await new Promise(resolve => setTimeout(resolve, 50)); // 50ms待機
+            }
+          } catch (saveError) {
+            saveAttempts++;
+            console.error(`simpleAuth.login: 保存試行${saveAttempts}でエラー:`, saveError);
+            if (saveAttempts < maxSaveAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 100)); // 100ms待機
+            }
+          }
+        }
+        
+        if (!saveSuccessful) {
+          console.error('simpleAuth.login: ローカルストレージ保存に失敗しました');
+        }
         
         // 冗長性のため主要な認証情報のみ別途保存（リカバリー用）
         if (response.data.data.accessToken) {
@@ -189,7 +278,16 @@ export const login = async (email, password) => {
           localStorage.setItem('user', JSON.stringify(response.data.data.user));
         }
         
+        // バックアップもセッションストレージに保存
+        try {
+          sessionStorage.setItem('backup-user-session', JSON.stringify(response.data.data));
+          console.log('simpleAuth.login: セッションストレージバックアップ完了');
+        } catch (sessionError) {
+          console.warn('simpleAuth.login: セッションストレージバックアップ失敗:', sessionError);
+        }
+        
         console.log('simpleAuth.login: ストレージ保存完了（バックアップも含む）');
+        console.log('simpleAuth.login: 保存後のキー', Object.keys(localStorage).filter(key => key.includes('simple') || key.includes('access') || key.includes('refresh') || key === 'user'));
       } catch (storageError) {
         console.error('simpleAuth.login: ストレージ保存エラー', storageError);
       }
@@ -223,7 +321,8 @@ export const logout = async () => {
     // リフレッシュトークンがあればサーバーに送信
     if (user.refreshToken) {
       await axios.post(`${SIMPLE_API_URL}/auth/logout`, {
-        refreshToken: user.refreshToken
+        refreshToken: user.refreshToken,
+        clientType: 'portal'  // Webポータルからのログアウト
       });
       console.log('simpleAuth.logout: サーバーログアウト完了');
     }

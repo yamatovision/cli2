@@ -111,7 +111,7 @@ export class MockupGalleryPanel extends ProtectedPanel {
   /**
    * 特定のモックアップを選択した状態で開く
    */
-  public static openWithMockup(extensionUri: vscode.Uri, mockupId: string, projectPath?: string): MockupGalleryPanel {
+  public static openWithMockup(extensionUri: vscode.Uri, mockupId: string, projectPath?: string): MockupGalleryPanel | undefined {
     const panel = MockupGalleryPanel.createOrShow(extensionUri, projectPath);
     
     // パネルが返された場合のみロード処理を実行

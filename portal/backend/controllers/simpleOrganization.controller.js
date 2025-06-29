@@ -5,7 +5,7 @@
 const SimpleOrganization = require('../models/simpleOrganization.model');
 const SimpleUser = require('../models/simpleUser.model');
 const axios = require('axios');
-const anthropicAdminService = require('../services/anthropicAdminService');
+// const anthropicAdminService = require('../services/anthropicAdminService'); // Removed: anthropicAdminService.js has been deleted
 
 // APIキー値を処理する関数
 function formatApiKeyHint(keyValue) {
@@ -372,21 +372,14 @@ exports.addApiKey = async (req, res) => {
       if (adminApiKey) {
         try {
           // Anthropic Admin APIを使用してAPIキー情報を取得
-          console.log(`[DEBUG-API-KEY-FLOW] Anthropic API呼び出し開始: keyLength=${keyValue.length}`);
-          console.log('Anthropic Admin APIを使用してAPIキー情報を取得します');
+          // anthropicAdminService has been removed - using placeholder values
+          console.log(`[DEBUG-API-KEY-FLOW] anthropicAdminService removed - using placeholder`);
           
-          // API呼び出し開始時間を記録
-          const apiStartTime = Date.now();
-          const keyInfo = await anthropicAdminService.verifyApiKey(adminApiKey, keyValue);
-          const apiEndTime = Date.now();
-          console.log(`[DEBUG-API-KEY-FLOW] API呼び出し完了: 所要時間=${apiEndTime - apiStartTime}ms`);
+          // APIキーIDと名前を設定（プレースホルダー）
+          apiKeyId = `key_${Date.now()}`;
+          keyName = 'Claude API Key';
           
-          // APIキーIDと名前を設定
-          apiKeyId = keyInfo.id;
-          keyName = keyInfo.name;
-          
-          console.log(`[DEBUG-API-KEY-FLOW] API結果: ID=${apiKeyId}, 名前=${keyName}`);
-          console.log(`Anthropic APIから取得: ID=${apiKeyId}, 名前=${keyName}`);
+          console.log(`[DEBUG-API-KEY-FLOW] Placeholder values: ID=${apiKeyId}, 名前=${keyName}`);
         } catch (apiError) {
           console.log(`[DEBUG-API-KEY-FLOW] API呼び出しエラー: ${apiError.message}`);
           console.log(`[DEBUG-API-KEY-FLOW] エラースタック: ${apiError.stack}`);
