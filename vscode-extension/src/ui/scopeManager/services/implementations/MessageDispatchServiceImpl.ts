@@ -7,7 +7,6 @@ import { Message } from '../interfaces/common';
 import { IProjectService } from '../interfaces/IProjectService';
 import { IFileSystemService } from '../interfaces/IFileSystemService';
 import { IUIStateService } from '../interfaces/IUIStateService';
-import { ISharingService } from '../interfaces/ISharingService';
 import { IPanelService } from '../interfaces/IPanelService';
 import { AppGeniusEventBus, AppGeniusEventType } from '../../../../services/AppGeniusEventBus';
 
@@ -105,14 +104,11 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
    * @param services 依存サービス
    */
   public setDependencies(services: {
-    sharingService?: any; // 互換性のために型は残すが使用しない
     projectService?: any;
     fileSystemService?: any;
     uiStateService?: any;
     panelService?: any;
   }): void {
-    // SharingServiceはScopeManagerPanelで直接使用されるため設定しない
-
     if (services.projectService) {
       this._projectService = services.projectService;
     }
@@ -132,7 +128,6 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
     // 依存サービスが設定された後でハンドラを登録
     this.registerProjectHandlers();
     this.registerFileHandlers();
-    // 共有ハンドラはScopeManagerPanelで直接処理されるため削除
 
     Logger.debug('MessageDispatchServiceImpl: 依存サービスを設定しました');
   }
@@ -1006,14 +1001,6 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
     Logger.info('MessageDispatchServiceImpl: ファイル操作関連のメッセージハンドラーを登録しました');
   }
   
-  /**
-   * 共有関連のメッセージハンドラーを登録
-   * @deprecated 共有機能はScopeManagerPanelで直接処理されるようになりました
-   */
-  public registerSharingHandlers(): void {
-    // 共有関連機能はすべてScopeManagerPanelで直接処理されるように変更されました
-    Logger.info('MessageDispatchServiceImpl: 共有関連機能はScopeManagerPanelに移行されました');
-  }
   
   // Note: 共有関連のメソッドはすべて削除
   // クライアントが直接SharingServiceを使用するよう変更

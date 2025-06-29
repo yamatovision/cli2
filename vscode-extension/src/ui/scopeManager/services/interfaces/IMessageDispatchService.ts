@@ -6,7 +6,7 @@ import { IService, Message } from './common';
  * WebViewとバックエンドサービス間のメッセージルーティングを担当
  * 
  * 注意: このインターフェースは簡素化され、ほとんどの機能は各専門サービスに移行されました。
- * クライアントは直接必要なサービス（IFileSystemService, IProjectService, ISharingServiceなど）
+ * クライアントは直接必要なサービス（IFileSystemService, IProjectServiceなど）
  * を使用することが推奨されます。
  */
 export interface IMessageDispatchService extends IService {
@@ -21,7 +21,6 @@ export interface IMessageDispatchService extends IService {
   
   // 依存サービスの設定
   setDependencies(services: {
-    sharingService?: any;
     projectService?: any;
     fileSystemService?: any;
     uiStateService?: any;
@@ -35,7 +34,6 @@ export interface IMessageDispatchService extends IService {
   // ハンドラー登録関数
   registerProjectHandlers(): void;
   registerFileHandlers(): void;
-  registerSharingHandlers(): void;
   
   // イベント
   onMessageProcessed: vscode.Event<{command: string, success: boolean}>;

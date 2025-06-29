@@ -7,7 +7,6 @@ import {
   IProjectService,
   ITabStateService,
   IUIStateService,
-  ISharingService,
 } from './interfaces';
 
 // ダミーパネルサービスインターフェイス（暫定）
@@ -38,7 +37,6 @@ import { ProjectService } from './ProjectService';
 // import { PanelService } from './PanelService'; // 現在存在しない - PanelService_リファクタリング計画.mdに基づいて実装予定
 import { TabStateService } from './TabStateService';
 import { UIStateService } from './UIStateService';
-import { SharingService } from './SharingService';
 import { AuthenticationHandler, IAuthenticationHandler } from './AuthenticationHandler';
 
 // 新しい実装クラス
@@ -67,7 +65,6 @@ export class ServiceFactory {
   private static _messageService: any; // IMessageDispatchService
   private static _tabStateService: ITabStateService;
   private static _uiStateService: IUIStateService;
-  private static _sharingService: ISharingService;
   private static _authHandler: IAuthenticationHandler;
   
   /**
@@ -197,15 +194,6 @@ export class ServiceFactory {
     return ServiceFactory._uiStateService;
   }
   
-  /**
-   * SharingServiceの取得
-   */
-  public static getSharingService(): ISharingService {
-    if (!ServiceFactory._sharingService) {
-      ServiceFactory._sharingService = SharingService.getInstance(ServiceFactory._context);
-    }
-    return ServiceFactory._sharingService;
-  }
   
   /**
    * AuthenticationHandlerの取得
@@ -229,11 +217,9 @@ export class ServiceFactory {
       const panelService = ServiceFactory.getPanelService();
       const uiStateService = ServiceFactory.getUIStateService();
       const tabStateService = ServiceFactory.getTabStateService();
-      const sharingService = ServiceFactory.getSharingService();
       
       // MessageDispatchServiceに依存サービスを設定
       messageService.setDependencies({
-        sharingService: sharingService,
         projectService: projectService,
         fileSystemService: fileSystemService,
         uiStateService: uiStateService,
@@ -352,7 +338,6 @@ export class ServiceFactory {
       // 初期化時にすでに登録されているはずだが、念のため明示的に呼び出す
       messageService.registerProjectHandlers();
       messageService.registerFileHandlers();
-      messageService.registerSharingHandlers();
       
       // 特殊コマンドを登録（警告を表示しないコマンド）
       if (typeof messageService.registerSpecialCommands === 'function') {
@@ -418,7 +403,6 @@ export class ServiceFactory {
     ServiceFactory._messageService = undefined as any;
     ServiceFactory._tabStateService = undefined as any;
     ServiceFactory._uiStateService = undefined as any;
-    ServiceFactory._sharingService = undefined as any;
     ServiceFactory._authHandler = undefined as any;
     
     Logger.info('ServiceFactory: すべてのサービス参照をクリアしました');

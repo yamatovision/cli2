@@ -11,5 +11,4 @@ export * from './ScopeManagerMessageHandler';
 
 // 個別ハンドラークラスのエクスポート
 export * from './ProjectMessageHandler';
-export * from './SharingMessageHandler';
 export * from './MockupMessageHandler';

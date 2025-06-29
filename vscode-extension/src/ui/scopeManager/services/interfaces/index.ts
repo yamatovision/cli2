@@ -13,4 +13,3 @@ export * from './IPanelService';
 export * from './IMessageDispatchService';
 export * from './ITabStateService';
 export * from './IUIStateService';
-export * from './ISharingService';
