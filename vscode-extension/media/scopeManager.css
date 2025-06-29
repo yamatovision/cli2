@@ -202,9 +202,9 @@ h1, h2, h3, h4 {
   flex-direction: column;
   gap: 8px;
   margin-top: 15px;
-  max-height: calc(100vh - 220px); /* 下部の「開発プロンプト」領域も考慮して高さを調整 */
+  max-height: calc(100vh - 120px); /* 余白を最小限に調整 */
   overflow-y: auto;
-  padding-bottom: 15px; /* 下部にパディングを追加して見切れないようにする */
+  padding-bottom: 15px;
 }
 
 .project-item {
@@ -276,7 +276,7 @@ h1, h2, h3, h4 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 20px);
   max-height: calc(100vh - 40px);
   width: 100%;
   box-sizing: border-box;
@@ -1486,35 +1486,6 @@ pre.code-block.directory-structure br {
   transform: translateY(-2px);
 }
 
-/* 開発プロンプト用モーダル */
-.claude-code-share-area {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: var(--app-card-background);
-  border-top: 1px solid var(--app-border-color);
-  padding: 15px;
-  z-index: 1000;
-  box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  max-height: 450px;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.claude-code-share-area.collapsed {
-  max-height: 40px;
-  overflow: hidden;
-}
-
-.claude-code-share-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
 
 /* 旧スタイル（後方互換性のため） */
 #share-result-dialog, .share-result, .share-actions {
