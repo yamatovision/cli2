@@ -91,7 +91,8 @@ try {
     const launchBluelampBtn = document.getElementById('launch-bluelamp-btn');
     if (launchBluelampBtn) {
       launchBluelampBtn.addEventListener('click', () => {
-        vscode.postMessage({ command: 'launchBluelamp' });
+        // ターミナルモード選択ダイアログを表示
+        dialogManager.showBluelampLaunchDialog();
       });
     }
   }
