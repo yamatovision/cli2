@@ -13,10 +13,8 @@ import { ProtectedPanel } from '../auth/ProtectedPanel';
 import { Feature } from '../../core/auth/roles';
 import { ClaudeCodeApiClient } from '../../api/claudeCodeApiClient';
 // import { PromptServiceClient } from '../../services/PromptServiceClient'; // 削除: ブルーランプCLI移行により不要
-import { SharedFile, FileSaveOptions } from '../../types/SharingTypes';
 import { IFileSystemService, FileSystemService } from './services/FileSystemService';
 import { IProjectService, ProjectService } from './services/ProjectService';
-import { ISharingService, SharingService } from './services/SharingService';
 import { IAuthenticationHandler, AuthenticationHandler } from './services/AuthenticationHandler';
 import { IUIStateService, UIStateService } from './services/UIStateService';
 import { ServiceFactory } from './services/ServiceFactory';
@@ -50,7 +48,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
   private _fileWatcher: vscode.Disposable | null = null;
   private _tempShareDir: string = '';
   // private _promptServiceClient: PromptServiceClient; // 削除: ブルーランプCLI移行により不要
-  private _sharingService: ISharingService; // 共有サービス
   private _activeProject: IProjectInfo | null = null; // 現在選択中のプロジェクト
   private _fileSystemService: IFileSystemService; // FileSystemServiceのインスタンス
   private _projectService: IProjectService; // ProjectServiceのインスタンス
@@ -188,8 +185,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
     // ProjectServiceのイベントリスナーを設定
     this._setupProjectServiceEventListeners();
     
-    // 共有サービスを初期化
-    this._sharingService = SharingService.getInstance(context);
     
     // 認証ハンドラーを初期化
     this._authHandler = AuthenticationHandler.getInstance();
@@ -334,19 +329,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
             case 'saveSharedTextContent':
               await this._handleSaveSharedTextContent(message.content);
               break;
-            case 'shareText':
-              await this._handleShareText(message.text, message.suggestedFilename);
-              break;
-            case 'shareImage':
-              // message.imageDataまたはmessage.dataのどちらかを使用（互換性のため）
-              const imageData = message.imageData || message.data;
-              if (!imageData) {
-                this._showError('画像データが見つかりません');
-                return;
-              }
-              
-              await this._handleShareImage(imageData, message.fileName);
-              break;
             
             case 'openMockupGallery':
               await this._handleOpenMockupGallery();
@@ -367,37 +349,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
               await this._handleOpenMarkdownViewer();
               break;
             
-            // 共有関連処理
-            case 'getHistory':
-              await this._handleGetHistory();
-              break;
-            case 'deleteFromHistory':
-              if (message.fileId) {
-                await this._handleDeleteFromHistory(message.fileId);
-              } else {
-                Logger.warn('ScopeManagerPanel: deleteFromHistoryメッセージにfileId必須パラメータがありません');
-                this._showError('履歴項目IDが指定されていません');
-              }
-              break;
-            case 'copyCommand':
-              if (message.fileId) {
-                await this._handleCopyCommand(message.fileId);
-              } else {
-                Logger.warn('ScopeManagerPanel: copyCommandメッセージにfileId必須パラメータがありません');
-                this._showError('コピー対象のファイルIDが指定されていません');
-              }
-              break;
-            case 'copyToClipboard':
-              if (message.text) {
-                await this._handleCopyToClipboard(message.text);
-              } else {
-                Logger.warn('ScopeManagerPanel: copyToClipboardメッセージにtext必須パラメータがありません');
-                this._showError('コピーするテキストが指定されていません');
-              }
-              break;
-            case 'reuseHistoryItem':
-              await this._handleReuseHistoryItem(message.fileId);
-              break;
               
             // プロジェクト選択処理は直接ハンドリング（MessageDispatchServiceを使わない）
             case 'selectProject':
@@ -555,7 +506,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
       
       // 関連サービスにプロジェクトパスを設定
       // this._promptServiceClient.setProjectPath(projectPath); // 削除: ブルーランプCLI移行により不要
-      this._sharingService.setProjectBasePath(projectPath);
       
       // ファイルウォッチャーと進捗ファイルを設定
       this._setupFileWatcher();
@@ -876,145 +826,15 @@ export class ScopeManagerPanel extends ProtectedPanel {
   /**
    * @deprecated ServiceFactory経由でサービスにアクセスしてください
    */
-  private async _handleGetHistory(): Promise<void> {
-    try {
-      // 直接SharingServiceを使用する
-      const sharingService = ServiceFactory.getSharingService();
-      const history = sharingService.getHistory();
-      
-      // 履歴情報をWebViewに送信
-      this._panel.webview.postMessage({
-        command: 'updateSharingHistory',
-        history: history
-      });
-      
-      Logger.info('ScopeManagerPanel: 共有履歴を取得して送信しました');
-    } catch (error) {
-      Logger.error('共有履歴の取得に失敗しました', error as Error);
-      this._showError(`履歴の取得に失敗しました: ${(error as Error).message}`);
-    }
   }
 
   /**
    * テキストを共有サービスで共有 - SharingServiceに委譲
    */
-  private async _handleShareText(text: any, suggestedFilename?: string): Promise<void> {
-    try {
-      // nullチェックとstring型の保証
-      if (!text) {
-        throw new Error('共有するテキストが指定されていません');
-      }
-      
-      // 文字列でない場合は文字列に変換
-      const textString = typeof text === 'string' ? text : String(text);
-      
-      // 共有オプションを設定
-      const options: FileSaveOptions = {
-        type: 'text',
-        expirationHours: 24  // デフォルト有効期限
-      };
-      
-      // 提案されたファイル名があれば使用
-      if (suggestedFilename) {
-        options.title = suggestedFilename;
-        options.metadata = { suggestedFilename };
-      }
-      
-      // エラーのデバッグログ
-      Logger.info(`_handleShareText: テキスト共有を開始します [type=${typeof textString}, length=${textString.length}]`);
-      
-      // SharingServiceを使ってテキストを共有
-      const file = await this._sharingService.shareText(textString, options);
-      
-      // コマンドを生成
-      const command = this._sharingService.generateCommand(file);
-      
-      // 履歴を取得
-      await this._handleGetHistory();
-      
-      // 結果をUIに通知
-      setTimeout(() => {
-        this._panel.webview.postMessage({
-          command: 'showShareResult',
-          data: {
-            filePath: file.path,
-            command: command,
-            type: 'text',
-            title: file.title || suggestedFilename,
-            originalName: file.originalName
-          }
-        });
-        
-        // 履歴更新
-        setTimeout(() => this._handleGetHistory(), 500);
-      }, 100);
-      
-    } catch (error) {
-      Logger.error('テキスト共有エラー', error as Error);
-      this._showError(`テキストの共有に失敗しました: ${(error as Error).message}`);
-    }
-  }
 
   /**
    * 画像を共有サービスで共有 - SharingServiceに委譲
    */
-  private async _handleShareImage(imageData: any, fileName: string): Promise<void> {
-    try {
-      // nullチェックとstring型の保証
-      if (!imageData) {
-        throw new Error('共有する画像データが指定されていません');
-      }
-      
-      // 文字列でない場合は文字列に変換
-      const imageDataString = typeof imageData === 'string' ? imageData : String(imageData);
-      
-      // エラーのデバッグログ
-      Logger.info(`_handleShareImage: 画像共有を開始します [type=${typeof imageDataString}, length=${imageDataString.length}]`);
-      
-      // SharingServiceを使って画像を共有
-      const file = await this._sharingService.shareImage(imageDataString, fileName);
-      
-      // コマンドを生成
-      const command = this._sharingService.generateCommand(file);
-      
-      // 履歴を更新
-      await this._handleGetHistory();
-      
-      // UIをリセット
-      this._panel.webview.postMessage({
-        command: 'resetDropZone',
-        force: true,
-        timestamp: new Date().getTime()
-      });
-      
-      // 念のため再度リセット
-      setTimeout(() => {
-        this._panel.webview.postMessage({
-          command: 'resetDropZone',
-          force: true,
-          timestamp: new Date().getTime() + 100
-        });
-      }, 100);
-      
-      // 結果をUIに通知
-      setTimeout(() => {
-        this._panel.webview.postMessage({
-          command: 'showShareResult',
-          data: {
-            filePath: file.path,
-            command: command,
-            type: 'image'
-          }
-        });
-        
-        // 履歴更新
-        setTimeout(() => this._handleGetHistory(), 500);
-      }, 100);
-      
-    } catch (error) {
-      this._showError(`画像の共有に失敗しました: ${(error as Error).message}`);
-    }
-  }
 
   /**
    * 履歴からアイテムを削除
@@ -1022,25 +842,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
   /**
    * @deprecated ServiceFactory経由でサービスにアクセスしてください
    */
-  private async _handleDeleteFromHistory(fileId: string): Promise<void> {
-    try {
-      // 直接SharingServiceを使用する
-      const sharingService = ServiceFactory.getSharingService();
-      const result = sharingService.deleteFromHistory(fileId);
-      
-      if (result) {
-        // 履歴を更新して送信
-        const history = sharingService.getHistory();
-        this._panel.webview.postMessage({
-          command: 'updateSharingHistory',
-          history: history
-        });
-        
-        Logger.info(`ScopeManagerPanel: ファイルID=${fileId}を履歴から削除しました`);
-      } else {
-        Logger.warn(`ScopeManagerPanel: ファイルID=${fileId}の削除に失敗しました`);
-        this._showError('履歴から項目を削除できませんでした');
-      }
     } catch (error) {
       Logger.error(`履歴からの削除に失敗しました: ファイルID=${fileId}`, error as Error);
       this._showError(`履歴からの削除に失敗しました: ${(error as Error).message}`);
@@ -1053,27 +854,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
   /**
    * @deprecated ServiceFactory経由でサービスにアクセスしてください
    */
-  private async _handleCopyCommand(fileId: string): Promise<void> {
-    try {
-      // 直接SharingServiceを使用する
-      const sharingService = ServiceFactory.getSharingService();
-      const command = await sharingService.getCommandByFileId(fileId);
-      
-      if (command) {
-        // クリップボードにコピー
-        await vscode.env.clipboard.writeText(command);
-        
-        // コピー成功通知
-        this._panel.webview.postMessage({
-          command: 'commandCopied',
-          fileId: fileId
-        });
-        
-        Logger.info(`ScopeManagerPanel: ファイルID=${fileId}のコマンドをコピーしました`);
-      } else {
-        Logger.warn(`ScopeManagerPanel: ファイルID=${fileId}のコマンド生成に失敗しました`);
-        this._showError('コマンドが見つかりませんでした');
-      }
     } catch (error) {
       Logger.error(`コマンドのコピーに失敗しました: fileId=${fileId}`, error as Error);
       this._showError(`コマンドのコピーに失敗しました: ${(error as Error).message}`);
@@ -1095,27 +875,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
   /**
    * 履歴アイテムを再利用
    */
-  private async _handleReuseHistoryItem(fileId: string): Promise<void> {
-    try {
-      // ファイルを履歴から検索
-      const history = this._sharingService.getHistory();
-      const file = history.find(item => item.id === fileId);
-      
-      if (file) {
-        // コマンドを生成
-        const command = this._sharingService.generateCommand(file);
-        
-        // アクセスカウントを増やす
-        this._sharingService.recordAccess(fileId);
-        
-        // 結果を表示
-        this._panel.webview.postMessage({
-          command: 'showShareResult',
-          data: {
-            filePath: file.path,
-            command: command,
-            type: file.type
-          }
         });
         
         Logger.info(`履歴アイテムを再利用しました: ${fileId}, ファイル: ${file.fileName}`);
@@ -1632,8 +1391,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
       this._fileSystemService.dispose();
     }
     
-    // 共有サービスのリソースを解放
-    this._sharingService.dispose();
     
     // 認証ハンドラーは使い回すので解放しない（シングルトンパターン）
 

@@ -49,9 +49,6 @@ export class ScopeManagerTemplate {
     const sharingPanelScriptUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, 'media', 'components', 'sharingPanel', 'sharingPanel.js')
     );
-    const environmentVariablesScriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'media', 'components', 'environmentVariables', 'environmentVariables.js')
-    );
 
     // Material Iconsの読み込み
     const materialIconsUrl = 'https://fonts.googleapis.com/icon?family=Material+Icons';
@@ -201,7 +198,6 @@ export class ScopeManagerTemplate {
                 <div class="tabs-container">
                   <div class="tab ${activeTabId === 'scope-progress' ? 'active' : ''}" data-tab="scope-progress">進捗状況</div>
                   <div class="tab ${activeTabId === 'files' ? 'active' : ''}" data-tab="files">ファイル</div>
-                  <div class="tab ${activeTabId === 'environment-variables' ? 'active' : ''}" data-tab="environment-variables">環境変数</div>
                   <div class="tab ${activeTabId === 'claude-code' ? 'active' : ''}" data-tab="claude-code">ClaudeCode連携</div>
                   <div class="tab ${activeTabId === 'tools' ? 'active' : ''}" data-tab="tools">モックアップギャラリー</div>
                 </div>
@@ -212,9 +208,6 @@ export class ScopeManagerTemplate {
 
               <!-- ファイルブラウザタブコンテンツ -->
               <!-- ファイルブラウザタブコンテンツは削除されました -->
-
-              <!-- 環境変数タブコンテンツ -->
-              ${this._generateEnvironmentVariablesTabContent(activeTabId)}
 
               <!-- ClaudeCode連携タブコンテンツ -->
               ${this._generateClaudeCodeTabContent(activeTabId)}
@@ -240,8 +233,6 @@ export class ScopeManagerTemplate {
       <!-- 共有パネルコンポーネント専用スクリプト -->
       <script type="module" nonce="${nonce}" src="${sharingPanelScriptUri}"></script>
       
-      <!-- 環境変数アシスタントコンポーネント専用スクリプト -->
-      <script type="module" nonce="${nonce}" src="${environmentVariablesScriptUri}"></script>
       
       <!-- ファイルブラウザコンポーネント専用スクリプト -->
       <!-- ファイルブラウザのスクリプトは削除済み -->
@@ -266,78 +257,6 @@ export class ScopeManagerTemplate {
   }
 
 
-  /**
-   * 環境変数タブのコンテンツを生成
-   */
-  private static _generateEnvironmentVariablesTabContent(activeTabId: string): string {
-    return `
-      <div id="environment-variables-tab" class="tab-content ${activeTabId === 'environment-variables' ? 'active' : ''}">
-        <div class="environment-variables-container">
-          <div class="env-header">
-            <h3>環境変数アシスタント</h3>
-            <p>プロジェクトの環境変数を簡単に設定・管理できます</p>
-          </div>
-          
-          <!-- プラットフォーム選択 -->
-          <div class="platform-selection">
-            <h4>デプロイ先プラットフォーム</h4>
-            <div class="platform-buttons">
-              <button class="platform-btn" data-platform="vercel">
-                <span class="platform-icon">▲</span>
-                Vercel
-              </button>
-              <button class="platform-btn" data-platform="netlify">
-                <span class="platform-icon">◆</span>
-                Netlify
-              </button>
-              <button class="platform-btn" data-platform="aws">
-                <span class="platform-icon">☁</span>
-                AWS
-              </button>
-              <button class="platform-btn" data-platform="gcp">
-                <span class="platform-icon">🔵</span>
-                GCP
-              </button>
-            </div>
-          </div>
-          
-          <!-- 環境変数入力エリア -->
-          <div class="env-variables-section">
-            <h4>環境変数</h4>
-            <div class="env-variables-list" id="env-variables-list">
-              <!-- 環境変数アイテムがここに動的に追加される -->
-            </div>
-            <button class="button button-secondary" id="add-env-variable">
-              <span class="material-icons">add</span>
-              環境変数を追加
-            </button>
-          </div>
-          
-          <!-- アクションボタン -->
-          <div class="env-actions">
-            <button class="button" id="generate-env-file">
-              <span class="material-icons">description</span>
-              .envファイル生成
-            </button>
-            <button class="button button-secondary" id="copy-env-variables">
-              <span class="material-icons">content_copy</span>
-              コピー
-            </button>
-            <button class="button button-secondary" id="import-env-file">
-              <span class="material-icons">upload_file</span>
-              .envファイル読み込み
-            </button>
-          </div>
-          
-          <!-- プレビューエリア -->
-          <div class="env-preview">
-            <h4>プレビュー</h4>
-            <pre id="env-preview-content"># 環境変数がここに表示されます</pre>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   /**
    * ClaudeCode連携タブのコンテンツを生成

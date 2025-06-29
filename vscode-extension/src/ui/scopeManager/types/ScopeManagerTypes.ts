@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { Feature } from '../../../core/auth/roles';
-import { SharedFile, FileSaveOptions } from '../../../types/SharingTypes';
 
 /**
  * プロジェクト情報インターフェース

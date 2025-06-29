@@ -2,7 +2,30 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
-import { SharedFile, FileSaveOptions } from '../types/SharingTypes';
+// SharingTypesが削除されたため、型定義を直接含める
+interface SharedFile {
+  id: string;
+  fileName: string;
+  originalName: string;
+  title: string;
+  type: 'text' | 'image';
+  size: number;
+  format: string;
+  createdAt: Date;
+  expiresAt: Date;
+  path: string;
+  accessCount: number;
+  isExpired: boolean;
+  metadata?: any;
+}
+
+interface FileSaveOptions {
+  type?: 'text' | 'image';
+  title?: string;
+  format?: string;
+  expirationHours?: number;
+  metadata?: any;
+}
 
 /**
  * 一時ファイル管理クラス

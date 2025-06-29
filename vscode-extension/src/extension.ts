@@ -30,7 +30,6 @@ import { Feature } from './core/auth/roles';
 import { AuthStorageManager } from './utils/AuthStorageManager';
 import { FileViewerPanel } from './ui/fileViewer/FileViewerPanel';
 import { NoProjectViewPanel } from './ui/noProjectView/NoProjectViewPanel';
-import { EnvironmentVariablesAssistantPanel } from './ui/environmentVariables/EnvironmentVariablesAssistantPanel';
 
 // グローバル変数としてExtensionContextを保持（安全対策）
 declare global {
@@ -428,20 +427,6 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 		Logger.info('SimpleChat fallback command registered successfully');
 		
-		// 環境変数アシスタントを開くコマンドの登録
-		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius.ai.openEnvironmentVariablesAssistant', () => {
-				try {
-					Logger.info('環境変数アシスタントを開くコマンドが実行されました');
-					EnvironmentVariablesAssistantPanel.createOrShow(context.extensionUri);
-					Logger.info('環境変数アシスタントを正常に開きました');
-				} catch (error) {
-					Logger.error('環境変数アシスタントを開く際にエラーが発生しました', error as Error);
-					vscode.window.showErrorMessage(`環境変数アシスタントを開けませんでした: ${(error as Error).message}`);
-				}
-			})
-		);
-		Logger.info('Environment Variables Assistant command registered successfully');
 		
 		// 新しいシンプル認証マネージャーの初期化（優先使用）
 		const simpleAuthManager = SimpleAuthManager.getInstance(context);

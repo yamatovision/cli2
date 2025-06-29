@@ -208,6 +208,12 @@
       padding: 8px;
     }
 
+    .button .material-icons {
+      margin-right: var(--app-spacing-xs);
+      font-size: 18px;
+      color: var(--app-primary);
+    }
+
     .project-list {
       display: flex;
       flex-direction: column;
@@ -281,94 +287,144 @@
       box-sizing: border-box;
     }
 
-    /* タブ */
-    .tabs {
+    /* カードヘッダー */
+    .card-header {
       display: flex;
-      border-bottom: 1px solid var(--app-border-color);
-      margin-bottom: var(--app-spacing-md);
       justify-content: space-between;
-      padding: 0 var(--app-spacing-md);
-      align-items: flex-end;
-      flex-wrap: wrap;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .tabs-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px;
-    }
-
-    .tab {
-      padding: var(--app-spacing-sm) var(--app-spacing-md);
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      color: var(--app-text-secondary);
-      transition: all var(--app-transition);
-      margin: 0 2px;
-      white-space: nowrap;
-      min-width: 60px;
-      text-align: center;
-    }
-
-    .tab.active {
-      border-bottom-color: var(--app-primary);
-      color: var(--app-text);
-      font-weight: var(--app-font-weight-medium);
-      background-color: var(--app-primary-light);
-      border-radius: 6px 6px 0 0;
-    }
-
-    .tab:hover:not(.active) {
-      border-bottom-color: var(--app-gray-300);
-      color: var(--app-text);
+      align-items: center;
+      margin-bottom: var(--app-spacing-md);
+      padding-bottom: var(--app-spacing-md);
+      border-bottom: 1px solid var(--app-border-color);
       background-color: var(--app-gray-100);
-      border-radius: 6px 6px 0 0;
+      margin: calc(-1 * var(--app-spacing-md)) calc(-1 * var(--app-spacing-md)) var(--app-spacing-md) calc(-1 * var(--app-spacing-md));
+      padding: var(--app-spacing-md);
+      border-radius: var(--app-border-radius) var(--app-border-radius) 0 0;
     }
 
-    /* プロジェクト表示エリア */
-    .project-display {
+    .project-info {
       display: flex;
       flex-direction: column;
-      padding: var(--app-spacing-sm) var(--app-spacing-md);
-      background-color: var(--app-primary-light);
-      border-radius: 6px 6px 0 0;
-      border-bottom: 3px solid var(--app-primary);
-      margin-bottom: -1px;
-      max-width: 250px;
-      flex-shrink: 1;
+      gap: var(--app-spacing-xs);
     }
 
-    .project-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--app-primary-dark);
+    .project-title {
       margin: 0;
-      padding: 0;
+      font-size: var(--app-font-size-lg);
+      font-weight: var(--app-font-weight-bold);
+      color: var(--app-heading-color);
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-sm);
+    }
+
+    .project-title .material-icons {
+      color: var(--app-primary);
+    }
+
+    .project-subtitle {
+      font-size: var(--app-font-size-sm);
+      color: var(--app-text-secondary);
+      margin: 0;
+    }
+
+    /* フローティングアクションバー */
+    .floating-action-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: row;
+      gap: var(--app-spacing-sm);
+      z-index: 1000;
+    }
+
+    .fab-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background-color: var(--app-card-background);
+      color: var(--app-text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all var(--app-transition);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid var(--app-border-color);
+    }
+
+    .fab-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      background-color: var(--app-hover-background);
+    }
+
+    .fab-btn.primary {
+      background-color: var(--app-primary);
+      color: white;
+      border-color: var(--app-primary);
+    }
+
+    .fab-btn.primary:hover {
+      background-color: var(--app-primary-dark);
+      border-color: var(--app-primary-dark);
+    }
+
+    .fab-btn .material-icons {
+      font-size: 24px;
+      color: var(--app-primary);
+    }
+
+    .fab-btn.primary .material-icons {
+      color: white;
+    }
+
+    .fab-label {
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background-color: var(--app-text);
+      color: var(--app-card-background);
+      padding: var(--app-spacing-xs) var(--app-spacing-sm);
+      border-radius: var(--app-border-radius-sm);
+      font-size: var(--app-font-size-xs);
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      opacity: 0;
+      transition: all var(--app-transition);
+      pointer-events: none;
+      font-weight: var(--app-font-weight-medium);
     }
 
-    .project-path-display {
-      display: none;
+    .fab-btn:hover .fab-label {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
-    /* タブコンテンツ */
-    .tab-content {
-      display: none;
+    /* ラベルの矢印 */
+    .fab-label::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid var(--app-text);
+    }
+
+    /* 進捗コンテンツ */
+    .progress-content {
       overflow-y: auto;
       overflow-x: hidden;
       height: calc(100vh - 130px);
       max-height: calc(100vh - 130px);
       width: 100%;
       box-sizing: border-box;
-    }
-
-    .tab-content.active {
-      display: block;
-      width: 100%;
     }
 
     .card-body {
@@ -455,268 +511,7 @@
       border-radius: 0;
     }
 
-    /* 環境変数タブ */
-    .environment-variables-container {
-      padding: var(--app-spacing-md);
-    }
 
-    .env-header h3 {
-      color: var(--app-heading-color);
-      margin-bottom: var(--app-spacing-sm);
-    }
-
-    .env-header p {
-      color: var(--app-text-secondary);
-      margin-bottom: var(--app-spacing-lg);
-    }
-
-    .platform-selection {
-      margin-bottom: var(--app-spacing-lg);
-    }
-
-    .platform-selection h4 {
-      margin-bottom: var(--app-spacing-md);
-      color: var(--app-heading-color);
-    }
-
-    .platform-buttons {
-      display: flex;
-      gap: var(--app-spacing-sm);
-      flex-wrap: wrap;
-    }
-
-    .platform-btn {
-      padding: var(--app-spacing-sm) var(--app-spacing-md);
-      border: 1px solid var(--app-border-color);
-      border-radius: var(--app-border-radius-sm);
-      background-color: var(--app-card-background);
-      cursor: pointer;
-      transition: all var(--app-transition);
-      display: flex;
-      align-items: center;
-      gap: var(--app-spacing-xs);
-    }
-
-    .platform-btn:hover {
-      background-color: var(--app-hover-background);
-      border-color: var(--app-primary);
-    }
-
-    .platform-btn.active {
-      background-color: var(--app-primary-light);
-      border-color: var(--app-primary);
-      color: var(--app-primary-dark);
-    }
-
-    .env-variables-section {
-      margin-bottom: var(--app-spacing-lg);
-    }
-
-    .env-variables-section h4 {
-      margin-bottom: var(--app-spacing-md);
-      color: var(--app-heading-color);
-    }
-
-    .env-variables-list {
-      margin-bottom: var(--app-spacing-md);
-      min-height: 100px;
-      border: 1px dashed var(--app-border-color);
-      border-radius: var(--app-border-radius);
-      padding: var(--app-spacing-md);
-      background-color: var(--app-gray-100);
-    }
-
-    .env-actions {
-      display: flex;
-      gap: var(--app-spacing-sm);
-      margin-bottom: var(--app-spacing-lg);
-      flex-wrap: wrap;
-    }
-
-    .env-preview {
-      background-color: var(--app-gray-100);
-      border-radius: var(--app-border-radius);
-      padding: var(--app-spacing-md);
-    }
-
-    .env-preview h4 {
-      margin-bottom: var(--app-spacing-sm);
-      color: var(--app-heading-color);
-    }
-
-    .env-preview pre {
-      background-color: var(--app-card-background);
-      padding: var(--app-spacing-md);
-      border-radius: var(--app-border-radius-sm);
-      border: 1px solid var(--app-border-color);
-      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: var(--app-font-size-sm);
-      color: var(--app-text-secondary);
-    }
-
-    /* ClaudeCode連携タブ */
-    .claude-share-container {
-      display: flex;
-      gap: var(--app-spacing-lg);
-      height: 100%;
-    }
-
-    .text-input-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .share-textarea {
-      flex: 1;
-      padding: var(--app-spacing-md);
-      border: 1px solid var(--app-border-color);
-      border-radius: var(--app-border-radius);
-      resize: none;
-      font-family: inherit;
-      font-size: var(--app-font-size-sm);
-      line-height: 1.5;
-      min-height: 200px;
-    }
-
-    .share-textarea:focus {
-      outline: none;
-      border-color: var(--app-primary);
-      box-shadow: 0 0 0 2px var(--app-primary-light);
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: var(--app-spacing-sm);
-      margin-top: var(--app-spacing-md);
-    }
-
-    .save-notification {
-      display: flex;
-      align-items: center;
-      gap: var(--app-spacing-xs);
-      margin-top: var(--app-spacing-sm);
-      padding: var(--app-spacing-sm);
-      background-color: var(--app-secondary);
-      color: white;
-      border-radius: var(--app-border-radius-sm);
-    }
-
-    .image-upload-area {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: var(--app-spacing-md);
-    }
-
-    .drop-zone {
-      border: 2px dashed var(--app-border-color);
-      border-radius: var(--app-border-radius);
-      padding: var(--app-spacing-lg);
-      text-align: center;
-      background-color: var(--app-gray-100);
-      cursor: pointer;
-      transition: all var(--app-transition);
-    }
-
-    .drop-zone:hover {
-      border-color: var(--app-primary);
-      background-color: var(--app-primary-light);
-    }
-
-    .drop-zone .material-icons {
-      font-size: 48px;
-      color: var(--app-text-secondary);
-      margin-bottom: var(--app-spacing-sm);
-    }
-
-    .history-container {
-      flex: 1;
-    }
-
-    .history-container h4 {
-      margin-bottom: var(--app-spacing-md);
-      color: var(--app-heading-color);
-    }
-
-    .shared-history-list {
-      background-color: var(--app-gray-100);
-      border-radius: var(--app-border-radius);
-      padding: var(--app-spacing-md);
-      min-height: 200px;
-    }
-
-    /* ファイルタブ */
-    .files-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      text-align: center;
-    }
-
-    .files-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: var(--app-spacing-md);
-    }
-
-    .files-placeholder .material-icons {
-      font-size: 64px;
-      color: var(--app-text-secondary);
-    }
-
-    .files-placeholder h3 {
-      color: var(--app-heading-color);
-    }
-
-    .files-placeholder p {
-      color: var(--app-text-secondary);
-    }
-
-    .loading-indicator {
-      margin-top: var(--app-spacing-md);
-    }
-
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid var(--app-border-color);
-      border-top: 3px solid var(--app-primary);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    /* ブルーランプ起動ボタン */
-    .toggle-share-btn {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: var(--app-primary);
-      color: white;
-      padding: var(--app-spacing-md);
-      border-radius: var(--app-border-radius-lg);
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: all var(--app-transition);
-      display: flex;
-      align-items: center;
-      gap: var(--app-spacing-sm);
-      font-weight: var(--app-font-weight-medium);
-      z-index: 1000;
-    }
-
-    .toggle-share-btn:hover {
-      background-color: var(--app-primary-dark);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
 
     /* レスポンシブ対応 */
     @media (max-width: 768px) {
@@ -731,16 +526,29 @@
         border-bottom: 1px solid var(--app-border-color);
       }
       
-      .claude-share-container {
-        flex-direction: column;
+      .floating-action-bar {
+        bottom: 10px;
+        right: 50%;
+        transform: translateX(50%);
+        gap: var(--app-spacing-xs);
       }
       
-      .platform-buttons {
-        justify-content: center;
+      .fab-btn {
+        width: 48px;
+        height: 48px;
       }
       
-      .env-actions {
-        justify-content: center;
+      .fab-btn .material-icons {
+        font-size: 20px;
+      }
+      
+      .fab-label {
+        bottom: 60px;
+        transform: translateX(-50%) translateY(10px);
+      }
+      
+      .fab-btn:hover .fab-label {
+        transform: translateX(-50%) translateY(-5px);
       }
     }
   </style>
@@ -762,11 +570,11 @@
         
         <div class="project-actions">
           <button class="button button-secondary" id="new-project-btn">
-            <span class="material-icons">add</span>
+            <span class="material-icons">create_new_folder</span>
             新規作成
           </button>
           <button class="button button-secondary" id="load-project-btn">
-            <span class="material-icons">folder_open</span>
+            <span class="material-icons">upload_file</span>
             読み込む
           </button>
         </div>
@@ -790,22 +598,18 @@
       <!-- 右側: コンテンツエリア -->
       <div class="content-area" id="content-area">
         <div class="card">
-          <div class="tabs">
-            <div class="project-display">
-              <span class="project-name">vscode-extension</span>
-              <span class="project-path-display">/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/vscode-extension</span>
-            </div>
-            <div class="tabs-container">
-              <div class="tab active" data-tab="scope-progress">進捗状況</div>
-              <div class="tab" data-tab="files">ファイル</div>
-              <div class="tab" data-tab="environment-variables">環境変数</div>
-              <div class="tab" data-tab="claude-code">ClaudeCode連携</div>
-              <div class="tab" data-tab="tools">モックアップギャラリー</div>
+          <div class="card-header">
+            <div class="project-info">
+              <h2 class="project-title">
+                <span class="material-icons">work</span>
+                vscode-extension
+              </h2>
+              <span class="project-subtitle">開発プロセス進捗状況</span>
             </div>
           </div>
           
-          <!-- 進捗状況タブコンテンツ -->
-          <div id="scope-progress-tab" class="tab-content active">
+          <!-- 進捗状況コンテンツ -->
+          <div class="progress-content">
             <div class="card-body">
               <div class="markdown-content">
                 <h1>vscode-extension 開発プロセス進捗状況</h1>
@@ -888,187 +692,30 @@
               </div>
             </div>
           </div>
-
-          <!-- ファイルタブコンテンツ -->
-          <div id="files-tab" class="tab-content">
-            <div class="files-container">
-              <div class="files-placeholder">
-                <span class="material-icons">description</span>
-                <h3>マークダウンビューワーを開いています...</h3>
-                <p>マークダウンビューワーが別ウィンドウで開かれます</p>
-                <div class="loading-indicator">
-                  <div class="spinner"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 環境変数タブコンテンツ -->
-          <div id="environment-variables-tab" class="tab-content">
-            <div class="environment-variables-container">
-              <div class="env-header">
-                <h3>環境変数アシスタント</h3>
-                <p>プロジェクトの環境変数を簡単に設定・管理できます</p>
-              </div>
-              
-              <!-- プラットフォーム選択 -->
-              <div class="platform-selection">
-                <h4>デプロイ先プラットフォーム</h4>
-                <div class="platform-buttons">
-                  <button class="platform-btn active" data-platform="vercel">
-                    <span class="platform-icon">▲</span>
-                    Vercel
-                  </button>
-                  <button class="platform-btn" data-platform="netlify">
-                    <span class="platform-icon">◆</span>
-                    Netlify
-                  </button>
-                  <button class="platform-btn" data-platform="aws">
-                    <span class="platform-icon">☁</span>
-                    AWS
-                  </button>
-                  <button class="platform-btn" data-platform="gcp">
-                    <span class="platform-icon">🔵</span>
-                    GCP
-                  </button>
-                </div>
-              </div>
-              
-              <!-- 環境変数入力エリア -->
-              <div class="env-variables-section">
-                <h4>環境変数</h4>
-                <div class="env-variables-list" id="env-variables-list">
-                  <p style="color: var(--app-text-secondary); text-align: center; margin-top: 2em;">
-                    「環境変数を追加」ボタンをクリックして環境変数を設定してください
-                  </p>
-                </div>
-                <button class="button button-secondary" id="add-env-variable">
-                  <span class="material-icons">add</span>
-                  環境変数を追加
-                </button>
-              </div>
-              
-              <!-- アクションボタン -->
-              <div class="env-actions">
-                <button class="button" id="generate-env-file">
-                  <span class="material-icons">description</span>
-                  .envファイル生成
-                </button>
-                <button class="button button-secondary" id="copy-env-variables">
-                  <span class="material-icons">content_copy</span>
-                  コピー
-                </button>
-                <button class="button button-secondary" id="import-env-file">
-                  <span class="material-icons">upload_file</span>
-                  .envファイル読み込み
-                </button>
-              </div>
-              
-              <!-- プレビューエリア -->
-              <div class="env-preview">
-                <h4>プレビュー</h4>
-                <pre id="env-preview-content"># 環境変数がここに表示されます
-# 例:
-# DATABASE_URL=postgresql://localhost:5432/mydb
-# API_KEY=your_api_key_here
-# NODE_ENV=development</pre>
-              </div>
-            </div>
-          </div>
-
-          <!-- ClaudeCode連携タブコンテンツ -->
-          <div id="claude-code-tab" class="tab-content">
-            <div class="claude-share-container">
-              <!-- 左側：テキスト入力エリア -->
-              <div class="text-input-area">
-                <textarea class="share-textarea" placeholder="ここにClaudeCodeと共有したいテキストを入力...
-
-例:
-- プロジェクトの要件や仕様
-- エラーメッセージやログ
-- コードの断片
-- 質問や相談内容
-
-入力後、「保存」ボタンをクリックしてClaudeCodeと共有できます。"></textarea>
-                
-                <!-- ボタンエリア -->
-                <div class="action-buttons">
-                  <button class="button button-secondary" id="clear-button">クリア</button>
-                  <button class="button" id="share-to-claude">保存</button>
-                </div>
-                
-                <!-- 保存結果通知（成功時のみ表示） -->
-                <div class="save-notification" id="save-notification" style="display: none;">
-                  <span class="material-icons">check_circle</span>
-                  <span class="notification-text">保存完了</span>
-                </div>
-              </div>
-              
-              <!-- 右側：画像アップロードエリアと履歴 -->
-              <div class="image-upload-area">
-                <!-- ドロップゾーン -->
-                <div class="drop-zone" id="drop-zone">
-                  <span class="material-icons">add_photo_alternate</span>
-                  <p>画像をアップロード<br><span style="font-size: 12px; color: var(--app-text-secondary);">（ファイルをドラッグ＆ドロップ）</span></p>
-                  <button class="button-secondary" id="file-select-btn">ブラウズ...</button>
-                  <input type="file" id="file-input" accept="image/*" style="display: none;">
-                </div>
-                
-                <!-- 履歴表示エリア -->
-                <div class="history-container">
-                  <h4>共有履歴</h4>
-                  <div class="shared-history-list">
-                    <p style="color: var(--app-text-secondary); text-align: center; margin-top: 2em;">
-                      共有履歴がここに表示されます
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- モックアップギャラリータブコンテンツ -->
-          <div id="tools-tab" class="tab-content">
-            <div style="padding: var(--app-spacing-lg); text-align: center;">
-              <span class="material-icons" style="font-size: 64px; color: var(--app-text-secondary); margin-bottom: var(--app-spacing-md);">view_quilt</span>
-              <h3 style="color: var(--app-heading-color); margin-bottom: var(--app-spacing-sm);">モックアップギャラリー</h3>
-              <p style="color: var(--app-text-secondary); margin-bottom: var(--app-spacing-lg);">プロジェクトのモックアップファイルがここに表示されます</p>
-              <button class="button">
-                <span class="material-icons">add</span>
-                新しいモックアップを作成
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- ブルーランプ起動ボタン -->
-  <div class="toggle-share-btn" id="toggle-share-btn">
-    <span class="material-icons">terminal</span>
-    <span>ブルーランプを起動</span>
+
+  <!-- フローティングアクションバー -->
+  <div class="floating-action-bar" id="floating-action-bar">
+    <button class="fab-btn" id="open-files-btn" title="ファイルビューワーを開く">
+      <span class="material-icons">folder_open</span>
+      <span class="fab-label">ファイル</span>
+    </button>
+    <button class="fab-btn" id="open-gallery-btn" title="モックアップギャラリーを開く">
+      <span class="material-icons">palette</span>
+      <span class="fab-label">ギャラリー</span>
+    </button>
+    <button class="fab-btn primary" id="launch-bluelamp-btn" title="ブルーランプを起動">
+      <span class="material-icons">rocket_launch</span>
+      <span class="fab-label">ブルーランプ</span>
+    </button>
   </div>
 
   <script>
-    // タブ切り替え機能
+    // メイン機能
     document.addEventListener('DOMContentLoaded', function() {
-      const tabs = document.querySelectorAll('.tab');
-      const tabContents = document.querySelectorAll('.tab-content');
-      
-      tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-          const targetTab = this.getAttribute('data-tab');
-          
-          // すべてのタブとコンテンツからactiveクラスを削除
-          tabs.forEach(t => t.classList.remove('active'));
-          tabContents.forEach(content => content.classList.remove('active'));
-          
-          // クリックされたタブとそのコンテンツにactiveクラスを追加
-          this.classList.add('active');
-          document.getElementById(targetTab + '-tab').classList.add('active');
-        });
-      });
       
       // プロジェクトナビゲーションの折りたたみ機能
       const toggleBtn = document.getElementById('toggle-nav-btn');
@@ -1097,79 +744,30 @@
           
           // プロジェクト名を更新
           const projectName = this.querySelector('strong').textContent;
-          document.querySelector('.project-name').textContent = projectName;
+          const projectTitle = document.querySelector('.project-title');
+          projectTitle.innerHTML = `<span class="material-icons">work</span>${projectName}`;
         });
       });
       
-      // プラットフォーム選択機能
-      const platformBtns = document.querySelectorAll('.platform-btn');
-      platformBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-          platformBtns.forEach(b => b.classList.remove('active'));
-          this.classList.add('active');
-        });
-      });
+      // アクションボタンのイベント
+      const openFilesBtn = document.getElementById('open-files-btn');
+      const openGalleryBtn = document.getElementById('open-gallery-btn');
+      const launchBluelampBtn = document.getElementById('launch-bluelamp-btn');
       
-      // ClaudeCode連携のクリアボタン
-      const clearBtn = document.getElementById('clear-button');
-      const textarea = document.querySelector('.share-textarea');
-      if (clearBtn && textarea) {
-        clearBtn.addEventListener('click', function() {
-          textarea.value = '';
+      if (openFilesBtn) {
+        openFilesBtn.addEventListener('click', function() {
+          alert('ファイルビューワーを別ウィンドウで開きます（デモ）');
         });
       }
       
-      // 保存ボタン
-      const saveBtn = document.getElementById('share-to-claude');
-      const notification = document.getElementById('save-notification');
-      if (saveBtn && notification) {
-        saveBtn.addEventListener('click', function() {
-          // 保存処理のシミュレーション
-          notification.style.display = 'flex';
-          setTimeout(() => {
-            notification.style.display = 'none';
-          }, 3000);
+      if (openGalleryBtn) {
+        openGalleryBtn.addEventListener('click', function() {
+          alert('モックアップギャラリーを別ウィンドウで開きます（デモ）');
         });
       }
       
-      // ファイル選択
-      const fileSelectBtn = document.getElementById('file-select-btn');
-      const fileInput = document.getElementById('file-input');
-      if (fileSelectBtn && fileInput) {
-        fileSelectBtn.addEventListener('click', function() {
-          fileInput.click();
-        });
-      }
-      
-      // ドラッグ&ドロップ
-      const dropZone = document.getElementById('drop-zone');
-      if (dropZone) {
-        dropZone.addEventListener('dragover', function(e) {
-          e.preventDefault();
-          this.style.borderColor = 'var(--app-primary)';
-          this.style.backgroundColor = 'var(--app-primary-light)';
-        });
-        
-        dropZone.addEventListener('dragleave', function(e) {
-          e.preventDefault();
-          this.style.borderColor = 'var(--app-border-color)';
-          this.style.backgroundColor = 'var(--app-gray-100)';
-        });
-        
-        dropZone.addEventListener('drop', function(e) {
-          e.preventDefault();
-          this.style.borderColor = 'var(--app-border-color)';
-          this.style.backgroundColor = 'var(--app-gray-100)';
-          
-          // ファイル処理のシミュレーション
-          alert('画像がアップロードされました（デモ）');
-        });
-      }
-      
-      // ブルーランプ起動ボタン
-      const launchBtn = document.getElementById('toggle-share-btn');
-      if (launchBtn) {
-        launchBtn.addEventListener('click', function() {
+      if (launchBluelampBtn) {
+        launchBluelampBtn.addEventListener('click', function() {
           alert('ブルーランプを起動します（デモ）');
         });
       }
@@ -1180,14 +778,6 @@
           alert('新規プロジェクト作成（デモ）');
         } else if (e.target.matches('#load-project-btn')) {
           alert('プロジェクト読み込み（デモ）');
-        } else if (e.target.matches('#add-env-variable')) {
-          alert('環境変数を追加（デモ）');
-        } else if (e.target.matches('#generate-env-file')) {
-          alert('.envファイルを生成（デモ）');
-        } else if (e.target.matches('#copy-env-variables')) {
-          alert('環境変数をコピー（デモ）');
-        } else if (e.target.matches('#import-env-file')) {
-          alert('.envファイルを読み込み（デモ）');
         }
       });
     });

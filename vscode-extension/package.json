@@ -35,10 +35,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "appgenius.ai.openEnvironmentVariablesAssistant",
-        "title": "AppGenius AI: 環境変数アシスタントを開く"
-      },
-      {
         "command": "appgenius.claudeCode.launchFromUrl",
         "title": "AppGenius AI: 公開URLからClaudeCodeを起動"
       },
