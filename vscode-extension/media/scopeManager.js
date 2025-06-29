@@ -433,16 +433,5 @@ try {
     } else {
       console.warn('右下のブルーランプ起動ボタンが見つかりません');
     }
-
-    // タブ内のブルーランプ起動ボタン（念のため残しておく）
-    const launchButton = document.getElementById('bluelamp-launch-btn');
-    if (launchButton) {
-      launchButton.addEventListener('click', () => {
-        console.log('タブ内のブルーランプ起動ボタンがクリックされました');
-        // ターミナルモード選択ダイアログを表示
-        dialogManager.showBluelampLaunchDialog();
-      });
-      console.log('タブ内のブルーランプ起動ボタンの初期化が完了しました');
-    }
   }
 })();

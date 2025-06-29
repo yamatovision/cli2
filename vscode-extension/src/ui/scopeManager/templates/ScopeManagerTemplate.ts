@@ -297,26 +297,6 @@ export class ScopeManagerTemplate {
         <span class="material-icons">terminal</span>
         <span>ブルーランプを起動</span>
       </div>
-      
-      <div class="claude-code-share-area" id="claude-code-share">
-        <div class="claude-code-share-header">
-          <h3>ブルーランプを起動</h3>
-          <div>
-            <button class="button button-secondary" id="minimize-share-btn">
-              <span class="material-icons">expand_more</span>
-            </button>
-          </div>
-        </div>
-        
-        <!-- ブルーランプ起動ボタン -->
-        <div class="bluelamp-launch-container">
-          <div class="bluelamp-launch-button" id="bluelamp-launch-btn">
-            <span class="material-icons">terminal</span>
-            <h3>ブルーランプを起動</h3>
-            <p>プロジェクトでブルーランプCLIを起動します</p>
-          </div>
-        </div>
-      </div>
     `;
   }
 }
