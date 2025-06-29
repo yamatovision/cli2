@@ -421,16 +421,28 @@ try {
    * ブルーランプ起動ボタンの初期化
    */
   function initializeBluelampLaunchButton() {
-    const launchButton = document.getElementById('bluelamp-launch-btn');
-    if (launchButton) {
-      launchButton.addEventListener('click', () => {
-        console.log('ブルーランプ起動ボタンがクリックされました');
+    // 右下の「ブルーランプを起動」ボタン
+    const toggleShareBtn = document.getElementById('toggle-share-btn');
+    if (toggleShareBtn) {
+      toggleShareBtn.addEventListener('click', () => {
+        console.log('右下のブルーランプ起動ボタンがクリックされました');
         // ターミナルモード選択ダイアログを表示
         dialogManager.showBluelampLaunchDialog();
       });
-      console.log('ブルーランプ起動ボタンの初期化が完了しました');
+      console.log('右下のブルーランプ起動ボタンの初期化が完了しました');
     } else {
-      console.warn('ブルーランプ起動ボタンが見つかりません');
+      console.warn('右下のブルーランプ起動ボタンが見つかりません');
+    }
+
+    // タブ内のブルーランプ起動ボタン（念のため残しておく）
+    const launchButton = document.getElementById('bluelamp-launch-btn');
+    if (launchButton) {
+      launchButton.addEventListener('click', () => {
+        console.log('タブ内のブルーランプ起動ボタンがクリックされました');
+        // ターミナルモード選択ダイアログを表示
+        dialogManager.showBluelampLaunchDialog();
+      });
+      console.log('タブ内のブルーランプ起動ボタンの初期化が完了しました');
     }
   }
 })();
