@@ -102,6 +102,8 @@ h1, h2, h3, h4 {
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .project-nav.collapsed {
@@ -111,7 +113,7 @@ h1, h2, h3, h4 {
   background-color: #f0f2f5; /* 背景色を少し暗くして目立たせる */
 }
 
-.project-nav.collapsed .filter-bar,
+.project-nav.collapsed .logo-container,
 .project-nav.collapsed h3,
 .project-nav.collapsed .project-actions,
 .project-nav.collapsed .project-list, /* プロジェクトリストも非表示 */
@@ -179,26 +181,49 @@ h1, h2, h3, h4 {
   font-size: 18px;
 }
 
+/* ロゴコンテナのスタイル */
+.logo-container {
+  padding: 5px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 60px;
+}
+
 .project-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 15px;
-  max-height: calc(100vh - 120px); /* 余白を最小限に調整 */
+  gap: 12px;
+  margin-top: 10px;
+  max-height: calc(100vh - 150px); /* 下部の領域も考慮して高さを調整 */
   overflow-y: auto;
-  padding-bottom: 15px;
+  overflow-x: hidden;
+  padding-bottom: 16px; /* 下部にパディングを追加して見切れないようにする */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .project-item {
-  padding: 12px;
+  padding: 16px;
   border-radius: var(--app-border-radius-sm);
   cursor: pointer;
   transition: all var(--app-transition);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-color: #f8f9fa;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #ffffff;
   border: 1px solid var(--app-border-color);
+  width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  position: relative;
+  min-height: 48px;
 }
 
 .project-item:hover {
@@ -210,7 +235,7 @@ h1, h2, h3, h4 {
 .project-item.active {
   background-color: var(--app-selected-background);
   color: var(--app-selected-text);
-  font-weight: var(--app-font-weight-medium);
+  font-weight: 600;
   border-left: 3px solid var(--app-primary);
   padding-left: calc(12px - 3px);
   border-color: var(--app-primary);
@@ -219,13 +244,46 @@ h1, h2, h3, h4 {
 .project-actions {
   display: flex;
   gap: 10px;
-  margin: 15px 0;
+  margin: 5px 0 10px 0;
 }
 
 .project-actions .button {
   flex: 1;
   font-size: 12px;
   padding: 8px;
+}
+
+/* プロジェクト名のスタイル */
+.project-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-primary-dark);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+}
+
+/* 削除ボタンのスタイル */
+.remove-project-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--app-text-secondary);
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  padding: 0;
+  margin-left: 8px;
+}
+
+.remove-project-btn:hover {
+  opacity: 0.8;
+}
+
+.remove-project-btn .material-icons {
+  font-size: 16px;
 }
 
 .content-area {
@@ -273,13 +331,51 @@ h1, h2, h3, h4 {
   border-bottom: 1px solid var(--app-border-color);
 }
 
+/* タブバー */
+.tabs {
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--app-border-color);
+  background-color: #ffffff;
+  padding: 0 var(--app-spacing-md);
+  padding-top: var(--app-spacing-sm);
+}
+
+/* プロジェクト名タブ */
+.project-display {
+  display: flex;
+  flex-direction: column;
+  padding: var(--app-spacing-sm) var(--app-spacing-md);
+  background-color: var(--app-primary-light);
+  border-radius: 6px 6px 0 0;
+  border-bottom: 3px solid var(--app-primary);
+  margin-bottom: -1px;
+  max-width: 250px;
+  flex-shrink: 1;
+}
+
+.project-display .project-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-primary-dark);
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-path-display {
+  display: none;
+}
+
 
 /* カード本体のスタイル */
 .card-body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 var(--app-spacing-md) 0 var(--app-spacing-md);
+  padding: 0 var(--app-spacing-md) var(--app-spacing-md) var(--app-spacing-md);
   padding-right: 10px;
   height: 100%;
   max-height: 100%;

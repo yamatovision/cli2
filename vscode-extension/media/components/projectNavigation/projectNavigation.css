@@ -71,6 +71,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 0;
+  padding-bottom: 40px;
 }
 
 .project-nav.collapsed .project-list {
