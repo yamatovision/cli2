@@ -245,6 +245,9 @@ try {
         });
         break;
       case 'updateProjectPath':
+        // プロジェクトパスをwindowオブジェクトに保存（ダイアログで使用）
+        window.currentProjectPath = message.path;
+        
         // 直接Custom Eventを発行
         const pathEvent = new CustomEvent('project-path-updated', {
           detail: message
