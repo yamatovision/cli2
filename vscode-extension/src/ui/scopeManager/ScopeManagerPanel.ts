@@ -288,6 +288,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
     this._panel.webview.onDidReceiveMessage(
       async message => {
         try {
+          Logger.info(`ScopeManagerPanel: メッセージ受信 - ${message.command}`, message);
 
           switch (message.command) {
             case 'initialize':

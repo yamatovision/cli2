@@ -308,9 +308,13 @@ export class ScopeManagerTemplate {
           </div>
         </div>
         
-        <!-- プロンプトグリッド - 初期表示要素なし、JSで動的に生成 -->
-        <div class="prompt-grid">
-          <!-- プロンプトカードはJSで動的に生成 -->
+        <!-- ブルーランプ起動ボタン -->
+        <div class="bluelamp-launch-container">
+          <div class="bluelamp-launch-button" id="bluelamp-launch-btn">
+            <span class="material-icons">terminal</span>
+            <h3>ブルーランプを起動</h3>
+            <p>プロジェクトでブルーランプCLIを起動します</p>
+          </div>
         </div>
       </div>
     `;

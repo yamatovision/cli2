@@ -15,7 +15,6 @@ import stateManager from './core/stateManager.js';
 import markdownViewer from './components/markdownViewer/markdownViewer.js';
 import projectNavigation from './components/projectNavigation/projectNavigation.js';
 import dialogManager from './components/dialogManager/dialogManager.js';
-import promptCards from './components/promptCards/promptCards.js';
 import simpleMarkdownConverter from './utils/simpleMarkdownConverter.js';
 
 // VSCode APIを安全に取得
@@ -105,8 +104,8 @@ try {
     setupStateManagerEvents();
 
     // 各コンポーネントの初期化（順序が重要）
-    // 1. プロンプトカードの初期化
-    promptCards.initializePromptCards();
+    // 1. ブルーランプ起動ボタンの初期化
+    initializeBluelampLaunchButton();
 
     // 2. プロジェクトナビゲーションの初期化
     projectNavigation.initializeNavigation();
@@ -417,4 +416,21 @@ try {
         break;
     }
   });
+
+  /**
+   * ブルーランプ起動ボタンの初期化
+   */
+  function initializeBluelampLaunchButton() {
+    const launchButton = document.getElementById('bluelamp-launch-btn');
+    if (launchButton) {
+      launchButton.addEventListener('click', () => {
+        console.log('ブルーランプ起動ボタンがクリックされました');
+        // ターミナルモード選択ダイアログを表示
+        dialogManager.showBluelampLaunchDialog();
+      });
+      console.log('ブルーランプ起動ボタンの初期化が完了しました');
+    } else {
+      console.warn('ブルーランプ起動ボタンが見つかりません');
+    }
+  }
 })();

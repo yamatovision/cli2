@@ -5,8 +5,38 @@ class DialogManager {
   constructor() {
     this.container = document.querySelector('.dialog-container') || this._createDialogContainer();
     this.activeTimeout = null;
-    this.vscode = window.vsCodeApi;
+    this.vscode = this._getVSCodeApi();
     this.initialize();
+  }
+  
+  /**
+   * VSCode API を安全に取得
+   * @returns {Object} VSCode API オブジェクト
+   */
+  _getVSCodeApi() {
+    try {
+      // 既存のAPIがあるか確認
+      if (typeof window.vsCodeApi !== 'undefined') {
+        console.log('DialogManager: 既存のVSCode APIを使用します');
+        return window.vsCodeApi;
+      }
+      // 新規取得
+      const api = acquireVsCodeApi();
+      console.log('DialogManager: VSCode APIを新規取得しました');
+      // グローバル変数として保存
+      window.vsCodeApi = api;
+      return api;
+    } catch (e) {
+      console.error('DialogManager: VSCode API取得エラー:', e);
+      // エラー時のフォールバック
+      return {
+        postMessage: function(msg) { 
+          console.log('DialogManager: ダミーvscode.postMessage:', msg); 
+        },
+        getState: function() { return {}; },
+        setState: function() {}
+      };
+    }
   }
   
   initialize() {
@@ -458,6 +488,8 @@ class DialogManager {
    * ブルーランプ起動用ターミナルモード選択ダイアログを表示
    */
   showBluelampLaunchDialog() {
+    console.log('DialogManager: ブルーランプ起動ダイアログを表示します');
+    
     // 既存のダイアログがあれば削除
     const existingDialog = document.getElementById('bluelamp-launch-dialog');
     if (existingDialog) {
@@ -504,22 +536,28 @@ class DialogManager {
     
     // ボタンのイベントリスナーを設定
     document.getElementById('bluelamp-split-terminal-btn').addEventListener('click', () => {
+      console.log('DialogManager: 分割ターミナルボタンがクリックされました');
       // 分割ターミナルモードでブルーランプを起動
-      this.vscode.postMessage({
+      const message = {
         command: 'launchBluelamp',
         splitTerminal: true
-      });
+      };
+      console.log('DialogManager: メッセージを送信:', message);
+      this.vscode.postMessage(message);
       
       // ダイアログを閉じる
       overlay.remove();
     });
     
     document.getElementById('bluelamp-new-tab-terminal-btn').addEventListener('click', () => {
+      console.log('DialogManager: 新しいタブターミナルボタンがクリックされました');
       // 新しいタブモードでブルーランプを起動
-      this.vscode.postMessage({
+      const message = {
         command: 'launchBluelamp',
         splitTerminal: false
-      });
+      };
+      console.log('DialogManager: メッセージを送信:', message);
+      this.vscode.postMessage(message);
       
       // ダイアログを閉じる
       overlay.remove();
