@@ -36,7 +36,7 @@ export interface TerminalOptions {
   deletePromptFile?: boolean;
   location?: vscode.ViewColumn;
   iconPath?: vscode.Uri | { light: vscode.Uri; dark: vscode.Uri } | undefined;
-  promptType?: string; // プロンプトの種類（要件定義、リファクタリングなど）
+  promptType?: string; // プロンプトの種類（リファクタリングなど）
   
   /**
    * アクティブなターミナルを分割してClaudeCodeを起動するかどうか

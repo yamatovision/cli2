@@ -471,39 +471,6 @@ export class MessageDispatchServiceImpl implements IMessageDispatchService {
               // エラーをログに記録するのみ（UIにエラーは表示しない）
               Logger.warn(`MessageDispatchServiceImpl: 進捗ファイルのアクセスでエラーが発生: ${progressFilePath}`, error as Error);
             }
-
-            // 要件定義ファイルもロード
-            let requirementsFilePath;
-            try {
-              // 要件定義ファイルパスをFileSystemServiceから取得
-              if (typeof this._fileSystemService.getRequirementsFilePath === 'function') {
-                requirementsFilePath = this._fileSystemService.getRequirementsFilePath(activeProject.path);
-                Logger.info(`MessageDispatchServiceImpl: FileSystemServiceから要件定義ファイルパスを取得: ${requirementsFilePath}`);
-              } else {
-                requirementsFilePath = path.join(activeProject.path, 'docs', 'requirements.md');
-                Logger.info(`MessageDispatchServiceImpl: 要件定義ファイルパスを構築: ${requirementsFilePath}`);
-              }
-
-              if (fs.existsSync(requirementsFilePath)) {
-                const content = await this._fileSystemService.readMarkdownFile(requirementsFilePath);
-                this.sendMessage(panel, {
-                  command: 'updateMarkdownContent',
-                  content: content,
-                  timestamp: Date.now(),
-                  priority: 'high',
-                  filePath: requirementsFilePath,
-                  forRequirements: true
-                });
-
-                Logger.info('MessageDispatchServiceImpl: 要件定義ファイルを読み込みました');
-              } else {
-                // 要件定義ファイルが見つからないことをログに記録するのみ（エラー表示なし）
-                Logger.info(`MessageDispatchServiceImpl: 要件定義ファイルが見つかりません: ${requirementsFilePath}`);
-              }
-            } catch (error) {
-              // エラーをログに記録するのみ（UIにエラーは表示しない）
-              Logger.warn(`MessageDispatchServiceImpl: 要件定義ファイルのアクセスでエラーが発生: ${requirementsFilePath || 'パス不明'}`, error as Error);
-            }
           }
           
           // 共有履歴を初期化 - 安全なチェック

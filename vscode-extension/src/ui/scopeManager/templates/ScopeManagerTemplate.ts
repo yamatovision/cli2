@@ -200,7 +200,6 @@ export class ScopeManagerTemplate {
                 </div>
                 <div class="tabs-container">
                   <div class="tab ${activeTabId === 'scope-progress' ? 'active' : ''}" data-tab="scope-progress">進捗状況</div>
-                  <div class="tab ${activeTabId === 'requirements' ? 'active' : ''}" data-tab="requirements">要件定義</div>
                   <div class="tab ${activeTabId === 'files' ? 'active' : ''}" data-tab="files">ファイル</div>
                   <div class="tab ${activeTabId === 'environment-variables' ? 'active' : ''}" data-tab="environment-variables">環境変数</div>
                   <div class="tab ${activeTabId === 'claude-code' ? 'active' : ''}" data-tab="claude-code">ClaudeCode連携</div>
@@ -210,9 +209,6 @@ export class ScopeManagerTemplate {
               
               <!-- 進捗状況タブコンテンツ -->
               ${this._generateProgressTabContent(activeTabId)}
-
-              <!-- 要件定義タブコンテンツ -->
-              ${this._generateRequirementsTabContent(activeTabId)}
 
               <!-- ファイルブラウザタブコンテンツ -->
               <!-- ファイルブラウザタブコンテンツは削除されました -->
@@ -269,21 +265,6 @@ export class ScopeManagerTemplate {
     `;
   }
 
-  /**
-   * 要件定義タブのコンテンツを生成
-   */
-  private static _generateRequirementsTabContent(activeTabId: string): string {
-    return `
-      <div id="requirements-tab" class="tab-content ${activeTabId === 'requirements' ? 'active' : ''}">
-        <div class="card-body">
-          <div class="markdown-content">
-            <!-- ここにrequirements.mdの内容がマークダウン表示される -->
-            <p>読み込み中...</p>
-          </div>
-        </div>
-      </div>
-    `;
-  }
 
   /**
    * 環境変数タブのコンテンツを生成

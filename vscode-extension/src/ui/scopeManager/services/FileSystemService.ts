@@ -28,7 +28,6 @@ export interface IFileSystemService {
   
   // ファイルパスとテンプレート取得
   getProgressFilePath(projectPath: string): string;
-  findRequirementsFile(projectPath: string): Promise<string | null>;
   
   // 新規メソッド
   loadProgressFile(projectPath: string, outputCallback?: (content: string) => void): Promise<string>;

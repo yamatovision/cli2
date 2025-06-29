@@ -66,7 +66,6 @@ export class ScopeExporter {
         name: scope.name || `スコープ ${scopeId.substring(0, 8)}`,
         description: scope.description || '',
         projectPath: scope.projectPath || '',
-        requirements: Array.isArray(scope.requirements) ? scope.requirements : [],
         items: this.standardizeSelectedItems(scope),
         selectedIds: Array.isArray(scope.selectedIds) ? scope.selectedIds : [],
         estimatedTime: scope.estimatedTime || "0",

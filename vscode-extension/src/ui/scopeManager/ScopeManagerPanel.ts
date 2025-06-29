@@ -628,13 +628,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
    * 要件定義ファイルの読み込み
    * docsディレクトリ内のrequirements.mdファイルを読み込んで表示
    */
-  /**
-   * @deprecated TabStateServiceに移行済み
-   */
-  private async _handleLoadRequirementsFile(): Promise<void> {
-    // TabStateServiceに移行済み
-    await this._tabStateService.loadRequirementsFile(this._panel);
-  }
   
   // _initializeFileBrowserメソッドはFileSystemServiceに完全移行されました
   

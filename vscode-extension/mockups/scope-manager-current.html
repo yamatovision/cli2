@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ブルーランプ - ScopeManager</title>
+  
+  <!-- Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  
+  <style>
+    /* ベースリセット */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* CSS変数定義 */
+    :root {
+      --app-background: #f8f9fa;
+      --app-text: #333333;
+      --app-text-secondary: #718096;
+      --app-heading-color: #2d3748;
+      --app-card-background: #ffffff;
+      --app-input-background: #ffffff;
+      --app-border-color: #e2e8f0;
+      --app-hover-background: #f1f5fd;
+      --app-selected-background: rgba(74, 105, 189, 0.1);
+      --app-selected-text: #333333;
+      --app-primary: #4a69bd;
+      --app-primary-dark: #3a5a9e;
+      --app-primary-light: rgba(74, 105, 189, 0.2);
+      --app-secondary: #00b894;
+      --app-secondary-dark: #00a77d;
+      --app-warning: #fdcb6e;
+      --app-danger: #e17055;
+      --app-gray-100: #f8f9fa;
+      --app-gray-200: #e9ecef;
+      --app-gray-300: #dee2e6;
+      --app-gray-700: #495057;
+      --app-spacing-xs: 4px;
+      --app-spacing-sm: 8px;
+      --app-spacing-md: 16px;
+      --app-spacing-lg: 24px;
+      --app-font-size-xs: 12px;
+      --app-font-size-sm: 14px;
+      --app-font-size-md: 16px;
+      --app-font-size-lg: 18px;
+      --app-font-weight-medium: 500;
+      --app-font-weight-bold: 700;
+      --app-border-radius: 8px;
+      --app-border-radius-sm: 4px;
+      --app-border-radius-lg: 12px;
+      --app-transition: 0.2s ease;
+    }
+
+    /* ベースレイアウト */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--app-background);
+      color: var(--app-text);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .scope-manager-container {
+      padding: 0;
+      background-color: var(--app-background);
+      color: var(--app-text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    .main-content {
+      display: flex;
+      gap: var(--app-spacing-md);
+      flex: 1;
+      overflow: visible;
+      min-height: 0;
+      position: relative;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* プロジェクトナビゲーション */
+    .project-nav {
+      width: 250px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--app-border-color);
+      padding: var(--app-spacing-md);
+      background-color: #fff;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .project-nav.collapsed {
+      width: 40px;
+      overflow: hidden;
+      padding: var(--app-spacing-md) 0;
+      background-color: #f0f2f5;
+    }
+
+    .project-nav.collapsed .filter-bar,
+    .project-nav.collapsed h3,
+    .project-nav.collapsed .project-actions,
+    .project-nav.collapsed .project-list {
+      display: none;
+    }
+
+    .toggle-nav-btn {
+      position: absolute;
+      top: 50%;
+      right: -12px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #fff;
+      border: 1px solid var(--app-border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 100;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transform: translateY(-50%);
+    }
+
+    .toggle-nav-btn:hover {
+      background-color: var(--app-primary-light);
+      color: var(--app-primary);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .project-nav.collapsed .toggle-nav-btn {
+      right: -14px;
+      background-color: var(--app-primary);
+      color: white;
+      border-color: var(--app-primary);
+    }
+
+    .toggle-nav-btn .material-icons {
+      font-size: 18px;
+    }
+
+    .filter-bar {
+      margin-bottom: var(--app-spacing-md);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: var(--app-spacing-sm);
+      border: 1px solid var(--app-border-color);
+      border-radius: var(--app-border-radius-sm);
+      background-color: var(--app-input-background);
+      font-size: var(--app-font-size-sm);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--app-primary);
+      box-shadow: 0 0 0 2px var(--app-primary-light);
+    }
+
+    .project-actions {
+      display: flex;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .button {
+      padding: var(--app-spacing-sm) var(--app-spacing-md);
+      border: none;
+      border-radius: var(--app-border-radius-sm);
+      background-color: var(--app-primary);
+      color: white;
+      cursor: pointer;
+      font-size: var(--app-font-size-sm);
+      font-weight: var(--app-font-weight-medium);
+      transition: all var(--app-transition);
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-xs);
+    }
+
+    .button:hover {
+      background-color: var(--app-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .button-secondary {
+      background-color: var(--app-gray-200);
+      color: var(--app-text);
+    }
+
+    .button-secondary:hover {
+      background-color: var(--app-gray-300);
+    }
+
+    .project-actions .button {
+      flex: 1;
+      font-size: 12px;
+      padding: 8px;
+    }
+
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 15px;
+      max-height: calc(100vh - 220px);
+      overflow-y: auto;
+      padding-bottom: 15px;
+    }
+
+    .project-item {
+      padding: 12px;
+      border-radius: var(--app-border-radius-sm);
+      cursor: pointer;
+      transition: all var(--app-transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background-color: #f8f9fa;
+      border: 1px solid var(--app-border-color);
+    }
+
+    .project-item:hover {
+      background-color: var(--app-hover-background);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .project-item.active {
+      background-color: var(--app-selected-background);
+      color: var(--app-selected-text);
+      font-weight: var(--app-font-weight-medium);
+      border-left: 3px solid var(--app-primary);
+      padding-left: calc(12px - 3px);
+      border-color: var(--app-primary);
+    }
+
+    /* コンテンツエリア */
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: var(--app-spacing-md);
+      overflow-y: visible;
+      overflow-x: hidden;
+      padding-right: var(--app-spacing-sm);
+      padding-left: 12px;
+      max-height: none;
+      flex: 1;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .content-area.expanded {
+      padding-left: 24px;
+    }
+
+    .card {
+      background-color: var(--app-card-background);
+      border-radius: var(--app-border-radius);
+      border: 1px solid var(--app-border-color);
+      padding: var(--app-spacing-md);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      margin-bottom: var(--app-spacing-md);
+      overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 40px);
+      max-height: calc(100vh - 40px);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* タブ */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--app-border-color);
+      margin-bottom: var(--app-spacing-md);
+      justify-content: space-between;
+      padding: 0 var(--app-spacing-md);
+      align-items: flex-end;
+      flex-wrap: wrap;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .tabs-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+    }
+
+    .tab {
+      padding: var(--app-spacing-sm) var(--app-spacing-md);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      color: var(--app-text-secondary);
+      transition: all var(--app-transition);
+      margin: 0 2px;
+      white-space: nowrap;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .tab.active {
+      border-bottom-color: var(--app-primary);
+      color: var(--app-text);
+      font-weight: var(--app-font-weight-medium);
+      background-color: var(--app-primary-light);
+      border-radius: 6px 6px 0 0;
+    }
+
+    .tab:hover:not(.active) {
+      border-bottom-color: var(--app-gray-300);
+      color: var(--app-text);
+      background-color: var(--app-gray-100);
+      border-radius: 6px 6px 0 0;
+    }
+
+    /* プロジェクト表示エリア */
+    .project-display {
+      display: flex;
+      flex-direction: column;
+      padding: var(--app-spacing-sm) var(--app-spacing-md);
+      background-color: var(--app-primary-light);
+      border-radius: 6px 6px 0 0;
+      border-bottom: 3px solid var(--app-primary);
+      margin-bottom: -1px;
+      max-width: 250px;
+      flex-shrink: 1;
+    }
+
+    .project-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--app-primary-dark);
+      margin: 0;
+      padding: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-path-display {
+      display: none;
+    }
+
+    /* タブコンテンツ */
+    .tab-content {
+      display: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+      height: calc(100vh - 130px);
+      max-height: calc(100vh - 130px);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .tab-content.active {
+      display: block;
+      width: 100%;
+    }
+
+    .card-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: var(--app-spacing-md);
+      padding-right: 10px;
+      min-height: calc(100vh - 160px);
+      height: calc(100vh - 120px);
+      max-height: calc(100vh - 120px);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* マークダウンコンテンツ */
+    .markdown-content {
+      line-height: 1.6;
+      font-size: var(--app-font-size-sm);
+      padding: 0 5px;
+      height: 100%;
+      overflow-y: auto;
+      width: 100%;
+      max-width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      box-sizing: border-box;
+    }
+
+    .markdown-content h1 {
+      font-size: 1.8em;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--app-border-color);
+    }
+
+    .markdown-content h2 {
+      font-size: 1.5em;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+      padding-bottom: 0.3em;
+      border-bottom: 1px solid var(--app-border-color);
+    }
+
+    .markdown-content h3 {
+      font-size: 1.3em;
+      margin-top: 1em;
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-content p {
+      margin-bottom: 1em;
+    }
+
+    .markdown-content ul, .markdown-content ol {
+      margin-bottom: 1em;
+      padding-left: 2em;
+    }
+
+    .markdown-content li {
+      margin-bottom: 0.5em;
+    }
+
+    .markdown-content code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 0.2em 0.4em;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
+    .markdown-content pre {
+      background-color: rgba(0, 0, 0, 0.05);
+      padding: 1em;
+      border-radius: var(--app-border-radius);
+      overflow-x: auto;
+      margin-bottom: 1em;
+    }
+
+    .markdown-content pre code {
+      background-color: transparent;
+      padding: 0;
+      border-radius: 0;
+    }
+
+    /* 環境変数タブ */
+    .environment-variables-container {
+      padding: var(--app-spacing-md);
+    }
+
+    .env-header h3 {
+      color: var(--app-heading-color);
+      margin-bottom: var(--app-spacing-sm);
+    }
+
+    .env-header p {
+      color: var(--app-text-secondary);
+      margin-bottom: var(--app-spacing-lg);
+    }
+
+    .platform-selection {
+      margin-bottom: var(--app-spacing-lg);
+    }
+
+    .platform-selection h4 {
+      margin-bottom: var(--app-spacing-md);
+      color: var(--app-heading-color);
+    }
+
+    .platform-buttons {
+      display: flex;
+      gap: var(--app-spacing-sm);
+      flex-wrap: wrap;
+    }
+
+    .platform-btn {
+      padding: var(--app-spacing-sm) var(--app-spacing-md);
+      border: 1px solid var(--app-border-color);
+      border-radius: var(--app-border-radius-sm);
+      background-color: var(--app-card-background);
+      cursor: pointer;
+      transition: all var(--app-transition);
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-xs);
+    }
+
+    .platform-btn:hover {
+      background-color: var(--app-hover-background);
+      border-color: var(--app-primary);
+    }
+
+    .platform-btn.active {
+      background-color: var(--app-primary-light);
+      border-color: var(--app-primary);
+      color: var(--app-primary-dark);
+    }
+
+    .env-variables-section {
+      margin-bottom: var(--app-spacing-lg);
+    }
+
+    .env-variables-section h4 {
+      margin-bottom: var(--app-spacing-md);
+      color: var(--app-heading-color);
+    }
+
+    .env-variables-list {
+      margin-bottom: var(--app-spacing-md);
+      min-height: 100px;
+      border: 1px dashed var(--app-border-color);
+      border-radius: var(--app-border-radius);
+      padding: var(--app-spacing-md);
+      background-color: var(--app-gray-100);
+    }
+
+    .env-actions {
+      display: flex;
+      gap: var(--app-spacing-sm);
+      margin-bottom: var(--app-spacing-lg);
+      flex-wrap: wrap;
+    }
+
+    .env-preview {
+      background-color: var(--app-gray-100);
+      border-radius: var(--app-border-radius);
+      padding: var(--app-spacing-md);
+    }
+
+    .env-preview h4 {
+      margin-bottom: var(--app-spacing-sm);
+      color: var(--app-heading-color);
+    }
+
+    .env-preview pre {
+      background-color: var(--app-card-background);
+      padding: var(--app-spacing-md);
+      border-radius: var(--app-border-radius-sm);
+      border: 1px solid var(--app-border-color);
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: var(--app-font-size-sm);
+      color: var(--app-text-secondary);
+    }
+
+    /* ClaudeCode連携タブ */
+    .claude-share-container {
+      display: flex;
+      gap: var(--app-spacing-lg);
+      height: 100%;
+    }
+
+    .text-input-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .share-textarea {
+      flex: 1;
+      padding: var(--app-spacing-md);
+      border: 1px solid var(--app-border-color);
+      border-radius: var(--app-border-radius);
+      resize: none;
+      font-family: inherit;
+      font-size: var(--app-font-size-sm);
+      line-height: 1.5;
+      min-height: 200px;
+    }
+
+    .share-textarea:focus {
+      outline: none;
+      border-color: var(--app-primary);
+      box-shadow: 0 0 0 2px var(--app-primary-light);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: var(--app-spacing-sm);
+      margin-top: var(--app-spacing-md);
+    }
+
+    .save-notification {
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-xs);
+      margin-top: var(--app-spacing-sm);
+      padding: var(--app-spacing-sm);
+      background-color: var(--app-secondary);
+      color: white;
+      border-radius: var(--app-border-radius-sm);
+    }
+
+    .image-upload-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--app-spacing-md);
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--app-border-color);
+      border-radius: var(--app-border-radius);
+      padding: var(--app-spacing-lg);
+      text-align: center;
+      background-color: var(--app-gray-100);
+      cursor: pointer;
+      transition: all var(--app-transition);
+    }
+
+    .drop-zone:hover {
+      border-color: var(--app-primary);
+      background-color: var(--app-primary-light);
+    }
+
+    .drop-zone .material-icons {
+      font-size: 48px;
+      color: var(--app-text-secondary);
+      margin-bottom: var(--app-spacing-sm);
+    }
+
+    .history-container {
+      flex: 1;
+    }
+
+    .history-container h4 {
+      margin-bottom: var(--app-spacing-md);
+      color: var(--app-heading-color);
+    }
+
+    .shared-history-list {
+      background-color: var(--app-gray-100);
+      border-radius: var(--app-border-radius);
+      padding: var(--app-spacing-md);
+      min-height: 200px;
+    }
+
+    /* ファイルタブ */
+    .files-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+
+    .files-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--app-spacing-md);
+    }
+
+    .files-placeholder .material-icons {
+      font-size: 64px;
+      color: var(--app-text-secondary);
+    }
+
+    .files-placeholder h3 {
+      color: var(--app-heading-color);
+    }
+
+    .files-placeholder p {
+      color: var(--app-text-secondary);
+    }
+
+    .loading-indicator {
+      margin-top: var(--app-spacing-md);
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--app-border-color);
+      border-top: 3px solid var(--app-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* ブルーランプ起動ボタン */
+    .toggle-share-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--app-primary);
+      color: white;
+      padding: var(--app-spacing-md);
+      border-radius: var(--app-border-radius-lg);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all var(--app-transition);
+      display: flex;
+      align-items: center;
+      gap: var(--app-spacing-sm);
+      font-weight: var(--app-font-weight-medium);
+      z-index: 1000;
+    }
+
+    .toggle-share-btn:hover {
+      background-color: var(--app-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* レスポンシブ対応 */
+    @media (max-width: 768px) {
+      .main-content {
+        flex-direction: column;
+      }
+      
+      .project-nav {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--app-border-color);
+      }
+      
+      .claude-share-container {
+        flex-direction: column;
+      }
+      
+      .platform-buttons {
+        justify-content: center;
+      }
+      
+      .env-actions {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="scope-manager-container">
+    <div class="main-content">
+      <!-- 左側: プロジェクトナビゲーション -->
+      <div class="project-nav" id="project-nav">
+        <button class="toggle-nav-btn" id="toggle-nav-btn" title="パネルを開閉">
+          <span class="material-icons">chevron_left</span>
+        </button>
+        
+        <div class="filter-bar">
+          <input type="text" class="search-input" placeholder="プロジェクト検索...">
+        </div>
+        
+        <h3>プロジェクト</h3>
+        
+        <div class="project-actions">
+          <button class="button button-secondary" id="new-project-btn">
+            <span class="material-icons">add</span>
+            新規作成
+          </button>
+          <button class="button button-secondary" id="load-project-btn">
+            <span class="material-icons">folder_open</span>
+            読み込む
+          </button>
+        </div>
+        
+        <div id="project-list" class="project-list">
+          <div class="project-item active">
+            <strong>vscode-extension</strong>
+            <small>/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/vscode-extension</small>
+          </div>
+          <div class="project-item">
+            <strong>sample-project</strong>
+            <small>/Users/tatsuya/Desktop/sample-project</small>
+          </div>
+          <div class="project-item">
+            <strong>web-app</strong>
+            <small>/Users/tatsuya/Desktop/web-app</small>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右側: コンテンツエリア -->
+      <div class="content-area" id="content-area">
+        <div class="card">
+          <div class="tabs">
+            <div class="project-display">
+              <span class="project-name">vscode-extension</span>
+              <span class="project-path-display">/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/vscode-extension</span>
+            </div>
+            <div class="tabs-container">
+              <div class="tab active" data-tab="scope-progress">進捗状況</div>
+              <div class="tab" data-tab="files">ファイル</div>
+              <div class="tab" data-tab="environment-variables">環境変数</div>
+              <div class="tab" data-tab="claude-code">ClaudeCode連携</div>
+              <div class="tab" data-tab="tools">モックアップギャラリー</div>
+            </div>
+          </div>
+          
+          <!-- 進捗状況タブコンテンツ -->
+          <div id="scope-progress-tab" class="tab-content active">
+            <div class="card-body">
+              <div class="markdown-content">
+                <h1>vscode-extension 開発プロセス進捗状況</h1>
+                
+                <p><strong>バージョン</strong>: 0.1 (初期版)<br>
+                <strong>最終更新日</strong>: 2025-06-26<br>
+                <strong>ステータス</strong>: プロジェクト作成完了・要件定義開始段階</p>
+                
+                <h2>1. 基本情報</h2>
+                <ul>
+                  <li><strong>ステータス</strong>: 開始段階 (5% 完了)</li>
+                  <li><strong>完了タスク数</strong>: 1/20</li>
+                  <li><strong>進捗率</strong>: 5%</li>
+                  <li><strong>次のマイルストーン</strong>: 要件定義完了</li>
+                </ul>
+                
+                <h2>2. 実装概要</h2>
+                <p>vscode-extensionは、AI駆動の完全自動開発環境をVSCodeで提供するプロジェクトです。このプロジェクトは現在、リポジトリとプロジェクト環境の準備が完了し、要件定義フェーズを開始しています。</p>
+                
+                <h2>3. 開発フロー進捗状況</h2>
+                <p>AppGeniusでの開発は以下のフローに沿って進行します：</p>
+                
+                <table style="width: 100%; border-collapse: collapse; margin: 1em 0;">
+                  <thead>
+                    <tr style="background-color: var(--app-gray-100);">
+                      <th style="padding: 8px; border: 1px solid var(--app-border-color);">フェーズ</th>
+                      <th style="padding: 8px; border: 1px solid var(--app-border-color);">状態</th>
+                      <th style="padding: 8px; border: 1px solid var(--app-border-color);">進捗</th>
+                      <th style="padding: 8px; border: 1px solid var(--app-border-color);">担当エージェント</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);"><strong>0. プロジェクト準備</strong></td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">✅ 完了</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">100%</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">-</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);"><strong>1. 要件定義</strong></td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">🔄 進行中</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">5%</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">プロジェクトファウンデーション (#1)</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);"><strong>2. 技術選定</strong></td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">⏱ 未着手</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">0%</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">プロジェクトファウンデーション (#1)</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);"><strong>3. モックアップ作成</strong></td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">⏱ 未着手</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">0%</td>
+                      <td style="padding: 8px; border: 1px solid var(--app-border-color);">モックアップクリエイター (#2)</td>
+                    </tr>
+                  </tbody>
+                </table>
+                
+                <h2>4. タスクリスト</h2>
+                
+                <h3>プロジェクト準備フェーズ</h3>
+                <ul>
+                  <li>✅ プロジェクトリポジトリ作成</li>
+                  <li>✅ 開発環境のセットアップ</li>
+                  <li>✅ 初期ディレクトリ構造の作成</li>
+                  <li>✅ README.mdの作成</li>
+                  <li>✅ 開発フレームワークの初期設定</li>
+                </ul>
+                
+                <h3>要件定義フェーズ</h3>
+                <ul>
+                  <li>🔄 プロジェクト目的と背景の明確化</li>
+                  <li>⏱ ターゲットユーザーの特定</li>
+                  <li>⏱ 主要機能リストの作成</li>
+                  <li>⏱ 画面一覧の作成</li>
+                  <li>⏱ ユーザーストーリーの作成</li>
+                  <li>⏱ 技術要件の定義</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- ファイルタブコンテンツ -->
+          <div id="files-tab" class="tab-content">
+            <div class="files-container">
+              <div class="files-placeholder">
+                <span class="material-icons">description</span>
+                <h3>マークダウンビューワーを開いています...</h3>
+                <p>マークダウンビューワーが別ウィンドウで開かれます</p>
+                <div class="loading-indicator">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 環境変数タブコンテンツ -->
+          <div id="environment-variables-tab" class="tab-content">
+            <div class="environment-variables-container">
+              <div class="env-header">
+                <h3>環境変数アシスタント</h3>
+                <p>プロジェクトの環境変数を簡単に設定・管理できます</p>
+              </div>
+              
+              <!-- プラットフォーム選択 -->
+              <div class="platform-selection">
+                <h4>デプロイ先プラットフォーム</h4>
+                <div class="platform-buttons">
+                  <button class="platform-btn active" data-platform="vercel">
+                    <span class="platform-icon">▲</span>
+                    Vercel
+                  </button>
+                  <button class="platform-btn" data-platform="netlify">
+                    <span class="platform-icon">◆</span>
+                    Netlify
+                  </button>
+                  <button class="platform-btn" data-platform="aws">
+                    <span class="platform-icon">☁</span>
+                    AWS
+                  </button>
+                  <button class="platform-btn" data-platform="gcp">
+                    <span class="platform-icon">🔵</span>
+                    GCP
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 環境変数入力エリア -->
+              <div class="env-variables-section">
+                <h4>環境変数</h4>
+                <div class="env-variables-list" id="env-variables-list">
+                  <p style="color: var(--app-text-secondary); text-align: center; margin-top: 2em;">
+                    「環境変数を追加」ボタンをクリックして環境変数を設定してください
+                  </p>
+                </div>
+                <button class="button button-secondary" id="add-env-variable">
+                  <span class="material-icons">add</span>
+                  環境変数を追加
+                </button>
+              </div>
+              
+              <!-- アクションボタン -->
+              <div class="env-actions">
+                <button class="button" id="generate-env-file">
+                  <span class="material-icons">description</span>
+                  .envファイル生成
+                </button>
+                <button class="button button-secondary" id="copy-env-variables">
+                  <span class="material-icons">content_copy</span>
+                  コピー
+                </button>
+                <button class="button button-secondary" id="import-env-file">
+                  <span class="material-icons">upload_file</span>
+                  .envファイル読み込み
+                </button>
+              </div>
+              
+              <!-- プレビューエリア -->
+              <div class="env-preview">
+                <h4>プレビュー</h4>
+                <pre id="env-preview-content"># 環境変数がここに表示されます
+# 例:
+# DATABASE_URL=postgresql://localhost:5432/mydb
+# API_KEY=your_api_key_here
+# NODE_ENV=development</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- ClaudeCode連携タブコンテンツ -->
+          <div id="claude-code-tab" class="tab-content">
+            <div class="claude-share-container">
+              <!-- 左側：テキスト入力エリア -->
+              <div class="text-input-area">
+                <textarea class="share-textarea" placeholder="ここにClaudeCodeと共有したいテキストを入力...
+
+例:
+- プロジェクトの要件や仕様
+- エラーメッセージやログ
+- コードの断片
+- 質問や相談内容
+
+入力後、「保存」ボタンをクリックしてClaudeCodeと共有できます。"></textarea>
+                
+                <!-- ボタンエリア -->
+                <div class="action-buttons">
+                  <button class="button button-secondary" id="clear-button">クリア</button>
+                  <button class="button" id="share-to-claude">保存</button>
+                </div>
+                
+                <!-- 保存結果通知（成功時のみ表示） -->
+                <div class="save-notification" id="save-notification" style="display: none;">
+                  <span class="material-icons">check_circle</span>
+                  <span class="notification-text">保存完了</span>
+                </div>
+              </div>
+              
+              <!-- 右側：画像アップロードエリアと履歴 -->
+              <div class="image-upload-area">
+                <!-- ドロップゾーン -->
+                <div class="drop-zone" id="drop-zone">
+                  <span class="material-icons">add_photo_alternate</span>
+                  <p>画像をアップロード<br><span style="font-size: 12px; color: var(--app-text-secondary);">（ファイルをドラッグ＆ドロップ）</span></p>
+                  <button class="button-secondary" id="file-select-btn">ブラウズ...</button>
+                  <input type="file" id="file-input" accept="image/*" style="display: none;">
+                </div>
+                
+                <!-- 履歴表示エリア -->
+                <div class="history-container">
+                  <h4>共有履歴</h4>
+                  <div class="shared-history-list">
+                    <p style="color: var(--app-text-secondary); text-align: center; margin-top: 2em;">
+                      共有履歴がここに表示されます
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- モックアップギャラリータブコンテンツ -->
+          <div id="tools-tab" class="tab-content">
+            <div style="padding: var(--app-spacing-lg); text-align: center;">
+              <span class="material-icons" style="font-size: 64px; color: var(--app-text-secondary); margin-bottom: var(--app-spacing-md);">view_quilt</span>
+              <h3 style="color: var(--app-heading-color); margin-bottom: var(--app-spacing-sm);">モックアップギャラリー</h3>
+              <p style="color: var(--app-text-secondary); margin-bottom: var(--app-spacing-lg);">プロジェクトのモックアップファイルがここに表示されます</p>
+              <button class="button">
+                <span class="material-icons">add</span>
+                新しいモックアップを作成
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ブルーランプ起動ボタン -->
+  <div class="toggle-share-btn" id="toggle-share-btn">
+    <span class="material-icons">terminal</span>
+    <span>ブルーランプを起動</span>
+  </div>
+
+  <script>
+    // タブ切り替え機能
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          const targetTab = this.getAttribute('data-tab');
+          
+          // すべてのタブとコンテンツからactiveクラスを削除
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          
+          // クリックされたタブとそのコンテンツにactiveクラスを追加
+          this.classList.add('active');
+          document.getElementById(targetTab + '-tab').classList.add('active');
+        });
+      });
+      
+      // プロジェクトナビゲーションの折りたたみ機能
+      const toggleBtn = document.getElementById('toggle-nav-btn');
+      const projectNav = document.getElementById('project-nav');
+      const contentArea = document.getElementById('content-area');
+      
+      toggleBtn.addEventListener('click', function() {
+        projectNav.classList.toggle('collapsed');
+        contentArea.classList.toggle('expanded');
+        
+        // アイコンの向きを変更
+        const icon = this.querySelector('.material-icons');
+        if (projectNav.classList.contains('collapsed')) {
+          icon.textContent = 'chevron_right';
+        } else {
+          icon.textContent = 'chevron_left';
+        }
+      });
+      
+      // プロジェクト選択機能
+      const projectItems = document.querySelectorAll('.project-item');
+      projectItems.forEach(item => {
+        item.addEventListener('click', function() {
+          projectItems.forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
+          
+          // プロジェクト名を更新
+          const projectName = this.querySelector('strong').textContent;
+          document.querySelector('.project-name').textContent = projectName;
+        });
+      });
+      
+      // プラットフォーム選択機能
+      const platformBtns = document.querySelectorAll('.platform-btn');
+      platformBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          platformBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+      
+      // ClaudeCode連携のクリアボタン
+      const clearBtn = document.getElementById('clear-button');
+      const textarea = document.querySelector('.share-textarea');
+      if (clearBtn && textarea) {
+        clearBtn.addEventListener('click', function() {
+          textarea.value = '';
+        });
+      }
+      
+      // 保存ボタン
+      const saveBtn = document.getElementById('share-to-claude');
+      const notification = document.getElementById('save-notification');
+      if (saveBtn && notification) {
+        saveBtn.addEventListener('click', function() {
+          // 保存処理のシミュレーション
+          notification.style.display = 'flex';
+          setTimeout(() => {
+            notification.style.display = 'none';
+          }, 3000);
+        });
+      }
+      
+      // ファイル選択
+      const fileSelectBtn = document.getElementById('file-select-btn');
+      const fileInput = document.getElementById('file-input');
+      if (fileSelectBtn && fileInput) {
+        fileSelectBtn.addEventListener('click', function() {
+          fileInput.click();
+        });
+      }
+      
+      // ドラッグ&ドロップ
+      const dropZone = document.getElementById('drop-zone');
+      if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) {
+          e.preventDefault();
+          this.style.borderColor = 'var(--app-primary)';
+          this.style.backgroundColor = 'var(--app-primary-light)';
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+          e.preventDefault();
+          this.style.borderColor = 'var(--app-border-color)';
+          this.style.backgroundColor = 'var(--app-gray-100)';
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+          e.preventDefault();
+          this.style.borderColor = 'var(--app-border-color)';
+          this.style.backgroundColor = 'var(--app-gray-100)';
+          
+          // ファイル処理のシミュレーション
+          alert('画像がアップロードされました（デモ）');
+        });
+      }
+      
+      // ブルーランプ起動ボタン
+      const launchBtn = document.getElementById('toggle-share-btn');
+      if (launchBtn) {
+        launchBtn.addEventListener('click', function() {
+          alert('ブルーランプを起動します（デモ）');
+        });
+      }
+      
+      // 各種ボタンのクリックイベント
+      document.addEventListener('click', function(e) {
+        if (e.target.matches('#new-project-btn')) {
+          alert('新規プロジェクト作成（デモ）');
+        } else if (e.target.matches('#load-project-btn')) {
+          alert('プロジェクト読み込み（デモ）');
+        } else if (e.target.matches('#add-env-variable')) {
+          alert('環境変数を追加（デモ）');
+        } else if (e.target.matches('#generate-env-file')) {
+          alert('.envファイルを生成（デモ）');
+        } else if (e.target.matches('#copy-env-variables')) {
+          alert('環境変数をコピー（デモ）');
+        } else if (e.target.matches('#import-env-file')) {
+          alert('.envファイルを読み込み（デモ）');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

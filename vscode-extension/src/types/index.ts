@@ -27,7 +27,6 @@ export interface IImplementationItem {
   estimatedHours?: number;
   relatedFiles?: string[];
   relatedMockups?: string[];
-  relatedRequirements?: string[];
   completed?: boolean; // ScopeExporter用
 }
 
@@ -46,7 +45,6 @@ export interface IImplementationScope {
   startDate?: string;
   targetDate?: string;
   projectPath: string;
-  requirements?: string[];    // ScopeExporter用
   created?: number;           // ScopeExporter用
   updated?: number;           // ScopeExporter用
 }

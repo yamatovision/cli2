@@ -14,7 +14,6 @@ export interface ITabStateService {
 
   // ファイル読み込み関連
   loadFileToTab(panel: vscode.WebviewPanel, tabId: string, filePath: string): Promise<void>;
-  loadRequirementsFile(panel: vscode.WebviewPanel): Promise<void>;
 
   // タブ内容更新
   updateTabContent(panel: vscode.WebviewPanel, tabId: string, content: string, filePath?: string): Promise<void>;
@@ -130,35 +129,6 @@ export class TabStateService implements ITabStateService {
     }
   }
   
-  /**
-   * 要件定義ファイルをタブに読み込む
-   * @param panel WebViewパネル
-   */
-  public async loadRequirementsFile(panel: vscode.WebviewPanel): Promise<void> {
-    try {
-      const activeProject = this._projectService.getActiveProject();
-      if (!activeProject || !activeProject.path) {
-        const messageService = ServiceFactory.getMessageService();
-        messageService.showError(panel, '要件定義ファイルを読み込むためのアクティブプロジェクトがありません');
-        return;
-      }
-      
-      // 要件定義ファイルのパスを決定
-      const requirementsPath = await this._fileSystemService.findRequirementsFile(activeProject.path);
-      if (!requirementsPath) {
-        const messageService = ServiceFactory.getMessageService();
-        messageService.showError(panel, '要件定義ファイルが見つかりません');
-        return;
-      }
-      
-      // 'requirements'タブに要件定義ファイルを読み込む
-      await this.loadFileToTab(panel, 'requirements', requirementsPath);
-    } catch (error) {
-      Logger.error(`TabStateService: 要件定義ファイルの読み込みに失敗しました: ${(error as Error).message}`, error as Error);
-      const messageService = ServiceFactory.getMessageService();
-      messageService.showError(panel, `要件定義ファイル読み込み中にエラーが発生しました: ${(error as Error).message}`);
-    }
-  }
   
   /**
    * タブの内容を更新する
@@ -203,11 +173,6 @@ export class TabStateService implements ITabStateService {
       if (message.tabId && message.filePath) {
         await this.loadFileToTab(panel, message.tabId, message.filePath);
       }
-    });
-
-    // loadRequirementsFile ハンドラー
-    messageService.registerHandler('loadRequirementsFile', async (_: Message, panel: vscode.WebviewPanel) => {
-      await this.loadRequirementsFile(panel);
     });
 
     // selectTab ハンドラー

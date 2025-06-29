@@ -345,7 +345,6 @@ export class MarkdownManager {
             notes,
             relatedFiles,
             relatedMockups,
-            relatedRequirements
           });
         }
       }
@@ -514,13 +513,6 @@ export class MarkdownManager {
           }
         }
         
-        // 関連要件
-        if (item.relatedRequirements && item.relatedRequirements.length > 0) {
-          markdown += `  - 関連要件:\n`;
-          for (const requirement of item.relatedRequirements) {
-            markdown += `    - ${requirement}\n`;
-          }
-        }
         
         markdown += '\n';
       }
