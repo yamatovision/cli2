@@ -819,74 +819,6 @@ export class ScopeManagerPanel extends ProtectedPanel {
     }
   }
 
-
-  /**
-   * 共有履歴を取得してWebViewに送信
-   */
-  /**
-   * @deprecated ServiceFactory経由でサービスにアクセスしてください
-   */
-  }
-
-  /**
-   * テキストを共有サービスで共有 - SharingServiceに委譲
-   */
-
-  /**
-   * 画像を共有サービスで共有 - SharingServiceに委譲
-   */
-
-  /**
-   * 履歴からアイテムを削除
-   */
-  /**
-   * @deprecated ServiceFactory経由でサービスにアクセスしてください
-   */
-    } catch (error) {
-      Logger.error(`履歴からの削除に失敗しました: ファイルID=${fileId}`, error as Error);
-      this._showError(`履歴からの削除に失敗しました: ${(error as Error).message}`);
-    }
-  }
-
-  /**
-   * ファイルのコマンドをクリップボードにコピー
-   */
-  /**
-   * @deprecated ServiceFactory経由でサービスにアクセスしてください
-   */
-    } catch (error) {
-      Logger.error(`コマンドのコピーに失敗しました: fileId=${fileId}`, error as Error);
-      this._showError(`コマンドのコピーに失敗しました: ${(error as Error).message}`);
-    }
-  }
-
-  /**
-   * テキストをクリップボードにコピー
-   */
-  /**
-   * @deprecated ServiceFactory経由でサービスにアクセスしてください
-   */
-  private async _handleCopyToClipboard(text: string): Promise<void> {
-    // MessageDispatchServiceに移行済み
-    const messageService = ServiceFactory.getMessageService();
-    await messageService.copyToClipboard(this._panel, text);
-  }
-
-  /**
-   * 履歴アイテムを再利用
-   */
-        });
-        
-        Logger.info(`履歴アイテムを再利用しました: ${fileId}, ファイル: ${file.fileName}`);
-      } else {
-        Logger.warn(`再利用対象のファイルが見つかりません: ${fileId}`);
-      }
-    } catch (error) {
-      Logger.error(`履歴アイテム再利用中にエラーが発生しました: ${fileId}`, error as Error);
-      this._showError(`履歴アイテムの再利用に失敗しました: ${(error as Error).message}`);
-    }
-  }
-  
   /**
    * プロジェクト選択処理
    * @param projectName プロジェクト名
@@ -928,6 +860,8 @@ export class ScopeManagerPanel extends ProtectedPanel {
       this._showError(`プロジェクト「${projectName}」の選択に失敗しました: ${(error as Error).message}`);
     }
   }
+
+
 
   
   /**

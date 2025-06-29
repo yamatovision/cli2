@@ -7,6 +7,7 @@
   
   <!-- Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
   
   <style>
     /* ベースリセット */
@@ -381,6 +382,17 @@
       color: white;
     }
 
+    /* アウトラインアイコンのスタイル */
+    .material-icons-outlined {
+      font-size: 24px;
+      color: var(--app-primary);
+    }
+
+    /* ファイルボタンのアイコンのみ黒色 */
+    #open-files-btn .material-icons {
+      color: var(--app-text);
+    }
+
     .fab-label {
       position: absolute;
       bottom: 70px;
@@ -700,11 +712,11 @@
   <!-- フローティングアクションバー -->
   <div class="floating-action-bar" id="floating-action-bar">
     <button class="fab-btn" id="open-files-btn" title="ファイルビューワーを開く">
-      <span class="material-icons">folder_open</span>
+      <span class="material-icons-outlined">folder</span>
       <span class="fab-label">ファイル</span>
     </button>
     <button class="fab-btn" id="open-gallery-btn" title="モックアップギャラリーを開く">
-      <span class="material-icons">palette</span>
+      <span class="material-icons-outlined">palette</span>
       <span class="fab-label">ギャラリー</span>
     </button>
     <button class="fab-btn primary" id="launch-bluelamp-btn" title="ブルーランプを起動">
