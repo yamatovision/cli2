@@ -1,0 +1,261 @@
+/* マークダウンビューアのスタイル */
+.markdown-content {
+  padding: 20px;
+  line-height: 1.6;
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* 太字スタイルの明示的定義 - 強調を大幅に増加 */
+.markdown-content strong {
+  font-weight: 900 !important; /* 最も太いウェイト */
+  color: #ffcc00 !important; /* 目立つ黄色に変更 */
+  background-color: rgba(0, 0, 0, 0.1); /* 背景に薄い黒を追加 */
+  padding: 0 3px; /* 左右に余白を追加 */
+  border-radius: 3px; /* 角を丸くする */
+  display: inline-block; /* インラインブロック化 */
+}
+
+/* 基本行スタイル - 最小限のマージンで行を表示 */
+.markdown-content .md-line {
+  display: block;
+  margin: 0.2em 0;  /* 最小限のマージン */
+  line-height: 1.4;
+}
+
+/* タイポグラフィ */
+.markdown-content h1 {
+  font-size: 2em;
+  margin-top: 1.2em;
+  margin-bottom: 0.6em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.5em;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h3 {
+  font-size: 1.2em;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+  font-weight: 600;
+}
+
+.markdown-content h4 {
+  font-size: 1.1em;
+  margin-top: 0.7em;
+  margin-bottom: 0.3em;
+  font-weight: 600;
+}
+
+.markdown-content p {
+  margin: 0.8em 0;
+}
+
+.markdown-content a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content code {
+  font-family: var(--vscode-editor-font-family);
+  background-color: #1E1E1E; /* ダークな背景色 */
+  color: #FFFFFF; /* 白色のテキスト */
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-size: 0.85em;
+  border: 1px solid #3E3E3E; /* 微妙なボーダー */
+}
+
+.markdown-content pre {
+  background-color: #1E1E1E; /* ダークな背景色 */
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  border: 1px solid #3E3E3E; /* 微妙なボーダー */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* 微妙な影で浮き上がり感 */
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: inherit;
+  color: #E0E0E0; /* やや明るめの白色 */
+  display: block;
+  line-height: 1.5;
+}
+
+/* 関数名など特定のコード要素の強調表示 */
+.markdown-content code b,
+.markdown-content code strong {
+  color: #61AFEF; /* 関数名を水色で表示 */
+  font-weight: normal; /* 太字を解除 */
+}
+
+/* 引数部分の強調表示 */
+.markdown-content code em,
+.markdown-content code i {
+  color: #E5C07B; /* 引数をオレンジ系の色で表示 */
+  font-style: normal; /* イタリックを解除 */
+}
+
+/* 文字列の強調表示 */
+.markdown-content code .string {
+  color: #98C379; /* 文字列を緑色で表示 */
+}
+
+/* キーワードの強調表示 */
+.markdown-content code .keyword {
+  color: #C678DD; /* キーワードを紫色で表示 */
+}
+
+/* リスト */
+.markdown-content ul, 
+.markdown-content ol {
+  margin: 0.8em 0;
+  padding-left: 2em;
+}
+
+.markdown-content li {
+  margin: 0.4em 0;
+}
+
+/* 番号付きリスト */
+.markdown-content li.ordered {
+  display: list-item;
+  list-style-type: decimal;
+}
+
+/* チェックボックス */
+.markdown-content .checkbox-item {
+  display: flex;
+  align-items: center;
+  margin: 0.4em 0;
+}
+
+.markdown-content .checkbox-item.numbered::before {
+  content: attr(data-number) ". ";
+  margin-right: 0.4em;
+  font-weight: normal;
+}
+
+.markdown-content input[type="checkbox"] {
+  margin-right: 0.6em;
+}
+
+/* 表 */
+.markdown-content .md-table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.markdown-content .md-table th {
+  background-color: var(--vscode-editor-lineHighlightBackground);
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 12px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.markdown-content .md-table th.sort-asc::after {
+  content: " ▲";
+  font-size: 0.8em;
+}
+
+.markdown-content .md-table th.sort-desc::after {
+  content: " ▼";
+  font-size: 0.8em;
+}
+
+.markdown-content .md-table td {
+  padding: 8px 12px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.markdown-content .md-table tr:nth-child(even) {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+/* 引用 */
+.markdown-content blockquote {
+  border-left: 4px solid var(--vscode-textBlockQuote-border);
+  padding: 0 1em;
+  color: var(--vscode-textBlockQuote-foreground);
+  margin: 1em 0;
+}
+
+/* ディレクトリ構造 */
+.markdown-content .directory-structure {
+  font-family: monospace;
+  white-space: pre;
+  line-height: 1.2;
+}
+
+/* 特殊なコードブロック */
+.markdown-content .enhanced-tree {
+  line-height: 1.2;
+  font-family: monospace;
+}
+
+/* タスク参照（行番号、タスク番号など） */
+.markdown-content .task-reference {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background-color: var(--vscode-editor-lineHighlightBackground);
+  border-radius: 4px;
+  border-left: 3px solid var(--vscode-activityBarBadge-background);
+}
+
+.markdown-content .task-reference .task-name {
+  font-weight: bold;
+  color: var(--vscode-editor-foreground);
+}
+
+.markdown-content .task-reference .task-func {
+  font-family: var(--vscode-editor-font-family, monospace);
+  background-color: var(--vscode-textBlockQuote-background);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.markdown-content .task-reference .line-number {
+  color: var(--vscode-editorLineNumber-activeForeground);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-weight: bold;
+}
+
+.markdown-content .task-reference .task-desc {
+  color: var(--vscode-editor-foreground);
+}
+
+/* 古い番号付き参照スタイル（互換性のため残す） */
+.markdown-content .numbered-reference {
+  font-weight: bold;
+  margin: 8px 0;
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-editor-lineHighlightBackground);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: block;
+}

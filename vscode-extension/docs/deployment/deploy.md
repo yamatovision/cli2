@@ -1,4 +1,4 @@
-# ブルーランプ デプロイ情報（2025/06/19更新）
+# ブルーランプ デプロイ情報（2025/06/30更新）
 
 ## ✅ サービス稼働状況（2025/06/19更新）
 
@@ -307,6 +307,13 @@ npm start
 
 ## 3. VSCode拡張機能
 
+### 公開状況（2025/06/30更新）
+
+**最新バージョン**: v1.0.0
+- **公開日**: 2025年6月30日
+- **マーケットプレイスURL**: https://marketplace.visualstudio.com/items?itemName=mikoto.bluelamp
+- **セキュリティ改善**: プロンプトファイルを完全に除外した安全な実装
+
 ### パッケージング・公開
 
 #### ローカルでのテストと開発用ビルド（推奨）
@@ -506,12 +513,12 @@ npm start
    
    秘密鍵（PAT）:
    ```
-   AwArW7YdFZNzWJnS86koekVHisIjKDyxE0jDaFN9K6AzJ5LYqAhxJQQJ99BEACAAAAAAAAAAAAASAZDOtN8w
+   5nZzz8wWZ8hTPCfF7MQACVzJklJPYNm5xrYGoZTe95MEiQIHZAuzJQQJ99BFACAAAAAAAAAAAAASAZDO18Dh
    ```
    
    公開コマンド例:
    ```bash
-   vsce publish -p AwArW7YdFZNzWJnS86koekVHisIjKDyxE0jDaFN9K6AzJ5LYqAhxJQQJ99BEACAAAAAAAAAAAAASAZDOtN8w
+   vsce publish -p 5nZzz8wWZ8hTPCfF7MQACVzJklJPYNm5xrYGoZTe95MEiQIHZAuzJQQJ99BFACAAAAAAAAAAAAASAZDO18Dh
    ```
 
 2. **または、ログインしてから公開**:

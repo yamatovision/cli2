@@ -109,18 +109,6 @@ export class ProjectManagementService {
           this.ensureDirectoryExists(path.join(project.path, 'mockups'));
           // 基本的なドキュメントファイルを作成
           this.createInitialDocuments(project.path);
-          // CLAUDE.mdファイルを生成
-          try {
-            const { ClaudeMdService } = await import('../utils/ClaudeMdService');
-            const claudeMdService = ClaudeMdService.getInstance();
-            await claudeMdService.generateClaudeMd(project.path, {
-              name: project.name,
-              description: ""
-            });
-            Logger.info(`CLAUDE.md file created for project: ${id}`);
-          } catch (e) {
-            Logger.warn(`Failed to create CLAUDE.md file: ${(e as Error).message}`);
-          }
         } catch (e) {
           Logger.error(`Failed to create project structure: ${(e as Error).message}`);
         }

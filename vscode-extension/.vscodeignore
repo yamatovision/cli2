@@ -1,0 +1,52 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+**/*.ts
+node_modules/**
+test/**
+docs/**
+scripts/**
+test_script/**
+AI/**
+参考/**
+reference/**
+.env
+.env.*
+*.vsix
+*.pyc
+__pycache__/**
+*.log
+logs/**
+tmp/**
+temp/**
+
+# 重要: プロンプトファイルを除外
+portal/**
+cli/**
+promptFiles/**
+*.prompt
+*.prompt.md
+
+# 秘密情報を含むファイルを除外
+deploy.md
+docs/deployment/**
+docs/env.md
+*.secret
+*.key
+*.pem
+
+# 不要なファイル
+*.sh
+Dockerfile
+docker-compose.yml
+.dockerignore
+CLAUDE.md
+
+# 機密情報を含むフォルダを除外
+templates/**

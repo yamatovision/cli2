@@ -259,25 +259,6 @@ export class ProjectService implements IProjectService {
       await this._fileSystemService.ensureDirectoryExists(docsDir);
       await this._fileSystemService.ensureDirectoryExists(mockupsDir);
       
-      // CLAUDE.mdファイルを作成
-      try {
-        // ClaudeMdServiceをインポートして使用
-        const { ClaudeMdService } = await import('../../../utils/ClaudeMdService');
-        const claudeMdService = ClaudeMdService.getInstance();
-        
-        // ClaudeMdServiceを使用してCLAUDE.mdを生成
-        await claudeMdService.generateClaudeMd(projectDir, {
-          name: name,
-          description: description || ""
-        });
-        
-        Logger.info(`ProjectService: CLAUDE.mdを生成しました: ${path.join(projectDir, 'CLAUDE.md')}`);
-      } catch (error) {
-        Logger.error(`ProjectService: CLAUDE.md生成エラー: ${error}`, error as Error);
-        
-        // エラーが発生した場合は処理を続行（プロジェクト作成自体は失敗させない）
-        Logger.info(`ProjectService: プロジェクト作成は続行します`);
-      }
       
       // SCOPE_PROGRESS.mdファイルを作成
       await this._fileSystemService.createProgressFile(projectDir, name);

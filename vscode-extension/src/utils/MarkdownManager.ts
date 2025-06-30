@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './logger';
 import { MessageBroker, MessageType } from './MessageBroker';
 import { PlatformManager } from './PlatformManager';
-import { ClaudeMdService } from './ClaudeMdService';
 import { ScopeItemStatus, IImplementationItem, IImplementationScope } from '../types';
 
 /**
@@ -14,7 +13,6 @@ import { ScopeItemStatus, IImplementationItem, IImplementationScope } from '../t
  */
 export class MarkdownManager {
   private static instance: MarkdownManager;
-  private claudeMdService: ClaudeMdService;
 
   /**
    * シングルトンインスタンスを取得
@@ -30,7 +28,6 @@ export class MarkdownManager {
    * コンストラクタ
    */
   private constructor() {
-    this.claudeMdService = ClaudeMdService.getInstance();
     Logger.debug('MarkdownManager initialized');
   }
   
@@ -223,7 +220,7 @@ export class MarkdownManager {
       const claudeMdContent = fs.readFileSync(claudeMdPath, 'utf8');
 
       // スコープセクションを探す
-      const scopeSection = this.claudeMdService.getClaudeMdSection(projectPath, 'スコープ');
+      const scopeSection = null; // CLAUDE.mdの使用は無効化されました
       if (!scopeSection) {
         Logger.debug('スコープセクションが見つかりません');
         return [];
@@ -391,7 +388,8 @@ export class MarkdownManager {
   public saveScopesToClaudeMd(projectPath: string, scopes: IImplementationScope[]): boolean {
     try {
       const markdownContent = this.formatScopesToMarkdown(scopes);
-      return this.claudeMdService.updateClaudeMdSection(projectPath, 'スコープ', markdownContent);
+      // CLAUDE.mdの使用は無効化されました
+      return false;
     } catch (error) {
       Logger.error('スコープのCLAUDE.mdへの保存に失敗しました', error as Error);
       return false;
@@ -883,7 +881,7 @@ export class MarkdownManager {
   public initializeScopeSection(projectPath: string): boolean {
     try {
       // スコープセクションを確認
-      const scopeSection = this.claudeMdService.getClaudeMdSection(projectPath, 'スコープ');
+      const scopeSection = null; // CLAUDE.mdの使用は無効化されました
       
       if (!scopeSection) {
         // 初期セクションを作成
@@ -928,7 +926,8 @@ export class MarkdownManager {
   - 依存関係: item-register, item-login
 `;
         
-        return this.claudeMdService.updateClaudeMdSection(projectPath, 'スコープ', initialSection);
+        // CLAUDE.mdの使用は無効化されました
+        return false;
       }
       
       return true;
