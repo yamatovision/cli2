@@ -42,16 +42,13 @@ exports.getUsers = async (req, res) => {
     
     let users;
     
-    // SuperAdminはすべてのユーザーを取得可能
+    // SuperAdminは全てのユーザーを取得可能
     if (currentUser.isSuperAdmin()) {
       users = await SimpleUser.find({}, '-password -refreshToken');
-    } 
-    // Adminは自分の組織のユーザーのみ取得可能
-    else if (currentUser.isAdmin() && currentUser.organizationId) {
-      users = await SimpleUser.find(
-        { organizationId: currentUser.organizationId },
-        '-password -refreshToken'
-      );
+    }
+    // Adminは自分とSuperAdmin以外のユーザーを取得可能
+    else if (currentUser.isAdmin()) {
+      users = await SimpleUser.find({ role: { $ne: 'SuperAdmin' } }, '-password -refreshToken');
     } 
     // 一般ユーザーは自分の情報のみ取得可能
     else {
@@ -120,13 +117,10 @@ exports.getUser = async (req, res) => {
     
     // アクセス権チェック
     // 1. SuperAdminは全てのユーザー情報にアクセス可能
-    // 2. Adminは自分の組織のユーザー情報にアクセス可能
+    // 2. Adminは組織に関係なく、SuperAdmin以外の全ユーザー情報にアクセス可能
     // 3. 一般ユーザーは自分の情報のみアクセス可能
     const hasSuperAdminAccess = requester.isSuperAdmin();
-    const hasAdminAccess = requester.isAdmin() && 
-                          requester.organizationId && 
-                          targetUser.organizationId && 
-                          requester.organizationId.toString() === targetUser.organizationId.toString();
+    const hasAdminAccess = requester.isAdmin() && targetUser.role !== 'SuperAdmin';
     const hasSelfAccess = requesterId === targetId;
     
     if (!hasSuperAdminAccess && !hasAdminAccess && !hasSelfAccess) {
@@ -254,23 +248,7 @@ exports.createUser = async (req, res) => {
         });
       }
       
-      // APIキーが指定されている場合、AnthropicApiKeyモデルから値を取得
-      if (apiKeyId) {
-        try {
-          const AnthropicApiKey = require('../models/anthropicApiKey.model');
-          const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: apiKeyId });
-          
-          if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
-            // APIキー値を変数に保存
-            var apiKeyValue = apiKeyDoc.apiKeyFull;
-            console.log(`新規ユーザー作成: APIキー値を取得しました: ${apiKeyId}`);
-          } else {
-            console.log(`警告: 新規ユーザー作成時にAPIキー ${apiKeyId} の完全な値が見つかりませんでした`);
-          }
-        } catch (apiKeyError) {
-          console.error(`新規ユーザー作成: AnthropicApiKeyモデルからの検索エラー:`, apiKeyError);
-        }
-      }
+      // APIキー関連のレガシーコードを削除（ユーザーが直接設定する方式に変更）
     }
     
     // 新しいユーザーを作成
@@ -333,10 +311,8 @@ exports.updateUser = async (req, res) => {
     
     // アクセス権チェック
     const hasSuperAdminAccess = requester.isSuperAdmin();
-    const hasAdminAccess = requester.isAdmin() && 
-                          requester.organizationId && 
-                          targetUser.organizationId && 
-                          requester.organizationId.toString() === targetUser.organizationId.toString();
+    // 管理者は組織に関係なく、SuperAdmin以外の全ユーザーを操作可能
+    const hasAdminAccess = requester.isAdmin() && targetUser.role !== 'SuperAdmin';
     const hasSelfAccess = requesterId === targetId;
     
     if (!hasSuperAdminAccess && !hasAdminAccess && !hasSelfAccess) {
@@ -412,21 +388,7 @@ exports.updateUser = async (req, res) => {
         }
       }
       
-      // AnthropicApiKeyモデルから直接APIキー値を取得
-      try {
-        const AnthropicApiKey = require('../models/anthropicApiKey.model');
-        const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: apiKeyId });
-        
-        if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
-          // 完全なAPIキー値を見つけた場合、ユーザーに設定
-          req.body.apiKeyValue = apiKeyDoc.apiKeyFull;
-          console.log(`APIキー値をAnthropicApiKeyモデルから取得しました: ${apiKeyId}`);
-        } else {
-          console.log(`警告: APIキー ${apiKeyId} の完全な値が見つかりませんでした`);
-        }
-      } catch (apiKeyError) {
-        console.error(`AnthropicApiKeyモデルからの検索エラー:`, apiKeyError);
-      }
+      // AnthropicApiKeyモデル関連のレガシーコードを削除（ユーザーが直接設定する方式に変更）
     }
     
     // メールアドレスの重複チェック
@@ -508,10 +470,8 @@ exports.deleteUser = async (req, res) => {
 
     // アクセス権チェック
     const hasSuperAdminAccess = requester.isSuperAdmin();
-    const hasAdminAccess = requester.isAdmin() &&
-                          requester.organizationId &&
-                          targetUser.organizationId &&
-                          requester.organizationId.toString() === targetUser.organizationId.toString();
+    // 管理者は組織に関係なく、SuperAdmin以外の全ユーザーを削除可能
+    const hasAdminAccess = requester.isAdmin() && targetUser.role !== 'SuperAdmin';
 
     if (!hasSuperAdminAccess && !hasAdminAccess) {
       return res.status(403).json({
@@ -679,26 +639,7 @@ exports.getUserApiKey = async (req, res) => {
         });
       }
       
-      // 2. AnthropicApiKeyモデルから完全なキー値を探す
-      const AnthropicApiKey = require('../models/anthropicApiKey.model');
-      const apiKeyDoc = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
-      
-      if (apiKeyDoc && apiKeyDoc.apiKeyFull) {
-        // 完全なAPIキー値を見つけた場合、ユーザーに保存して返す
-        user.apiKeyValue = apiKeyDoc.apiKeyFull;
-        await user.save();
-        console.log(`ユーザー ${user.name} (${user._id}) のAPIキー値をAnthropicApiKeyモデルから復元しました`);
-        
-        return res.status(200).json({
-          success: true,
-          data: {
-            id: user.apiKeyId,
-            key: user.apiKeyValue,
-            status: apiKeyDoc.status || 'active',
-            organizationId: user.organizationId
-          }
-        });
-      }
+      // AnthropicApiKeyモデル関連のレガシーコードを削除
     }
     
     // APIキーが見つからない場合は、ユーザーが入力した値を直接保存して返す
@@ -718,15 +659,7 @@ exports.getUserApiKey = async (req, res) => {
         user.apiKeyValue = directKey;
         await user.save();
         
-        // AnthropicApiKeyモデルにも保存
-        const AnthropicApiKey = require('../models/anthropicApiKey.model');
-        await new AnthropicApiKey({
-          apiKeyId: newApiKeyId,
-          apiKeyFull: directKey,
-          name: `Direct_${user.name}`,
-          status: 'active',
-          lastSyncedAt: new Date()
-        }).save();
+        // AnthropicApiKeyモデル関連のレガシーコードを削除
         
         return res.status(200).json({
           success: true,

@@ -312,7 +312,7 @@ export class ScopeManagerPanel extends ProtectedPanel {
             case 'navigateDirectory':
             case 'listDirectory':
             case 'openFileInEditor':
-              // MessageDispatchServiceが処理するため何もしない
+              await this._handleOpenFileInEditor(message.filePath);
               break;
             // 新しいコマンド
             case 'launchPromptFromURL':
@@ -348,7 +348,14 @@ export class ScopeManagerPanel extends ProtectedPanel {
               break;
 
             case 'openFileViewer':
-              await vscode.commands.executeCommand('appgenius-ai.openFileViewer', this._projectPath);
+              // ファイルパスと検索クエリを含めてファイルビューワーを開く
+              const fileInfo = {
+                projectPath: this._projectPath,
+                filePath: message.filePath,
+                searchQuery: message.searchQuery,
+                suggestedPaths: message.suggestedPaths
+              };
+              await vscode.commands.executeCommand('appgenius-ai.openFileViewer', this._projectPath, fileInfo);
               break;
               
             case 'openMarkdownViewer':
@@ -1151,7 +1158,29 @@ export class ScopeManagerPanel extends ProtectedPanel {
     }
   }
 
+  /**
+   * ファイルをVSCodeエディターで開く
+   */
+  private async _handleOpenFileInEditor(filePath: string): Promise<void> {
+    try {
+      if (!filePath) {
+        this._showError('ファイルパスが指定されていません');
+        return;
+      }
 
+      // SCOPE_PROGRESS.mdの場合は、プロジェクトパスから完全なパスを構築
+      if (filePath === 'SCOPE_PROGRESS.md') {
+        const fullPath = this._fileSystemService.getProgressFilePath(this._projectPath);
+        await this._fileSystemService.openFileInEditor(fullPath);
+      } else {
+        // その他のファイルはそのまま開く
+        await this._fileSystemService.openFileInEditor(filePath);
+      }
+    } catch (error) {
+      Logger.error('ScopeManagerPanel: ファイルを開く際にエラーが発生しました', error as Error);
+      this._showError(`ファイルを開けませんでした: ${(error as Error).message}`);
+    }
+  }
 
   /**
    * ファイル監視を設定する - FileWatcherServiceに委譲

@@ -41,6 +41,13 @@ def suppress_cli_warnings():
         message='.*Expected .* fields but got .*',
         category=UserWarning,
     )
+    
+    # Suppress prompt-toolkit CPR warnings (if they somehow still appear)
+    warnings.filterwarnings(
+        'ignore',
+        message=".*terminal doesn't support cursor position requests.*",
+        category=UserWarning,
+    )
 
 
 # Apply warning suppressions when module is imported

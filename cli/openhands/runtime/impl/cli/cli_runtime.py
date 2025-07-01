@@ -532,7 +532,13 @@ class CLIRuntime(Runtime):
         if not self._runtime_initialized:
             return ErrorObservation('Runtime not initialized')
 
-        file_path = self._sanitize_filename(action.path)
+        try:
+            file_path = self._sanitize_filename(action.path)
+        except LLMMalformedActionError as e:
+            return ErrorObservation(
+                content=f'Path access denied: {str(e)}. Please use paths within the allowed workspace.',
+                error_id='PATH_ACCESS_DENIED'
+            )
 
         # Cannot read binary files
         if os.path.exists(file_path) and is_binary(file_path):
@@ -575,7 +581,13 @@ class CLIRuntime(Runtime):
         if not self._runtime_initialized:
             return ErrorObservation('Runtime not initialized')
 
-        file_path = self._sanitize_filename(action.path)
+        try:
+            file_path = self._sanitize_filename(action.path)
+        except LLMMalformedActionError as e:
+            return ErrorObservation(
+                content=f'Path access denied: {str(e)}. Please use paths within the allowed workspace.',
+                error_id='PATH_ACCESS_DENIED'
+            )
 
         try:
             # Create parent directories if they don't exist
@@ -658,7 +670,13 @@ class CLIRuntime(Runtime):
             return ErrorObservation('Runtime not initialized')
 
         # Ensure the path is within the workspace
-        file_path = self._sanitize_filename(action.path)
+        try:
+            file_path = self._sanitize_filename(action.path)
+        except LLMMalformedActionError as e:
+            return ErrorObservation(
+                content=f'Path access denied: {str(e)}. Please use paths within the allowed workspace.',
+                error_id='PATH_ACCESS_DENIED'
+            )
 
         # Check if it's a binary file
         if os.path.exists(file_path) and is_binary(file_path):

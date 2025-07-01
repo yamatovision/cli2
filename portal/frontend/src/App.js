@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { 
   AppBar, 
@@ -32,7 +32,8 @@ import PromptForm from './components/prompts/PromptForm';
 
 // 新しい認証システム
 import { AuthProvider, useAuth } from './auth/AuthContext';
-import AuthGuard, { LoginGuard } from './auth/AuthGuard';
+import { LoginGuard } from './auth/AuthGuard';
+import AdminAuthGuard from './auth/AdminAuthGuard';
 
 // テーマの設定
 const theme = createTheme({
@@ -58,7 +59,7 @@ const theme = createTheme({
 
 // AuthContextを内部で使用するメインアプリコンポーネント
 const MainApp = () => {
-  const { user, isAuthenticated, loading, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const navigate = useNavigate();
 
@@ -124,7 +125,7 @@ const MainApp = () => {
                 display: 'flex',
                 alignItems: 'center'
               }}>
-                AppGenius
+                ブルーランプ
               </Typography>
               
               {user ? (
@@ -176,21 +177,24 @@ const MainApp = () => {
                         <DashboardIcon />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title="プロンプト管理" arrow>
-                      <IconButton
-                        color="inherit"
-                        onClick={() => navigate('/prompts', { replace: true })}
-                        size="large"
-                        sx={{ 
-                          backgroundColor: window.location.pathname.startsWith('/prompts') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.25)'
-                          }
-                        }}
-                      >
-                        <PromptIcon />
-                      </IconButton>
-                    </Tooltip>
+                    {/* プロンプト管理メニューはSuperAdminのみ表示 */}
+                    {user?.role === 'SuperAdmin' && (
+                      <Tooltip title="プロンプト" arrow>
+                        <IconButton
+                          color="inherit"
+                          onClick={() => navigate('/prompts', { replace: true })}
+                          size="large"
+                          sx={{ 
+                            backgroundColor: window.location.pathname.startsWith('/prompts') ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.25)'
+                            }
+                          }}
+                        >
+                          <PromptIcon />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                   </Box>
                   
                   <Tooltip title="ログアウト" arrow>
@@ -228,36 +232,35 @@ const MainApp = () => {
             } />
             
             <Route path="/dashboard" element={
-              <AuthGuard>
+              <AdminAuthGuard>
                 <Dashboard />
-              </AuthGuard>
+              </AdminAuthGuard>
             } />
             
-            {/* プロンプト管理ルート */}
+            {/* プロンプト関連のルート - SuperAdminのみアクセス可能 */}
             <Route path="/prompts" element={
-              <AuthGuard>
+              <AdminAuthGuard requireSuperAdmin={true}>
                 <PromptList />
-              </AuthGuard>
+              </AdminAuthGuard>
             } />
             
-            <Route path="/prompts/create" element={
-              <AuthGuard>
+            <Route path="/prompts/new" element={
+              <AdminAuthGuard requireSuperAdmin={true}>
                 <PromptForm />
-              </AuthGuard>
-            } />
-            
-            <Route path="/prompts/edit/:id" element={
-              <AuthGuard>
-                <PromptForm />
-              </AuthGuard>
+              </AdminAuthGuard>
             } />
             
             <Route path="/prompts/:id" element={
-              <AuthGuard>
+              <AdminAuthGuard requireSuperAdmin={true}>
                 <PromptDetail />
-              </AuthGuard>
+              </AdminAuthGuard>
             } />
             
+            <Route path="/prompts/:id/edit" element={
+              <AdminAuthGuard requireSuperAdmin={true}>
+                <PromptForm />
+              </AdminAuthGuard>
+            } />
             
             <Route path="/" element={
               // 認証コンテキストを使用

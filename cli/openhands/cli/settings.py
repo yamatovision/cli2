@@ -5,6 +5,7 @@ from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.widgets import Frame, TextArea
 from pydantic import SecretStr
 
+from openhands.cli.branding import get_message, SETTINGS_LABELS
 from openhands.cli.tui import (
     COLOR_GREY,
     UserCancelledError,
@@ -45,31 +46,31 @@ def display_settings(config: OpenHandsConfig) -> None:
         )
         labels_and_values.extend(
             [
-                ('   LLM Provider', str(provider)),
-                ('   LLM Model', str(llm_config.model)),
-                ('   API Key', '********' if llm_config.api_key else 'Not Set'),
+                ('   LLMプロバイダー', str(provider)),
+                ('   LLMモデル', str(llm_config.model)),
+                ('   APIキー', '********' if llm_config.api_key else '未設定'),
             ]
         )
     else:
         labels_and_values.extend(
             [
-                ('   Custom Model', str(llm_config.model)),
-                ('   Base URL', str(llm_config.base_url)),
-                ('   API Key', '********' if llm_config.api_key else 'Not Set'),
+                ('   カスタムモデル', str(llm_config.model)),
+                ('   ベースURL', str(llm_config.base_url)),
+                ('   APIキー', '********' if llm_config.api_key else '未設定'),
             ]
         )
 
     # Common settings
     labels_and_values.extend(
         [
-            ('   Agent', str(config.default_agent)),
+            ('   エージェント', str(config.default_agent)),
             (
-                '   Confirmation Mode',
-                'Enabled' if config.security.confirmation_mode else 'Disabled',
+                '   確認モード',
+                '有効' if config.security.confirmation_mode else '無効',
             ),
             (
-                '   Memory Condensation',
-                'Enabled' if config.enable_default_condenser else 'Disabled',
+                '   メモリ圧縮',
+                '有効' if config.enable_default_condenser else '無効',
             ),
         ]
     )
@@ -97,7 +98,7 @@ def display_settings(config: OpenHandsConfig) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='Settings',
+        title=SETTINGS_LABELS['title'],
         style=f'fg:{COLOR_GREY}',
     )
 
@@ -167,13 +168,13 @@ async def modify_llm_settings_basic(
     try:
         # Show the default provider but allow changing it
         print_formatted_text(
-            HTML(f'\n<grey>Default provider: </grey><green>{provider}</green>')
+            HTML(f'\n<grey>デフォルトプロバイダー: </grey><green>{provider}</green>')
         )
 
         # Show verified providers plus "Select another provider" option
-        provider_choices = verified_providers + ['Select another provider']
+        provider_choices = verified_providers + ['他のプロバイダーを選択']
         provider_choice = cli_confirm(
-            '(Step 1/3) Select LLM Provider:',
+            '(ステップ1/3) LLMプロバイダーを選択:',
             provider_choices,
         )
 
@@ -200,7 +201,7 @@ async def modify_llm_settings_basic(
 
             provider = await get_validated_input(
                 session,
-                '(Step 1/3) Select LLM Provider (TAB for options, CTRL-c to cancel): ',
+                '(ステップ1/3) LLMプロバイダーを入力 (TABでオプション、CTRL-cでキャンセル): ',
                 completer=provider_completer,
                 validator=provider_validator,
                 error_message='Invalid provider selected',
@@ -256,7 +257,7 @@ async def modify_llm_settings_basic(
         change_model = (
             cli_confirm(
                 'Do you want to use a different model?',
-                [f'Use {default_model}', 'Select another model'],
+                [f'{default_model}を使用', '他のモデルを選択'],
             )
             == 1
         )
@@ -282,7 +283,7 @@ async def modify_llm_settings_basic(
 
             model = await get_validated_input(
                 session,
-                '(Step 2/3) Select LLM Model (TAB for options, CTRL-c to cancel): ',
+                '(ステップ2/3) LLMモデルを入力 (TABでオプション、CTRL-cでキャンセル): ',
                 completer=model_completer,
                 validator=model_validator,
                 error_message='Model name cannot be empty',
@@ -293,7 +294,7 @@ async def modify_llm_settings_basic(
 
         api_key = await get_validated_input(
             session,
-            '(Step 3/3) Enter API Key (CTRL-c to cancel): ',
+            '(ステップ3/3) APIキーを入力 (CTRL-cでキャンセル): ',
             error_message='API Key cannot be empty',
         )
 

@@ -183,10 +183,10 @@ const Login = () => {
           <Box p={4}>
             <Box display="flex" flexDirection="column" alignItems="center" mb={4}>
               <Typography variant="h4" component="h1" gutterBottom>
-                AppGenius
+                ブルーランプ
               </Typography>
               <Typography variant="subtitle1" color="textSecondary">
-                プロンプト管理ポータル
+                ブルーランプ管理ポータル
               </Typography>
               {isVSCodeClient() && (
                 <Typography variant="caption" color="primary" sx={{ mt: 1 }}>
@@ -267,7 +267,7 @@ const Login = () => {
         
         <Box mt={4} textAlign="center">
           <Typography variant="body2" color="textSecondary">
-            AppGenius © {new Date().getFullYear()}
+            ブルーランプ © {new Date().getFullYear()}
           </Typography>
         </Box>
       </Box>

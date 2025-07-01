@@ -169,6 +169,12 @@ config.toml
 config.toml_
 config.toml.bak
 
+# Private directory (contains sensitive agent configurations)
+private/
+
+# Reference directory (contains external repositories)
+reference/
+
 # Specific sensitive files
 docs/deployment/deploy.md
 .vqc8x9d3gsb4j

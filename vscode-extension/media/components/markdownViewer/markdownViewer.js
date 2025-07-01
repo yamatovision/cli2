@@ -2,6 +2,9 @@
 import stateManager from '../../core/stateManager.js';
 import { convertMarkdownToHtml, enhanceSpecialElements, setupCheckboxes } from '../../utils/simpleMarkdownConverter.js';
 
+// stateManagerをグローバルに公開（他の場所でも使えるように）
+window.stateManager = stateManager;
+
 class MarkdownViewer {
   constructor() {
     this.container = document.querySelector('.markdown-content');
@@ -71,6 +74,83 @@ class MarkdownViewer {
     
     // チェックボックスのイベントリスナー設定
     setupCheckboxes();
+    
+    // ファイルリンクのクリックイベントを設定
+    this._setupFileLinks();
+  }
+  
+  /**
+   * ファイルリンクのクリックイベントを設定
+   */
+  _setupFileLinks() {
+    const fileLinks = document.querySelectorAll('.file-link');
+    console.log('ファイルリンク検出数:', fileLinks.length);
+    
+    fileLinks.forEach((link, index) => {
+      const filePath = link.getAttribute('data-file-path');
+      console.log(`ファイルリンク[${index}]:`, filePath);
+      
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('ファイルリンククリック検出:', filePath);
+        console.log('vsCodeApi存在確認:', !!window.vsCodeApi);
+        
+        if (filePath && window.vsCodeApi) {
+          // 現在のプロジェクトパスを取得
+          // stateManagerから取得を試みる
+          let projectPath = '';
+          if (window.stateManager) {
+            const state = window.stateManager.getState();
+            projectPath = state?.projectPath || '';
+          }
+          
+          // それでも取得できない場合は、プロジェクト表示から取得
+          if (!projectPath) {
+            const projectPathElement = document.querySelector('.project-path-display');
+            if (projectPathElement) {
+              projectPath = projectPathElement.textContent || '';
+            }
+          }
+          
+          console.log('プロジェクトパス:', projectPath);
+          
+          // ファイルビューワーを開く際に、検索文字列として渡す
+          console.log('openFileViewerメッセージ送信:', {
+            command: 'openFileViewer',
+            filePath: filePath,
+            searchQuery: filePath,  // 検索ボックスに入れる
+            suggestedPaths: [       // 探すべき候補パス
+              filePath,                                    // そのまま
+              `docs/${filePath}`,                         // docs/ディレクトリ
+              `${projectPath}/${filePath}`,               // プロジェクトルート
+              `${projectPath}/docs/${filePath}`,          // プロジェクト/docs
+              `${projectPath}/src/${filePath}`,           // プロジェクト/src
+            ]
+          });
+          
+          // ファイルビューワーを開いて、該当ファイルを表示
+          window.vsCodeApi.postMessage({
+            command: 'openFileViewer',
+            filePath: filePath,
+            searchQuery: filePath,
+            suggestedPaths: [
+              filePath,
+              `docs/${filePath}`,
+              `${projectPath}/${filePath}`,
+              `${projectPath}/docs/${filePath}`,
+              `${projectPath}/src/${filePath}`,
+            ]
+          });
+        } else {
+          console.error('ファイルリンククリックエラー:', {
+            filePath: filePath,
+            vsCodeApi: !!window.vsCodeApi
+          });
+        }
+      });
+    });
   }
   
   /**
@@ -142,6 +222,9 @@ class MarkdownViewer {
 
           // チェックボックスのイベントリスナー設定
           setupCheckboxes();
+
+          // ファイルリンクのクリックイベントを設定
+          this._setupFileLinks();
 
           // 表示内容を記録
           this._lastDisplayedMarkdown = content;

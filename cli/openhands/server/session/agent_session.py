@@ -401,6 +401,7 @@ class AgentSession:
         agent_to_llm_config: dict[str, LLMConfig] | None = None,
         agent_configs: dict[str, AgentConfig] | None = None,
         replay_events: list[Event] | None = None,
+        agent_switch_logging: bool = True,
     ) -> tuple[AgentController, bool]:
         """Creates an AgentController instance
 
@@ -445,6 +446,7 @@ class AgentSession:
             agent_to_llm_config=agent_to_llm_config,
             agent_configs=agent_configs,
             confirmation_mode=confirmation_mode,
+            agent_switch_logging=agent_switch_logging,
             headless_mode=False,
             status_callback=self._status_callback,
             initial_state=initial_state,

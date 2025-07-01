@@ -6,6 +6,10 @@ import sys
 import threading
 import time
 
+# Suppress prompt-toolkit CPR warnings for terminals that don't support it
+if os.environ.get('TERM') in ['dumb', 'unknown'] or not sys.stdout.isatty():
+    os.environ['PROMPT_TOOLKIT_NO_CPR'] = '1'
+
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear
@@ -44,7 +48,7 @@ from openhands.core.config import (
 )
 from openhands.core.config.condenser_config import NoOpCondenserConfig
 from openhands.core.config.mcp_config import OpenHandsMCPConfigImpl
-from openhands.core.logger import openhands_logger as logger
+from openhands.core.logger import bluelamp_logger as logger
 from openhands.core.loop import run_agent_until_done
 from openhands.core.schema import AgentState
 from openhands.core.setup import (
@@ -73,9 +77,12 @@ from openhands.microagent.microagent import BaseMicroagent
 from openhands.runtime.base import Runtime
 from openhands.storage.settings.file_settings_store import FileSettingsStore
 
+# Global shutdown flag for signal handling
+_shutdown_requested = threading.Event()
+_shutdown_lock = threading.Lock()
 
 def setup_signal_handlers():
-    """Setup signal handlers for immediate termination."""
+    """Setup signal handlers for graceful shutdown."""
     def signal_handler(signum, frame):
         print_formatted_text(HTML(f'\n<blue>{get_message("ctrl_c_exit")}</blue>'))
         sys.exit(0)
@@ -92,6 +99,7 @@ async def cleanup_session(
     controller: AgentController,
 ) -> None:
     """Clean up all resources from the current session."""
+    logger.info("CTRL+C_DEBUG: Starting session cleanup...")
     
     try:
         event_stream = runtime.event_stream
@@ -101,16 +109,99 @@ async def cleanup_session(
             event_stream.file_store,
             event_stream.user_id,
         )
-    except Exception:
-        pass
+        logger.info("CTRL+C_DEBUG: Session state saved")
+    except Exception as e:
+        logger.warning(f"CTRL+C_DEBUG: Failed to save session state: {e}")
 
     try:
+        current_task = asyncio.current_task(loop)
+        pending = [task for task in asyncio.all_tasks(loop) if task is not current_task]
+        logger.info(f"CTRL+C_DEBUG: Found {len(pending)} pending tasks to cancel")
+
+        if pending:
+            # Cancel all pending tasks
+            for task in pending:
+                if not task.done():
+                    task.cancel()
+                    logger.debug(f"CTRL+C_DEBUG: Cancelled task: {task.get_name()}")
+            
+            # Wait for tasks to complete with extended timeout
+            try:
+                done, pending_set = await asyncio.wait(set(pending), timeout=5.0)
+                remaining_pending = list(pending_set)
+                logger.info(f"CTRL+C_DEBUG: {len(done)} tasks completed, {len(remaining_pending)} still pending")
+                
+                # Force cancel any remaining tasks
+                for task in remaining_pending:
+                    if not task.done():
+                        task.cancel()
+                        logger.warning(f"CTRL+C_DEBUG: Force cancelled task: {task.get_name()}")
+                        
+            except asyncio.TimeoutError:
+                logger.warning("CTRL+C_DEBUG: Timeout waiting for tasks to complete")
+
         # Clean up resources
+        logger.info("CTRL+C_DEBUG: Cleaning up agent and runtime...")
         agent.reset()
         runtime.close()
         await controller.close()
-    except Exception:
-        pass
+        logger.info("CTRL+C_DEBUG: Session cleanup completed successfully")
+
+    except Exception as e:
+        logger.error(f'CTRL+C_DEBUG: Error during session cleanup: {e}')
+        import traceback
+        logger.error(f'CTRL+C_DEBUG: Cleanup traceback: {traceback.format_exc()}')
+
+
+async def background_auth_check(config: OpenHandsConfig, check_interval: int = 600) -> None:
+    """Background task to periodically check authentication status.
+    
+    Args:
+        config: Application configuration
+        check_interval: Check interval in seconds (default 600 = 10 minutes)
+    """
+    from openhands.cli.auth import get_authenticator
+    
+    # Always use authentication - fallback to default URL if not configured
+    portal_url = config.portal_base_url or "https://bluelamp-235426778039.asia-northeast1.run.app/api"
+    authenticator = get_authenticator(portal_url)
+    
+    while not _shutdown_requested.is_set():
+        try:
+            await asyncio.sleep(check_interval)
+            
+            if _shutdown_requested.is_set():
+                break
+                
+            # Check authentication status
+            try:
+                await authenticator.verify_api_key()
+                logger.debug("Background auth check: Still authenticated")
+            except ValueError as e:
+                # Authentication failed
+                logger.warning(f"Background auth check failed: {e}")
+                print_formatted_text(
+                    HTML(f'\n<red>{get_message("portal_auth_check_failed")}</red>')
+                )
+                # Request shutdown after current task
+                _shutdown_requested.set()
+                break
+            except Exception as e:
+                # 認証サービス利用不可の場合は停止
+                if "Authentication service unavailable" in str(e):
+                    logger.error(f"Background auth check failed: {e}")
+                    print_formatted_text(
+                        HTML(f'\n<red>認証サービスに接続できません。CLIを終了します。</red>')
+                    )
+                    _shutdown_requested.set()
+                    break
+                else:
+                    # その他のネットワークエラーはログのみ
+                    logger.debug(f"Background auth check network error: {e}")
+                
+        except asyncio.CancelledError:
+            logger.debug("Background auth check cancelled")
+            break
 
 
 async def run_session(
@@ -128,7 +219,9 @@ async def run_session(
 
     sid = generate_sid(config, session_name)
     is_loaded = asyncio.Event()
+    is_paused = asyncio.Event()  # Event to track agent pause requests
     always_confirm_mode = False  # Flag to enable always confirm mode
+    # confirmation_in_progress = False  # Removed: was causing repeated prompts
 
     # Show runtime initialization message
     display_runtime_initialization_message(config.runtime)
@@ -142,7 +235,7 @@ async def run_session(
     runtime = create_runtime(
         config,
         sid=sid,
-        headless_mode=True,
+        headless_mode=True,  # Temporarily disable confirmation to avoid hang issues
         agent=agent,
     )
 
@@ -152,21 +245,37 @@ async def run_session(
 
     runtime.subscribe_to_shell_stream(stream_to_console)
 
-    controller, initial_state = create_controller(agent, runtime, config)
+    # Temporarily disable confirmation to avoid hang issues
+    controller, initial_state = create_controller(agent, runtime, config, headless_mode=True)
 
     event_stream = runtime.event_stream
 
     usage_metrics = UsageMetrics()
+    
+    # Start background auth check task (always enabled)
+    auth_check_task = None
+    portal_url = config.portal_base_url or "https://bluelamp-235426778039.asia-northeast1.run.app/api"
+    # Update config for background task
+    config.portal_base_url = portal_url
+    auth_check_task = asyncio.create_task(background_auth_check(config))
+    logger.debug("Started background authentication check task")
 
     async def prompt_for_next_task(agent_state: str) -> None:
         nonlocal reload_microagents, new_session_requested
         while True:
+            # Check for shutdown request
+            if _shutdown_requested.is_set():
+                logger.info("CTRL+C_DEBUG: Shutdown requested, exiting prompt loop")
+                return
             
-                
             next_message = await read_prompt_input(
                 agent_state, multiline=config.cli_multiline_input
             )
 
+            # Check again after input (in case CTRL+C was pressed during input)
+            if _shutdown_requested.is_set():
+                logger.info("CTRL+C_DEBUG: Shutdown requested after input, exiting prompt loop")
+                return
 
             if not next_message.strip():
                 continue
@@ -185,12 +294,20 @@ async def run_session(
                 settings_store,
             )
 
-            if close_repl:
+            if close_repl or _shutdown_requested.is_set():
                 return
 
     async def on_event_async(event: Event) -> None:
-        nonlocal reload_microagents, always_confirm_mode
+        nonlocal reload_microagents, is_paused, always_confirm_mode
         
+        # Check for shutdown request early
+        if _shutdown_requested.is_set():
+            logger.info("CTRL+C_DEBUG: Shutdown requested, skipping event processing")
+            return
+            
+        logging.info(f"AGENT_SWITCH_DEBUG: Processing event: {type(event).__name__}")
+        if isinstance(event, AgentStateChangedObservation):
+            logging.info(f"AGENT_SWITCH_DEBUG: AgentStateChangedObservation - state: {event.agent_state}")
             
         display_event(event, config)
         update_usage_metrics(event, usage_metrics)
@@ -200,6 +317,9 @@ async def run_session(
                 AgentState.AWAITING_USER_INPUT,
                 AgentState.FINISHED,
             ]:
+                # If the agent is paused, do not prompt for input as it's already handled by PAUSED state change
+                if is_paused.is_set():
+                    return
 
                 # Reload microagents after initialization of repo.md
                 if reload_microagents:
@@ -210,37 +330,21 @@ async def run_session(
                     reload_microagents = False
                 await prompt_for_next_task(event.agent_state)
 
-            if event.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
+            # Commented out: Task completion confirmation handling
+            # This was causing repeated confirmation prompts
+            # Original OpenHands design does not have confirmation on task completion
+            # if event.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
+            #     ...
 
-                if always_confirm_mode:
-                    event_stream.add_event(
-                        ChangeAgentStateAction(AgentState.USER_CONFIRMED),
-                        EventSource.USER,
-                    )
-                    return
-
-                confirmation_status = await read_confirmation_input()
-                if confirmation_status == 'yes' or confirmation_status == 'always':
-                    event_stream.add_event(
-                        ChangeAgentStateAction(AgentState.USER_CONFIRMED),
-                        EventSource.USER,
-                    )
-                else:
-                    event_stream.add_event(
-                        ChangeAgentStateAction(AgentState.USER_REJECTED),
-                        EventSource.USER,
-                    )
-
-                # Set the always_confirm_mode flag if the user wants to always confirm
-                if confirmation_status == 'always':
-                    always_confirm_mode = True
-
+            if event.agent_state == AgentState.PAUSED:
+                is_paused.clear()  # Revert the event state before prompting for user input
+                await prompt_for_next_task(event.agent_state)
 
             if event.agent_state == AgentState.RUNNING:
                 display_agent_running_message()
-                # Start monitoring for ESC key press
-                is_paused = asyncio.Event()
-                asyncio.create_task(process_agent_pause(is_paused, event_stream))
+                loop.create_task(
+                    process_agent_pause(is_paused, event_stream)
+                )  # Create a task to track agent pause requests from the user
 
     def on_event(event: Event) -> None:
         loop.create_task(on_event_async(event))
@@ -323,8 +427,16 @@ async def run_session(
         asyncio.create_task(prompt_for_next_task(''))
 
     await run_agent_until_done(
-        controller, runtime, memory, [AgentState.STOPPED, AgentState.ERROR]
+        controller, runtime, memory, [AgentState.STOPPED, AgentState.ERROR, AgentState.FINISHED]
     )
+
+    # Cancel background auth check task if running
+    if auth_check_task and not auth_check_task.done():
+        auth_check_task.cancel()
+        try:
+            await auth_check_task
+        except asyncio.CancelledError:
+            logger.debug("Background auth check task cancelled")
 
     await cleanup_session(loop, agent, runtime, controller)
 
@@ -374,6 +486,90 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
         banner_shown = True
 
         settings = await settings_store.load()
+    
+    # Portal authentication check (always required)
+    from openhands.cli.auth import get_authenticator
+    # Always require authentication regardless of config
+    portal_url = config.portal_base_url or "https://bluelamp-235426778039.asia-northeast1.run.app/api"
+    authenticator = get_authenticator(portal_url)
+    
+    # Try to load saved API key
+    saved_api_key = authenticator.load_api_key()
+    
+    if not saved_api_key:
+        # No saved API key, prompt for one
+        clear()
+        if not banner_shown:
+            display_banner(session_id='auth')
+            banner_shown = True
+        
+        print_formatted_text(
+            HTML(f'<yellow>{get_message("portal_auth_required")}</yellow>\n')
+        )
+        print_formatted_text(
+            HTML(f'<grey>{get_message("portal_auth_prompt")}</grey>\n')
+        )
+        
+        # メール/パスワード認証を実行
+        try:
+            success = await authenticator.prompt_for_login()
+            if not success:
+                print_formatted_text(HTML(f'<red>{get_message("portal_auth_cancelled")}</red>'))
+                return
+        except Exception as e:
+            print_formatted_text(HTML(f'<red>{get_message("portal_network_error", error=str(e))}</red>\n'))
+            print_formatted_text(HTML(f'<grey>{get_message("portal_connection_check")}</grey>\n'))
+            return
+    else:
+        # Verify saved API key
+        try:
+            await authenticator.verify_api_key()
+            user_info = authenticator.get_user_info()
+            if not banner_shown:
+                clear()
+                display_banner(session_id='authenticated')
+                banner_shown = True
+            print_formatted_text(
+                HTML(f'<green>{get_message("portal_authenticated", name=user_info.get("name"))}</green>\n')
+            )
+        except ValueError as e:
+            print_formatted_text(HTML(f'<red>{get_message("portal_auth_error", error=str(e))}</red>'))
+            print_formatted_text(HTML(f'<yellow>{get_message("portal_key_invalid")}</yellow>\n'))
+            
+            # Clear invalid key and reprompt
+            authenticator.clear_auth()
+            
+            # 無効なキーをクリアして再認証
+            try:
+                success = await authenticator.prompt_for_login()
+                if not success:
+                    print_formatted_text(HTML(f'<red>{get_message("portal_auth_cancelled")}</red>'))
+                    return
+                user_info = authenticator.get_user_info()
+                print_formatted_text(
+                    HTML(f'<green>認証成功: {user_info.get("name")} としてログインしました。</green>\n')
+                )
+            except ValueError as e:
+                print_formatted_text(HTML(f'<red>{get_message("portal_auth_error", error=str(e))}</red>\n'))
+                return
+            except Exception as e:
+                print_formatted_text(HTML(f'<red>{get_message("portal_network_error", error=str(e))}</red>\n'))
+                return
+        except Exception as e:
+            # 認証サービス利用不可の場合は終了
+            if "Authentication service unavailable" in str(e):
+                print_formatted_text(
+                    HTML(f'<red>認証サービスに接続できません。CLIを終了します。</red>')
+                )
+                return
+            else:
+                # その他のネットワークエラーは警告のみ
+                print_formatted_text(
+                    HTML(f'<yellow>{get_message("portal_connection_error", error=str(e))}</yellow>')
+                )
+                print_formatted_text(
+                    HTML(f'<yellow>{get_message("portal_offline_mode")}</yellow>\n')
+                )
 
     # Use settings from settings store if available and override with command line arguments
     if settings:
@@ -419,12 +615,10 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
     if not should_override_cli_defaults:
         config.runtime = 'cli'
-        if not config.workspace_base:
-            config.workspace_base = os.getcwd()
         config.security.confirmation_mode = True
 
-    # TODO: Set working directory from config or use current working directory?
-    current_dir = config.workspace_base
+    # Use current working directory
+    current_dir = os.getcwd()
 
     if not current_dir:
         raise ValueError('Workspace base directory not specified')
@@ -448,7 +642,7 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     )
 
     # If a new session was requested, run it
-    while new_session_requested:
+    while new_session_requested and not _shutdown_requested.is_set():
         new_session_requested = await run_session(
             loop, config, settings_store, current_dir, None
         )
@@ -463,12 +657,15 @@ def main():
     
     # Set up logging for debug
     logger.setLevel(logging.INFO)
+    logger.info("CTRL+C_DEBUG: Starting BlueLamp CLI application")
     
     try:
         loop.run_until_complete(main_with_loop(loop))
+        logger.info("CTRL+C_DEBUG: Main loop completed normally")
     except KeyboardInterrupt:
-        # KeyboardInterrupt is handled by signal handler
-        pass
+        logger.info("CTRL+C_DEBUG: KeyboardInterrupt caught in main()")
+        print_formatted_text(HTML('<gold>Received keyboard interrupt, shutting down...</gold>'))
+        _shutdown_requested.set()
     except ConnectionRefusedError as e:
         print(get_message('error_connection', error=str(e)))
         sys.exit(1)
@@ -478,8 +675,41 @@ def main():
         traceback.print_exc()
         sys.exit(1)
     finally:
-        loop.close()
+        logger.info("CTRL+C_DEBUG: Starting final cleanup...")
+        try:
+            # Cancel all running tasks
+            pending = asyncio.all_tasks(loop)
+            logger.info(f"CTRL+C_DEBUG: Cancelling {len(pending)} pending tasks")
+            
+            for task in pending:
+                if not task.done():
+                    task.cancel()
+                    logger.debug(f"CTRL+C_DEBUG: Cancelled task in main: {task.get_name()}")
+
+            # Wait for all tasks to complete with a timeout
+            if pending:
+                try:
+                    loop.run_until_complete(
+                        asyncio.wait_for(
+                            asyncio.gather(*pending, return_exceptions=True),
+                            timeout=3.0
+                        )
+                    )
+                    logger.info("CTRL+C_DEBUG: All tasks completed successfully")
+                except asyncio.TimeoutError:
+                    logger.warning("CTRL+C_DEBUG: Timeout waiting for tasks in main cleanup")
+                except Exception as cleanup_error:
+                    logger.warning(f"CTRL+C_DEBUG: Error during task cleanup: {cleanup_error}")
+            
+            loop.close()
+            logger.info("CTRL+C_DEBUG: Event loop closed")
+            
+        except Exception as e:
+            logger.error(f'CTRL+C_DEBUG: Error during final cleanup: {e}')
+            print(f'Error during cleanup: {e}')
+            sys.exit(1)
         
+        logger.info("CTRL+C_DEBUG: Application shutdown complete")
 
 
 if __name__ == '__main__':

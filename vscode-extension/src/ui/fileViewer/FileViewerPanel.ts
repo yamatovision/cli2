@@ -93,8 +93,9 @@ export class FileViewerPanel {
    */
   public static createOrShow(
     extensionUri: vscode.Uri,
-    messageDispatchService?: IMessageDispatchService,
-    initialProjectPath?: string
+    initialProjectPath?: string,
+    fileInfo?: any,
+    messageDispatchService?: IMessageDispatchService
   ): FileViewerPanel {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
@@ -102,6 +103,9 @@ export class FileViewerPanel {
 
     try {
       Logger.info(`FileViewerPanel: createOrShow呼び出し (initialProjectPath=${initialProjectPath || 'なし'})`);
+      if (fileInfo) {
+        Logger.info(`FileViewerPanel: ファイル情報受信: ${JSON.stringify(fileInfo)}`);
+      }
 
       // パネルが既に存在する場合は、それを表示
       if (FileViewerPanel._currentPanel) {
@@ -124,6 +128,16 @@ export class FileViewerPanel {
           }
         } else {
           Logger.info('FileViewerPanel: 初期プロジェクトパスが指定されていません');
+        }
+
+        // ファイル情報が渡された場合は、検索ボックスに設定
+        if (fileInfo && fileInfo.searchQuery) {
+          Logger.info(`FileViewerPanel: 検索クエリを設定: ${fileInfo.searchQuery}`);
+          // Webviewにメッセージを送信して検索ボックスに値を設定
+          FileViewerPanel._currentPanel._panel.webview.postMessage({
+            command: 'setSearchQuery',
+            searchQuery: fileInfo.searchQuery
+          });
         }
 
         return FileViewerPanel._currentPanel;
@@ -153,6 +167,13 @@ export class FileViewerPanel {
       // 新しいインスタンスを作成
       FileViewerPanel._currentPanel = new FileViewerPanel(panel, extensionUri, messageDispatchService, initialProjectPath);
       Logger.info(`FileViewerPanel: 新しいインスタンスを作成しました${initialProjectPath ? ` (初期プロジェクトパス: ${initialProjectPath})` : ''}`);
+      
+      // ファイル情報が渡された場合は、ファイルを探して開く
+      if (fileInfo && fileInfo.suggestedPaths && initialProjectPath) {
+        Logger.info(`FileViewerPanel: ファイルを探しています...`);
+        FileViewerPanel._currentPanel._tryOpenFileFromSuggestions(fileInfo);
+      }
+      
       return FileViewerPanel._currentPanel;
     } catch (error) {
       Logger.error('FileViewerPanel: createOrShowでエラーが発生しました', error as Error);
@@ -984,6 +1005,58 @@ export class FileViewerPanel {
       this._panel.webview.postMessage(message);
     } catch (error) {
       Logger.error(`FileViewerPanel: WebViewへのメッセージ送信に失敗しました: ${message.command}`, error as Error);
+    }
+  }
+  
+  /**
+   * suggestedPathsからファイルを探して開く
+   */
+  private async _tryOpenFileFromSuggestions(fileInfo: any): Promise<void> {
+    try {
+      const fs = vscode.workspace.fs;
+      
+      // suggestedPathsを順番に試す
+      for (const suggestedPath of fileInfo.suggestedPaths) {
+        try {
+          const fullPath = path.isAbsolute(suggestedPath) 
+            ? suggestedPath 
+            : path.join(this._currentProjectPath, suggestedPath);
+          
+          const uri = vscode.Uri.file(fullPath);
+          
+          // ファイルが存在するか確認
+          await fs.stat(uri);
+          
+          Logger.info(`FileViewerPanel: ファイルが見つかりました: ${fullPath}`);
+          
+          // ファイルを開く（Webviewにメッセージを送信）
+          setTimeout(() => {
+            this._panel.webview.postMessage({
+              command: 'openFile',
+              filePath: fullPath
+            });
+          }, 500); // Webviewの初期化を待つ
+          
+          return; // ファイルが見つかったので終了
+        } catch (error) {
+          // ファイルが存在しない場合は次の候補を試す
+          continue;
+        }
+      }
+      
+      // どのパスでもファイルが見つからなかった場合
+      Logger.info(`FileViewerPanel: ファイルが見つかりませんでした。検索ボックスに設定します: ${fileInfo.searchQuery}`);
+      
+      // 検索ボックスに値を設定
+      setTimeout(() => {
+        this._panel.webview.postMessage({
+          command: 'setSearchQuery',
+          searchQuery: fileInfo.searchQuery
+        });
+      }, 500); // Webviewの初期化を待つ
+      
+    } catch (error) {
+      Logger.error('FileViewerPanel: ファイル検索中にエラーが発生しました', error as Error);
     }
   }
 

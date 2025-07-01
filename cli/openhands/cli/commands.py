@@ -10,6 +10,8 @@ from openhands.cli.settings import (
     modify_llm_settings_advanced,
     modify_llm_settings_basic,
 )
+from openhands.cli.auth import get_authenticator
+from openhands.cli.branding import get_message
 from openhands.cli.tui import (
     COLOR_GREY,
     UsageMetrics,
@@ -72,6 +74,8 @@ async def handle_commands(
         await handle_settings_command(config, settings_store)
     elif command == '/resume':
         close_repl, new_session_requested = await handle_resume_command(event_stream)
+    elif command == '/logout':
+        close_repl = await handle_logout_command(event_stream, usage_metrics, sid)
     else:
         close_repl = True
         action = MessageAction(content=command)
@@ -86,7 +90,7 @@ def handle_exit_command(
     close_repl = False
 
     confirm_exit = (
-        cli_confirm('\nTerminate session?', ['Yes, proceed', 'No, dismiss']) == 0
+        cli_confirm('\nセッションを終了しますか？', ['はい、終了します', 'いいえ、終了しません']) == 0
     )
 
     if confirm_exit:
@@ -102,6 +106,41 @@ def handle_exit_command(
 
 def handle_help_command() -> None:
     display_help()
+
+
+async def handle_logout_command(
+    event_stream: EventStream, usage_metrics: UsageMetrics, sid: str
+) -> bool:
+    """
+    ログアウトコマンドの処理
+    
+    Returns:
+        ログアウト実行時True（REPLを終了）
+    """
+    close_repl = False
+    
+    # ログアウト確認プロンプト
+    confirm_logout = (
+        cli_confirm('\nログアウトしますか？', ['はい、ログアウトします', 'いいえ、キャンセルします']) == 0
+    )
+    
+    if confirm_logout:
+        # 認証インスタンスを取得してログアウト実行
+        authenticator = get_authenticator()
+        logout_success = await authenticator.logout_async()
+        
+        if logout_success:
+            # セッションを停止
+            event_stream.add_event(
+                ChangeAgentStateAction(AgentState.STOPPED),
+                EventSource.ENVIRONMENT,
+            )
+            display_shutdown_message(usage_metrics, sid)
+            close_repl = True
+        else:
+            print("❌ ログアウト処理中にエラーが発生しました")
+    
+    return close_repl
 
 
 async def handle_init_command(
@@ -147,8 +186,8 @@ def handle_new_command(
 
     new_session_requested = (
         cli_confirm(
-            '\nCurrent session will be terminated and you will lose the conversation history.\n\nContinue?',
-            ['Yes, proceed', 'No, dismiss'],
+            '\n現在のセッションが終了し、会話履歴が失われます。\n\n続けますか？',
+            ['はい、続けます', 'いいえ、キャンセルします'],
         )
         == 0
     )
@@ -237,8 +276,8 @@ async def init_repository(current_dir: str) -> bool:
 
             init_repo = (
                 cli_confirm(
-                    'Do you want to re-initialize?',
-                    ['Yes, re-initialize', 'No, dismiss'],
+                    '再初期化しますか？',
+                    ['はい、再初期化します', 'いいえ、キャンセルします'],
                 )
                 == 0
             )
@@ -246,17 +285,17 @@ async def init_repository(current_dir: str) -> bool:
             if init_repo:
                 write_to_file(repo_file_path, '')
         except Exception:
-            print_formatted_text('Error reading repository instructions file (repo.md)')
+            print_formatted_text(get_message('error_file_not_found', file='repo.md'))
             init_repo = False
     else:
         print_formatted_text(
-            '\nRepository instructions file will be created by exploring the repository.\n'
+            '\nリポジトリ説明ファイルは、リポジトリを探索することで作成されます。\n'
         )
 
         init_repo = (
             cli_confirm(
-                'Do you want to proceed?',
-                ['Yes, create', 'No, dismiss'],
+                '続けますか？',
+                ['はい、作成します', 'いいえ、キャンセルします'],
             )
             == 0
         )
@@ -297,7 +336,7 @@ def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -
         print_formatted_text('')
 
         confirm = (
-            cli_confirm('Do you wish to continue?', ['Yes, proceed', 'No, exit']) == 0
+            cli_confirm('続けますか？', ['はい、続けます', 'いいえ、終了します']) == 0
         )
 
         if confirm:

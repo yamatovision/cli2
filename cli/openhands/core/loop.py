@@ -41,6 +41,35 @@ async def run_agent_until_done(
     controller.status_callback = status_callback
     memory.status_callback = status_callback
 
+    logger.info(f"AGENT_LOOP_DEBUG: Starting agent loop with end_states: {end_states}")
+    
     while controller.state.agent_state not in end_states:
+        current_state = controller.state.agent_state
+        logger.debug(f"AGENT_LOOP_DEBUG: Current agent state: {current_state}, waiting for: {end_states}")
+        
+        # Check for shutdown request
+        try:
+            from openhands.cli.main import _shutdown_requested
+            if _shutdown_requested.is_set():
+                logger.info("CTRL+C_DEBUG: Shutdown requested, breaking agent loop")
+                break
+        except ImportError:
+            # If we can't import the shutdown flag, continue normally
+            pass
+        
+        # Check for user interrupt request (ESC key)
+        try:
+            from openhands.cli.interrupt_handler import is_user_interrupt_requested
+            if is_user_interrupt_requested():
+                logger.info("ESC_INTERRUPT: User interrupt detected in agent loop, setting agent to AWAITING_USER_INPUT")
+                # Set agent state to awaiting user input to trigger prompt_for_next_task
+                await controller.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
+                break
+        except ImportError:
+            # If we can't import the interrupt handler, continue normally
+            pass
         
         await asyncio.sleep(1)
+    
+    final_state = controller.state.agent_state
+    logger.info(f"AGENT_LOOP_DEBUG: Agent loop completed with final state: {final_state}")

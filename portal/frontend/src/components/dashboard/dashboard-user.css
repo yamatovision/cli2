@@ -120,13 +120,15 @@
 /* ユーザー管理テーブルスタイル */
 .simple-user-table-container {
   margin-top: 20px;
-  overflow: hidden;
+  overflow-x: auto;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .simple-user-table-container table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 800px;
 }
 
 .simple-user-table-container th {
@@ -135,14 +137,37 @@
   padding: 12px 16px;
   font-weight: 600;
   color: #333;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .simple-user-table-container td {
   padding: 12px 16px;
   border-top: 1px solid #eee;
+  white-space: nowrap;
 }
 
-.simple-user-table-container tr:hover {
+.simple-user-table-container td:last-child {
+  position: sticky;
+  right: 0;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.simple-user-table-container th:last-child {
+  position: sticky;
+  right: 0;
+  background-color: #f5f5f5;
+  box-shadow: -2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.simple-user-table-container tr:hover td {
+  background-color: #f9f9f9;
+}
+
+.simple-user-table-container tr:hover td:last-child {
   background-color: #f9f9f9;
 }
 

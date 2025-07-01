@@ -3,7 +3,7 @@
  * ログイン、ログアウト、ユーザー情報取得、トークンリフレッシュなどの機能を提供します
  */
 import axios from 'axios';
-import authHeader from '../../utils/auth-header';
+// import authHeader from '../../utils/auth-header'; // 未使用のため一時的にコメントアウト
 // apiConfig.jsは削除予定のため、使用しない
 
 // API基本URL 
@@ -180,7 +180,8 @@ export const forceLogin = async (email, password) => {
     }
     
     // ネットワークエラーなど
-    throw { success: false, message: '接続エラーが発生しました' };
+    const errorObj = { success: false, message: '接続エラーが発生しました' };
+    throw new Error(JSON.stringify(errorObj));
   }
 };
 
@@ -303,7 +304,8 @@ export const login = async (email, password) => {
     }
     
     // ネットワークエラーなど
-    throw { success: false, message: '接続エラーが発生しました' };
+    const errorObj = { success: false, message: '接続エラーが発生しました' };
+    throw new Error(JSON.stringify(errorObj));
   }
 };
 
@@ -329,6 +331,14 @@ export const logout = async () => {
     
     // ローカルストレージをクリア
     localStorage.removeItem('simpleUser');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    
+    // キャッシュもクリア
+    lastAuthCheckTime = 0;
+    cachedAuthResponse = null;
+    
     console.log('simpleAuth.logout: ローカルストレージクリア完了');
     
     return { success: true, message: 'ログアウトしました' };
@@ -337,6 +347,13 @@ export const logout = async () => {
     
     // エラーが発生してもローカルストレージはクリア
     localStorage.removeItem('simpleUser');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('user');
+    
+    // キャッシュもクリア
+    lastAuthCheckTime = 0;
+    cachedAuthResponse = null;
     
     return { success: false, message: 'サーバーとの通信中にエラーが発生しましたが、ログアウト処理は完了しました' };
   }
@@ -374,7 +391,8 @@ export const register = async (name, email, password) => {
       throw error.response.data;
     }
     
-    throw { success: false, message: '接続エラーが発生しました' };
+    const errorObj = { success: false, message: '接続エラーが発生しました' };
+    throw new Error(JSON.stringify(errorObj));
   }
 };
 
@@ -514,7 +532,8 @@ export const getCurrentUser = async (forceRefresh = false) => {
   try {
     // アクセストークンが存在しない場合はエラー
     if ((!localUser || !localUser.accessToken) && !directToken) {
-      throw { success: false, message: '認証情報がありません' };
+      const errorObj = { success: false, message: '認証情報がありません' };
+      throw new Error(JSON.stringify(errorObj));
     }
     
     // サーバーAPIを呼び出し
@@ -535,9 +554,19 @@ export const getCurrentUser = async (forceRefresh = false) => {
         apiKeyValue: user.apiKeyValue || (apiKey && apiKey.value) || null
       };
       
+      console.log('simpleAuth.getCurrentUser: 保存前のユーザー情報', { user, authData });
+      
       // simpleUserとして保存
       localStorage.setItem('simpleUser', JSON.stringify(authData));
-      console.log('simpleAuth.getCurrentUser: 認証情報を更新しました');
+      
+      // 保存後の検証
+      const savedData = localStorage.getItem('simpleUser');
+      const parsedData = savedData ? JSON.parse(savedData) : null;
+      console.log('simpleAuth.getCurrentUser: 保存後の検証', { 
+        saved: !!savedData, 
+        role: parsedData?.role,
+        keys: parsedData ? Object.keys(parsedData) : 'no data'
+      });
     }
     
     // レスポンスをキャッシュして時間を記録
@@ -585,11 +614,12 @@ export const getCurrentUser = async (forceRefresh = false) => {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       
-      throw { 
+      const errorObj = { 
         success: false, 
         message: '認証セッションの有効期限が切れました。再ログインしてください。',
         requireRelogin: true 
       };
+      throw new Error(JSON.stringify(errorObj));
     }
     
     throw error;

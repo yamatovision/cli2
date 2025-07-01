@@ -38,10 +38,11 @@ from openhands.cli.branding import (
 )
 from openhands.core.config import OpenHandsConfig
 from openhands.core.schema import AgentState
-from openhands.events import EventSource
+from openhands.events import EventSource, EventStream
 from openhands.events.action import (
     Action,
     ActionConfirmationStatus,
+    ChangeAgentStateAction,
     CmdRunAction,
     MessageAction,
 )
@@ -56,7 +57,7 @@ from openhands.events.observation import (
 from openhands.llm.metrics import Metrics
 
 # Get logger for debug output
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('bluelamp.cli.tui')
 
 ENABLE_STREAMING = False  # FIXME: this doesn't work
 
@@ -129,9 +130,11 @@ def display_initialization_animation(text: str, is_loaded: asyncio.Event) -> Non
 
 
 def display_banner(session_id: str) -> None:
+    import os
+    cwd = os.getcwd()
     print_formatted_text(HTML(BLUELAMP_BANNER), style=DEFAULT_STYLE)
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>{get_message("session_id", sid=session_id)}</grey>'))
+    print_formatted_text(HTML(f'<grey>ディレクトリ: {cwd}</grey>'))
     print_formatted_text('')
 
 
@@ -387,14 +390,14 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
     total_tokens_str = f'{usage_metrics.metrics.accumulated_token_usage.prompt_tokens + usage_metrics.metrics.accumulated_token_usage.completion_tokens:,}'
 
     labels_and_values = [
-        ('   Total Cost (USD):', cost_str),
+        ('   合計コスト (USD):', cost_str),
         ('', ''),
-        ('   Total Input Tokens:', input_tokens_str),
-        ('      Cache Hits:', cache_read_str),
-        ('      Cache Writes:', cache_write_str),
-        ('   Total Output Tokens:', output_tokens_str),
+        ('   入力トークン数:', input_tokens_str),
+        ('      キャッシュヒット:', cache_read_str),
+        ('      キャッシュ書込:', cache_write_str),
+        ('   出力トークン数:', output_tokens_str),
         ('', ''),
-        ('   Total Tokens:', total_tokens_str),
+        ('   合計トークン数:', total_tokens_str),
     ]
 
     # Calculate max widths for alignment
@@ -415,7 +418,7 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title='Usage Metrics',
+        title='利用状況',
         style=f'fg:{COLOR_GREY}',
     )
 
@@ -434,13 +437,13 @@ def get_session_duration(session_init_time: float) -> str:
 def display_shutdown_message(usage_metrics: UsageMetrics, session_id: str) -> None:
     duration_str = get_session_duration(usage_metrics.session_init_time)
 
-    print_formatted_text(HTML('<grey>Closing current conversation...</grey>'))
+    print_formatted_text(HTML('<grey>現在の会話を終了しています...</grey>'))
     print_formatted_text('')
     display_usage_metrics(usage_metrics)
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>Conversation duration: {duration_str}</grey>'))
+    print_formatted_text(HTML(f'<grey>会話時間: {duration_str}</grey>'))
     print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>Closed conversation {session_id}</grey>'))
+    print_formatted_text(HTML(f'<grey>会話を終了しました: {session_id}</grey>'))
     print_formatted_text('')
 
 
@@ -457,17 +460,47 @@ def display_status(usage_metrics: UsageMetrics, session_id: str) -> None:
 def display_agent_running_message() -> None:
     print_formatted_text('')
     print_formatted_text(
-        HTML(f'<blue>{get_message("agent_running")}</blue> <grey>(ESCキーで中断・Ctrl+Cで終了)</grey>')
+        HTML(f'<blue>{get_message("agent_running")}</blue> <grey>(Press Ctrl-P to pause)</grey>')
     )
 
 
 def display_agent_state_change_message(agent_state: str) -> None:
-    if agent_state == AgentState.FINISHED:
+    if agent_state == AgentState.PAUSED:
+        print_formatted_text('')
+        print_formatted_text(
+            HTML(
+                '<gold>Agent paused...</gold> <grey>(Enter /resume to continue)</grey>'
+            )
+        )
+    elif agent_state == AgentState.FINISHED:
         print_formatted_text('')
         print_formatted_text(HTML(f'<blue>{get_message("agent_finished")}</blue>'))
     elif agent_state == AgentState.AWAITING_USER_INPUT:
         print_formatted_text('')
         print_formatted_text(HTML(f'<blue>{get_message("agent_waiting")}</blue>'))
+
+
+async def prompt_for_api_key() -> str | None:
+    """Prompt user for Portal API key."""
+    kb = KeyBindings()
+    
+    @kb.add('c-c')
+    def _(event: KeyPressEvent) -> None:
+        """Handle Ctrl+C to cancel."""
+        event.app.exit(exception=KeyboardInterrupt())
+    
+    try:
+        session = PromptSession(
+            key_bindings=kb,
+            style=DEFAULT_STYLE,
+        )
+        api_key = await session.prompt_async(
+            'APIキー: ',
+            is_password=True,  # Hide the API key input
+        )
+        return api_key.strip() if api_key else None
+    except (KeyboardInterrupt, EOFError):
+        return None
 
 
 # Common input functions
@@ -483,7 +516,11 @@ class CommandCompleter(Completer):
     ) -> Generator[Completion, None, None]:
         text = document.text_before_cursor.lstrip()
         if text.startswith('/'):
-            for command, description in COMMANDS.items():
+            available_commands = dict(COMMANDS)
+            if self.agent_state != AgentState.PAUSED:
+                available_commands.pop('/resume', None)
+
+            for command, description in available_commands.items():
                 if command.startswith(text):
                     yield Completion(
                         command,
@@ -499,6 +536,7 @@ def create_prompt_session() -> PromptSession[str]:
 
 async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
     try:
+        logger.info("CTRL+C_DEBUG: Starting prompt input")
         prompt_session = create_prompt_session()
         prompt_session.completer = (
             CommandCompleter(agent_state) if not multiline else None
@@ -513,6 +551,7 @@ async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
 
             @kb.add('c-c')
             def _(event: KeyPressEvent) -> None:
+                logger.info("CTRL+C_DEBUG: CTRL+C pressed in multiline input")
                 event.app.exit(exception=KeyboardInterrupt())
 
             with patch_stdout():
@@ -529,6 +568,7 @@ async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
             
             @kb.add('c-c')
             def _(event: KeyPressEvent) -> None:
+                logger.info("CTRL+C_DEBUG: CTRL+C pressed in single line input")
                 event.app.exit(exception=KeyboardInterrupt())
             
             with patch_stdout():
@@ -537,101 +577,176 @@ async def read_prompt_input(agent_state: str, multiline: bool = False) -> str:
                     HTML('<gold>> </gold>'),
                     key_bindings=kb,
                 )
+        logger.info("CTRL+C_DEBUG: Prompt input completed normally")
         return message if message is not None else ''
     except (KeyboardInterrupt, EOFError):
+        logger.info("CTRL+C_DEBUG: KeyboardInterrupt/EOFError caught in read_prompt_input")
         return '/exit'
 
 
-async def read_confirmation_input() -> str:
+async def read_confirmation_input(message_key: str = 'confirm_proceed', target_agent_name: str = None, current_agent_name: str = None) -> str:
+    """Read confirmation input from user with Japanese support.
+    
+    Args:
+        message_key: Key for the confirmation message in branding.py
+        target_agent_name: Name of the target agent for dynamic message generation
+    
+    Returns:
+        'yes', 'no', or 'always'
+    """
     try:
+        logger.info("AGENT_SWITCH_DEBUG: Starting confirmation input")
+        logger.info(f"AGENT_SWITCH_DEBUG: message_key={message_key}, target_agent={target_agent_name}, current_agent={current_agent_name}")
         prompt_session = create_prompt_session()
         
         kb = KeyBindings()
         
         @kb.add('c-c')
         def _(event: KeyPressEvent) -> None:
+            logger.info("AGENT_SWITCH_DEBUG: CTRL+C pressed in confirmation input")
             event.app.exit(exception=KeyboardInterrupt())
 
         with patch_stdout():
             print_formatted_text('')
+            
+            # Get dynamic message based on target agent and current agent
+            confirmation_message = get_message(message_key, target_agent_name=target_agent_name, current_agent_name=current_agent_name)
+            logger.info(f"AGENT_SWITCH_DEBUG: Displaying confirmation message: {confirmation_message}")
+            
             confirmation: str = await prompt_session.prompt_async(
-                HTML('<gold>Proceed with action? (y)es/(n)o/(a)lways > </gold>'),
+                HTML(f'<gold>{confirmation_message} > </gold>'),
                 key_bindings=kb,
             )
 
+            logger.info(f"AGENT_SWITCH_DEBUG: Raw user input received: '{confirmation}'")
             confirmation = '' if confirmation is None else confirmation.strip().lower()
+            logger.info(f"AGENT_SWITCH_DEBUG: Processed user input: '{confirmation}'")
 
-            if confirmation in ['y', 'yes']:
+            # Japanese and English input support
+            if confirmation in ['h', 'はい', 'y', 'yes']:
+                logger.info("AGENT_SWITCH_DEBUG: User selected 'yes'")
                 return 'yes'
-            elif confirmation in ['n', 'no']:
+            elif confirmation in ['i', 'いいえ', 'n', 'no']:
+                logger.info("AGENT_SWITCH_DEBUG: User selected 'no'")
                 return 'no'
-            elif confirmation in ['a', 'always']:
+            elif confirmation in ['t', 'つねに', 'つねに許可', 'a', 'always']:
+                logger.info("AGENT_SWITCH_DEBUG: User selected 'always'")
                 return 'always'
             else:
+                logger.info(f"AGENT_SWITCH_DEBUG: Unknown input '{confirmation}', defaulting to 'no'")
                 return 'no'
     except (KeyboardInterrupt, EOFError):
+        logger.info("AGENT_SWITCH_DEBUG: KeyboardInterrupt/EOFError caught in read_confirmation_input")
         return 'no'
 
 
-async def process_agent_pause(is_paused: asyncio.Event, event_stream) -> None:
-    """Monitor for ESC key press during agent execution."""
-    from openhands.events import EventSource
-    from openhands.events.action import ChangeAgentStateAction
-    from openhands.core.schema import AgentState
+
+
+
+def log_agent_switch(from_agent: str, to_agent: str, reason: str = '', switch_type: str = 'delegate') -> None:
+    """Log agent switch with visual formatting.
     
-    # Wait for key press
-    done = asyncio.Event()
-    input = create_input()
-    
-    async def check_key() -> None:
-        async for key_press in input.read_keys():
-                if (
-                    key_press.key == Keys.ControlP
-                    or key_press.key == Keys.ControlC
-                    or key_press.key == Keys.ControlD
-                    or key_press.key == Keys.Escape
-                ):
-                    print_formatted_text('')
-                    if key_press.key == Keys.ControlC:
-                        print_formatted_text(HTML(f'<blue>{get_message("ctrl_c_exit")}</blue>'))
-                        import sys
-                        sys.exit(0)
-                    elif key_press.key == Keys.Escape:
-                        print_formatted_text(HTML(f'<blue>{get_message("esc_cancel")}</blue>'))
-                        print_formatted_text('')
-                        # Immediately change agent state to AWAITING_USER_INPUT
-                        event_stream.add_event(
-                            ChangeAgentStateAction(AgentState.AWAITING_USER_INPUT),
-                            EventSource.USER,
-                        )
-                    else:
-                        print_formatted_text(HTML(f'<blue>{get_message("pausing_agent")}</blue>'))
-                        event_stream.add_event(
-                            ChangeAgentStateAction(AgentState.PAUSED),
-                            EventSource.USER,
-                        )
-                    done.set()
-                    break
-    
+    Args:
+        from_agent: Name of the agent being switched from
+        to_agent: Name of the agent being switched to
+        reason: Reason for the switch
+        switch_type: Type of switch ('delegate', 'return', 'error')
+    """
     try:
-        with input.raw_mode():
-            # Start monitoring keys
-            check_task = asyncio.create_task(check_key())
+        # Determine the appropriate icon and color based on switch type
+        if switch_type == 'delegate':
+            icon = '🔄'
+            color = 'blue'
+            direction = '→'
+        elif switch_type == 'return':
+            icon = '🔄'
+            color = 'green'
+            direction = '←'
+        elif switch_type == 'error':
+            icon = '⚠️'
+            color = 'red'
+            direction = '→'
+        else:
+            icon = '🔄'
+            color = 'gold'
+            direction = '↔'
+        
+        # Format the main switch message
+        switch_message = f'{icon} <{color}>エージェント切り替え</color>: {from_agent} {direction} {to_agent}'
+        
+        # Add reason if provided
+        if reason:
+            if switch_type == 'delegate':
+                reason_icon = '📋'
+            elif switch_type == 'return':
+                reason_icon = '✅'
+            elif switch_type == 'error':
+                reason_icon = '❌'
+            else:
+                reason_icon = '📝'
             
-            # Wait for done or is_paused
-            await asyncio.wait(
-                [done.wait(), is_paused.wait()],
-                return_when=asyncio.FIRST_COMPLETED
-            )
+            reason_message = f'{reason_icon} <{color}>理由</color>: {reason}'
+        else:
+            reason_message = ''
+        
+        # Print the formatted messages
+        with patch_stdout():
+            print_formatted_text('')
+            print_formatted_text(HTML(switch_message))
+            if reason_message:
+                print_formatted_text(HTML(reason_message))
+            print_formatted_text('')
             
-            # Cancel the check task if still running
-            check_task.cancel()
-            try:
-                await check_task
-            except asyncio.CancelledError:
-                pass
-    finally:
-        input.close()
+    except Exception as e:
+        # Fallback to simple logging if formatting fails
+        logger.info(f'Agent switch: {from_agent} -> {to_agent} ({reason})')
+
+
+async def process_agent_pause(done: asyncio.Event, event_stream: EventStream) -> None:
+    logger.info("CTRL+C_DEBUG: Starting agent pause monitoring")
+    input = create_input()
+
+    def keys_ready() -> None:
+        for key_press in input.read_keys():
+            if (
+                key_press.key == Keys.ControlP
+                or key_press.key == Keys.ControlC
+                or key_press.key == Keys.ControlD
+                or key_press.key == Keys.Escape
+            ):
+                logger.info(f"CTRL+C_DEBUG: Control key pressed: {key_press.key}")
+                print_formatted_text('')
+                if key_press.key == Keys.ControlC:
+                    print_formatted_text(HTML('<gold>Shutdown requested...</gold>'))
+                    # Import the shutdown flag from main module
+                    try:
+                        from openhands.cli.main import _shutdown_requested
+                        _shutdown_requested.set()
+                        logger.info("CTRL+C_DEBUG: Shutdown flag set from process_agent_pause")
+                    except ImportError:
+                        logger.warning("CTRL+C_DEBUG: Could not import shutdown flag")
+                elif key_press.key == Keys.Escape:
+                    logger.info("ESC_INTERRUPT: ESC key pressed, requesting user interrupt")
+                    # Import the interrupt handler
+                    try:
+                        from openhands.cli.interrupt_handler import request_user_interrupt
+                        request_user_interrupt()
+                        logger.info("ESC_INTERRUPT: User interrupt flag set from process_agent_pause")
+                    except ImportError:
+                        logger.warning("ESC_INTERRUPT: Could not import interrupt handler")
+                else:
+                    print_formatted_text(HTML('<gold>Pausing the agent...</gold>'))
+                    event_stream.add_event(
+                        ChangeAgentStateAction(AgentState.PAUSED),
+                        EventSource.USER,
+                    )
+                done.set()
+
+    with input.raw_mode():
+        with input.attach(keys_ready):
+            await done.wait()
+    
+    logger.info("CTRL+C_DEBUG: Agent pause monitoring ended")
 
 
 def cli_confirm(

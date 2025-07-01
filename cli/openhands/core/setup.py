@@ -217,6 +217,8 @@ def create_controller(
         initial_state=initial_state,
         headless_mode=headless_mode,
         confirmation_mode=config.security.confirmation_mode,
+        agent_switch_confirmation=getattr(config.security, 'agent_switch_confirmation', True),
+        agent_switch_logging=getattr(config.security, 'agent_switch_logging', True),
         replay_events=replay_events,
     )
     return (controller, initial_state)

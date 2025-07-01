@@ -1497,6 +1497,97 @@ pre.code-block.directory-structure br {
   cursor: pointer;
 }
 
+/* タブコンテナスタイル */
+.tab-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--vscode-editor-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding: 0;
+  margin: 0;
+}
+
+.tab-list {
+  display: flex;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.tab-actions {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+/* タブスタイル */
+.tab {
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  border: none;
+  background: transparent;
+  color: var(--vscode-foreground);
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.tab.active {
+  color: var(--vscode-panelTitle-activeForeground);
+  font-weight: 500;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--vscode-panelTitle-activeBorder);
+}
+
+.tab-icon {
+  font-size: 14px;
+}
+
+/* 編集ボタンスタイル */
+.edit-button {
+  background: transparent;
+  border: 1px solid var(--vscode-button-border);
+  color: var(--vscode-button-foreground);
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  display: none; /* デフォルトは非表示 */
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+/* 進捗管理タブがアクティブな時のみ編集ボタンを表示 */
+.tab[data-tab-id="scope-progress"].active ~ .tab-actions .edit-button {
+  display: flex;
+}
+
+.edit-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+  border-color: var(--vscode-button-hoverBackground);
+}
+
+.edit-button .icon {
+  font-size: 14px;
+}
+
 /* メディアクエリ - 小さい画面サイズでの調整 */
 @media screen and (max-width: 768px) {
   .project-nav {
@@ -1788,9 +1879,9 @@ pre.code-block.directory-structure br {
   color: var(--app-primary);
 }
 
-/* ファイルボタンのアイコンのみ黒色 */
+/* ファイルボタンのアイコンを青色に */
 #open-files-btn .material-icons-outlined {
-  color: var(--app-text);
+  color: var(--app-primary);
 }
 
 .fab-label {
@@ -1907,4 +1998,39 @@ pre.code-block.directory-structure br {
   .fab-btn:hover .fab-label {
     transform: translateX(-50%) translateY(-5px);
   }
+}
+
+/* ファイルリンクのスタイル */
+.file-link {
+  color: #4a69bd;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-link:hover {
+  color: #3a5a9e;
+  background-color: rgba(74, 105, 189, 0.1);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+/* 編集ボタンのスタイル */
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  color: var(--app-text-secondary);
+}
+
+.icon-button:hover {
+  background-color: var(--app-hover-background);
+  color: var(--app-primary);
+}
+
+.icon-button .material-icons-outlined {
+  font-size: 20px;
 }

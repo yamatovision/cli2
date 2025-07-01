@@ -1,10 +1,25 @@
 import asyncio
+import atexit
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, Coroutine, Iterable
 
+from openhands.core.logger import openhands_logger as logger
+
 GENERAL_TIMEOUT: int = 15
 EXECUTOR = ThreadPoolExecutor()
+
+def _shutdown_executor():
+    """Gracefully shutdown the global executor"""
+    logger.info("SAFE_INTERRUPT_DEBUG: Shutting down global ThreadPoolExecutor")
+    try:
+        EXECUTOR.shutdown(wait=True, cancel_futures=True)
+        logger.info("SAFE_INTERRUPT_DEBUG: Global ThreadPoolExecutor shutdown completed")
+    except Exception as e:
+        logger.warning(f"SAFE_INTERRUPT_DEBUG: Error during executor shutdown: {e}")
+
+# Register shutdown handler
+atexit.register(_shutdown_executor)
 
 
 async def call_sync_from_async(fn: Callable, *args, **kwargs):
@@ -46,13 +61,23 @@ def call_async_from_sync(
             loop_for_thread.close()
 
     if getattr(EXECUTOR, '_shutdown', False):
+        logger.warning("THREADPOOL_DEBUG: Global executor shutdown, using direct execution")
         result = run()
         return result
 
-    future = EXECUTOR.submit(run)
-    futures.wait([future], timeout=timeout or None)
-    result = future.result()
-    return result
+    try:
+        future = EXECUTOR.submit(run)
+        futures.wait([future], timeout=timeout or None)
+        result = future.result()
+        return result
+    except RuntimeError as e:
+        if "cannot schedule new futures after shutdown" in str(e):
+            logger.warning(f"THREADPOOL_DEBUG: Global executor shutdown during submit: {e}")
+            # フォールバック: 直接実行
+            result = run()
+            return result
+        else:
+            raise
 
 
 async def call_coro_in_bg_thread(

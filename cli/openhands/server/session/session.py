@@ -246,8 +246,8 @@ class Session:
             'info', msg_id, f'Retrying LLM request, {retries} / {max}'
         )
 
-    def on_event(self, event: Event) -> None:
-        asyncio.get_event_loop().run_until_complete(self._on_event(event))
+    async def on_event(self, event: Event) -> None:
+        await self._on_event(event)
 
     async def _on_event(self, event: Event) -> None:
         """Callback function for events that mainly come from the agent.

@@ -3,6 +3,13 @@ workspace_base = "/tmp/openhands_workspace"
 
 [security]
 confirmation_mode = false
+agent_switch_confirmation = true
+agent_switch_logging = true
 
 [condenser]
 type = "noop"
+
+[portal]
+# Portal API configuration
+base_url = "http://localhost:8080/api"  # for development
+# base_url = "https://bluelamp-235426778039.asia-northeast1.run.app/api"  # for production

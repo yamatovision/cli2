@@ -6,10 +6,14 @@ class SecurityConfig(BaseModel):
 
     Attributes:
         confirmation_mode: Whether to enable confirmation mode.
+        agent_switch_confirmation: Whether to enable confirmation mode for agent switching.
+        agent_switch_logging: Whether to enable logging for agent switching.
         security_analyzer: The security analyzer to use.
     """
 
     confirmation_mode: bool = Field(default=False)
+    agent_switch_confirmation: bool = Field(default=True)
+    agent_switch_logging: bool = Field(default=True)
     security_analyzer: str | None = Field(default=None)
 
     model_config = {'extra': 'forbid'}

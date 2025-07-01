@@ -142,7 +142,7 @@ const PromptList = () => {
 
   // プロンプト編集ページへ遷移
   const handleEditPrompt = (id) => {
-    navigate(`/prompts/edit/${id}`);
+    navigate(`/prompts/${id}/edit`);
   };
 
   // プロンプト詳細ページへ遷移
@@ -176,7 +176,7 @@ const PromptList = () => {
     try {
       const result = await promptService.clonePrompt(id);
       // 成功後に編集ページへ遷移
-      navigate(`/prompts/edit/${result.prompt._id}`);
+      navigate(`/prompts/${result.prompt._id}/edit`);
     } catch (err) {
       setError('プロンプトの複製に失敗しました');
       console.error('プロンプト複製エラー:', err);
@@ -216,7 +216,7 @@ const PromptList = () => {
 
   // 新規プロンプト作成ページへ遷移
   const handleCreatePrompt = () => {
-    navigate('/prompts/create');
+    navigate('/prompts/new');
   };
 
   // 日付フォーマット関数

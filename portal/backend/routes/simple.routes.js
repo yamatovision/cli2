@@ -27,6 +27,9 @@ router.get('/auth/check', rateLimitMiddleware.authRateLimit, simpleAuthMiddlewar
 // CLI APIキー認証エンドポイント
 router.post('/auth/cli-verify', rateLimitMiddleware.authRateLimit, simpleAuthController.cliVerify);
 
+// CLI専用ログアウトエンドポイント
+router.post('/auth/cli-logout', rateLimitMiddleware.authRateLimit, simpleAuthController.cliLogout);
+
 // ユーザーのAPIキーを取得するエンドポイント
 router.get('/user/apikey', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getUserApiKey);
 
@@ -55,7 +58,7 @@ router.get('/users/profile', simpleAuthMiddleware.verifySimpleToken, simpleUserC
 router.get('/auth/users/me', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getUserProfile);
 router.get('/users/:id', simpleAuthMiddleware.verifySimpleToken, simpleUserController.getUser);
 router.post('/users', simpleAuthMiddleware.verifySimpleToken, simpleAuthMiddleware.isSimpleAdmin, simpleUserController.createUser);
-router.put('/users/:id', simpleAuthMiddleware.verifySimpleToken, simpleUserController.updateUser);
+router.put('/users/:id', simpleAuthMiddleware.verifySimpleToken, simpleAuthMiddleware.isSimpleAdmin, simpleUserController.updateUser);
 router.delete('/users/:id', simpleAuthMiddleware.verifySimpleToken, simpleAuthMiddleware.isSimpleAdmin, simpleUserController.deleteUser);
 router.put('/users/change-password', simpleAuthMiddleware.verifySimpleToken, simpleUserController.changePassword);
 // ClaudeCode起動カウンターインクリメント
@@ -87,52 +90,5 @@ router.put('/organizations/:id/users/:userId/role', simpleAuthMiddleware.verifyS
 // ===== ワークスペース系エンドポイント =====
 router.post('/organizations/:id/create-workspace', simpleAuthMiddleware.verifySimpleToken, simpleOrganizationController.createWorkspace);
 
-// ===== プロンプト系エンドポイント =====
-// 標準のプロンプトAPIと同じコントローラーを使用
-const promptController = require('../controllers/prompt.controller');
-
-// プロンプトの読み込み関数
-const loadPrompt = async (id) => {
-  const Prompt = require('../models/prompt.model');
-  return await Prompt.findById(id).populate('ownerId', 'name email');
-};
-
-// シンプル版の権限チェック - すべてのアクセスを許可
-const checkPromptAccess = async (req, res, next) => {
-  try {
-    const prompt = await loadPrompt(req.params.id);
-    if (!prompt) {
-      return res.status(404).json({
-        success: false,
-        message: 'プロンプトが見つかりません'
-      });
-    }
-    
-    // プロンプトをリクエストに追加して次へ
-    req.resource = prompt;
-    next();
-  } catch (error) {
-    console.error('プロンプト読み込みエラー:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'サーバーエラーが発生しました'
-    });
-  }
-};
-
-// プロンプト関連のルート
-router.get('/prompts/metadata/categories-tags', simpleAuthMiddleware.verifySimpleToken, promptController.getCategoriesAndTags);
-router.get('/prompts', simpleAuthMiddleware.verifySimpleToken, promptController.getAllPrompts);
-router.post('/prompts', simpleAuthMiddleware.verifySimpleToken, promptController.createPrompt);
-router.get('/prompts/:id', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, (req, res) => {
-  res.json(req.resource);
-});
-router.put('/prompts/:id', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.updatePrompt);
-router.delete('/prompts/:id', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.deletePrompt);
-router.get('/prompts/:id/versions', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.getPromptVersions);
-router.post('/prompts/:id/versions', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.createPromptVersion);
-router.get('/prompts/:id/content', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.getPromptContent);
-router.post('/prompts/:id/clone', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.clonePrompt);
-router.post('/prompts/:id/share', simpleAuthMiddleware.verifySimpleToken, checkPromptAccess, promptController.createShareLink);
 
 module.exports = router;

@@ -75,9 +75,9 @@ class Memory:
         # from typically OpenHands/microagents (i.e., the PUBLIC microagents)
         self._load_global_microagents()
 
-    def on_event(self, event: Event):
+    async def on_event(self, event: Event):
         """Handle an event from the event stream."""
-        asyncio.get_event_loop().run_until_complete(self._on_event(event))
+        await self._on_event(event)
 
     async def _on_event(self, event: Event):
         """Handle an event from the event stream asynchronously."""

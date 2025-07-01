@@ -162,12 +162,14 @@ class EventStream(EventStore):
         self._clean_up_subscriber(subscriber_id, callback_id)
 
     def add_event(self, event: Event, source: EventSource) -> None:
+        logger.info(f"AGENT_SWITCH_DEBUG: EventStream.add_event called - event_type: {type(event).__name__}, source: {source}")
         if event.id != Event.INVALID_ID:
             raise ValueError(
                 f'Event already has an ID:{event.id}. It was probably added back to the EventStream from inside a handler, triggering a loop.'
             )
         event._timestamp = datetime.now().isoformat()
         event._source = source  # type: ignore [attr-defined]
+        logger.info("AGENT_SWITCH_DEBUG: About to acquire lock for event processing")
         with self._lock:
             event._id = self.cur_id  # type: ignore [attr-defined]
             self.cur_id += 1
@@ -201,7 +203,9 @@ class EventStream(EventStore):
 
             # Store the cache page last - if it is not present during reads then it will simply be bypassed.
             self._store_cache_page(current_write_page)
+        logger.info("AGENT_SWITCH_DEBUG: About to put event in queue")
         self._queue.put(event)
+        logger.info("AGENT_SWITCH_DEBUG: Event added to queue successfully")
 
     def _store_cache_page(self, current_write_page: list[dict]):
         """Store a page in the cache. Reading individual events is slow when there are a lot of them, so we use pages."""
@@ -244,6 +248,7 @@ class EventStream(EventStore):
             except queue.Empty:
                 continue
 
+            logger.info(f"AGENT_SWITCH_DEBUG: Processing event from queue: {type(event).__name__}")
             # pass each event to each callback in order
             for key in sorted(self._subscribers.keys()):
                 callbacks = self._subscribers[key]
@@ -253,11 +258,43 @@ class EventStream(EventStore):
                     # Check if callback_id still exists (might have been removed during iteration)
                     if callback_id in callbacks:
                         callback = callbacks[callback_id]
-                        pool = self._thread_pools[key][callback_id]
-                        future = pool.submit(callback, event)
-                        future.add_done_callback(
-                            self._make_error_handler(callback_id, key)
-                        )
+                        logger.info(f"AGENT_SWITCH_DEBUG: Calling callback {callback_id} for subscriber {key}")
+                        try:
+                            # Check if callback is async
+                            if asyncio.iscoroutinefunction(callback):
+                                await callback(event)
+                                logger.info(f"AGENT_SWITCH_DEBUG: Async callback {callback_id} completed")
+                            else:
+                                # Use thread pool for sync callbacks
+                                pool = self._thread_pools[key][callback_id]
+                                try:
+                                    # Check if ThreadPoolExecutor is shutdown
+                                    if hasattr(pool, '_shutdown') and pool._shutdown:
+                                        logger.warning(f"THREADPOOL_DEBUG: Pool {callback_id} already shutdown, using direct execution")
+                                        # Fallback: direct synchronous execution
+                                        callback(event)
+                                        logger.info(f"THREADPOOL_DEBUG: Direct execution completed for {callback_id}")
+                                    else:
+                                        future = pool.submit(callback, event)
+                                        future.add_done_callback(
+                                            self._make_error_handler(callback_id, key)
+                                        )
+                                        logger.info(f"AGENT_SWITCH_DEBUG: Sync callback {callback_id} submitted to thread pool")
+                                except RuntimeError as e:
+                                    if "cannot schedule new futures after shutdown" in str(e):
+                                        logger.warning(f"THREADPOOL_DEBUG: Cannot submit to shutdown pool {callback_id}: {e}")
+                                        # Fallback: direct synchronous execution
+                                        try:
+                                            callback(event)
+                                            logger.info(f"THREADPOOL_DEBUG: Fallback sync execution completed for {callback_id}")
+                                        except Exception as fallback_error:
+                                            logger.error(f"THREADPOOL_DEBUG: Fallback execution failed for {callback_id}: {fallback_error}")
+                                    else:
+                                        raise
+                        except Exception as e:
+                            logger.error(
+                                f'Error in event callback {callback_id} for subscriber {key}: {str(e)}',
+                            )
 
     def _make_error_handler(
         self, callback_id: str, subscriber_id: str

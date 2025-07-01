@@ -89,6 +89,8 @@ class AgentController:
     event_stream: EventStream
     state: State
     confirmation_mode: bool
+    agent_switch_confirmation: bool
+    agent_switch_logging: bool
     agent_to_llm_config: dict[str, LLMConfig]
     agent_configs: dict[str, AgentConfig]
     parent: 'AgentController | None' = None
@@ -96,6 +98,7 @@ class AgentController:
     _pending_action_info: tuple[Action, float] | None = None  # (action, timestamp)
     _closed: bool = False
     _cached_first_user_message: MessageAction | None = None
+    _always_allow_agent_switch: bool = False  # Flag for "always allow" mode
 
     def __init__(
         self,
@@ -109,6 +112,8 @@ class AgentController:
         file_store: FileStore | None = None,
         user_id: str | None = None,
         confirmation_mode: bool = False,
+        agent_switch_confirmation: bool = False,
+        agent_switch_logging: bool = True,
         initial_state: State | None = None,
         is_delegate: bool = False,
         headless_mode: bool = True,
@@ -128,6 +133,7 @@ class AgentController:
                 we delegate to a different agent.
             sid: The session ID of the agent.
             confirmation_mode: Whether to enable confirmation mode for agent actions.
+            agent_switch_confirmation: Whether to enable confirmation mode for agent switching.
             initial_state: The initial state of the controller.
             is_delegate: Whether this controller is a delegate.
             headless_mode: Whether the agent is run in headless mode.
@@ -163,6 +169,8 @@ class AgentController:
 
         self.state = self.state_tracker.state  # TODO: share between manager and controller for backward compatability; we should ideally move all state related logic to the state manager
 
+        self.agent_switch_confirmation = agent_switch_confirmation
+        self.agent_switch_logging = agent_switch_logging
         self.agent_to_llm_config = agent_to_llm_config if agent_to_llm_config else {}
         self.agent_configs = agent_configs if agent_configs else {}
         self._initial_max_iterations = iteration_delta
@@ -352,7 +360,7 @@ class AgentController:
             return True
         return False
 
-    def on_event(self, event: Event) -> None:
+    async def on_event(self, event: Event) -> None:
         """Callback from the event stream. Notifies the controller of incoming events.
 
         Args:
@@ -374,17 +382,18 @@ class AgentController:
                 in self.delegate.state.last_error
             ):
                 # Forward the event to delegate and skip parent processing
-                asyncio.get_event_loop().run_until_complete(
-                    self.delegate._on_event(event)
-                )
+                await self.delegate._on_event(event)
                 return
             else:
                 # delegate is done or errored, so end it
-                self.end_delegate()
+                delegate_ended = await self.end_delegate()
+                if not delegate_ended:
+                    # User chose to continue with delegate, forward the event
+                    await self.delegate._on_event(event)
                 return
 
         # continue parent processing only if there's no active delegate
-        asyncio.get_event_loop().run_until_complete(self._on_event(event))
+        await self._on_event(event)
 
     async def _on_event(self, event: Event) -> None:
         if hasattr(event, 'hidden') and event.hidden:
@@ -467,10 +476,12 @@ class AgentController:
 
             self._pending_action = None
 
-            if self.state.agent_state == AgentState.USER_CONFIRMED:
-                await self.set_agent_state_to(AgentState.RUNNING)
-            if self.state.agent_state == AgentState.USER_REJECTED:
-                await self.set_agent_state_to(AgentState.AWAITING_USER_INPUT)
+            # Commented out: Task completion confirmation handling
+            # This was causing the repeated confirmation prompts issue
+            # if self.state.agent_state == AgentState.USER_CONFIRMED:
+            #     ...
+            # if self.state.agent_state == AgentState.USER_REJECTED:
+            #     ...
             return
 
     async def _handle_message_action(self, action: MessageAction) -> None:
@@ -553,12 +564,14 @@ class AgentController:
         Args:
             new_state (AgentState): The new state to set for the agent.
         """
+        logger.info(f"AGENT_SWITCH_DEBUG: set_agent_state_to called: {self.state.agent_state} -> {new_state}")
         self.log(
             'info',
             f'Setting agent({self.agent.name}) state from {self.state.agent_state} to {new_state}',
         )
 
         if new_state == self.state.agent_state:
+            logger.info("AGENT_SWITCH_DEBUG: State unchanged, returning early")
             return
 
         if new_state in (AgentState.STOPPED, AgentState.ERROR):
@@ -591,14 +604,18 @@ class AgentController:
         if new_state == AgentState.ERROR:
             reason = self.state.last_error
 
+        logger.info(f"AGENT_SWITCH_DEBUG: Adding AgentStateChangedObservation event for state: {self.state.agent_state}")
         self.event_stream.add_event(
             AgentStateChangedObservation('', self.state.agent_state, reason),
             EventSource.ENVIRONMENT,
         )
+        logger.info("AGENT_SWITCH_DEBUG: AgentStateChangedObservation event added successfully")
 
         # Save state whenever agent state changes to ensure we don't lose state
         # in case of crashes or unexpected circumstances
+        logger.info("AGENT_SWITCH_DEBUG: Saving state")
         self.save_state()
+        logger.info("AGENT_SWITCH_DEBUG: State saved successfully, set_agent_state_to completed")
 
     def get_agent_state(self) -> AgentState:
         """Returns the current state of the agent.
@@ -624,6 +641,41 @@ class AgentController:
         Args:
             action (AgentDelegateAction): The action containing information about the delegate agent to start.
         """
+        # 軽量確認機能：デフォルトでON（環境変数で無効化可能）
+        if os.getenv('AGENT_SWITCH_CONFIRM', 'true').lower() != 'false' and not self.headless_mode:
+            try:
+                from openhands.cli.confirm import get_user_confirmation, format_agent_switch_message
+                
+                # 現在のエージェント名とタスクを取得
+                current_agent = getattr(self.agent, 'name', 'オーケストレーター')
+                task = action.inputs.get('task', 'タスク詳細なし') if action.inputs else 'タスク詳細なし'
+                
+                # 確認メッセージを作成
+                message = format_agent_switch_message(
+                    from_agent=current_agent,
+                    to_agent=action.agent,
+                    task=task
+                )
+                
+                # ユーザーに確認（タイムアウト30秒、デフォルトは承認）
+                confirmed = await get_user_confirmation(message, default=True, timeout=30.0)
+                
+                if not confirmed:
+                    logger.info(f"User cancelled agent switch from {current_agent} to {action.agent}")
+                    # MessageActionを送信してユーザーに通知
+                    self.event_stream.add_event(
+                        MessageAction(
+                            content=f"エージェント切り替えがキャンセルされました。",
+                            source=EventSource.AGENT
+                        ),
+                        EventSource.AGENT
+                    )
+                    return
+                    
+            except Exception as e:
+                logger.warning(f"Error in agent switch confirmation: {e}, proceeding anyway")
+                # エラーが発生しても処理を続行
+        
         agent_cls: type[Agent] = Agent.get_cls(action.agent)
         agent_config = self.agent_configs.get(action.agent, self.agent.config)
         llm_config = self.agent_to_llm_config.get(action.agent, self.agent.llm.config)
@@ -668,17 +720,46 @@ class AgentController:
             initial_state=state,
             is_delegate=True,
             headless_mode=self.headless_mode,
+            agent_switch_confirmation=self.agent_switch_confirmation,
+            agent_switch_logging=self.agent_switch_logging,
         )
+        
+        # Log agent switch if logging is enabled
+        if self.agent_switch_logging and not self.headless_mode:
+            try:
+                from openhands.cli.tui import log_agent_switch
+                
+                parent_name = getattr(self.agent, 'name', 'オーケストレーター')
+                delegate_name = getattr(delegate_agent, 'name', 'エージェント')
+                reason = action.inputs.get('task', '新しいタスクの委譲') if action.inputs else '新しいタスクの委譲'
+                
+                log_agent_switch(
+                    from_agent=parent_name,
+                    to_agent=delegate_name,
+                    reason=reason,
+                    switch_type='delegate'
+                )
+            except ImportError:
+                # Fallback if TUI is not available
+                self.log('info', f'Agent switch: {getattr(self.agent, "name", "オーケストレーター")} -> {getattr(delegate_agent, "name", "エージェント")}')
+            except Exception as e:
+                self.log('warning', f'Error logging agent switch: {e}')
 
-    def end_delegate(self) -> None:
+    async def end_delegate(self) -> bool:
         """Ends the currently active delegate (e.g., if it is finished or errored).
 
         so that this controller can resume normal operation.
+        
+        Returns:
+            bool: True if delegate was ended, False if user cancelled the switch
         """
         if self.delegate is None:
-            return
+            return True
 
         delegate_state = self.delegate.get_agent_state()
+        
+        # Note: Agent switch confirmation system removed as it was not functioning
+        # Task completion confirmation is now handled by the main confirmation system
 
         # update iteration that is shared across agents
         self.state.iteration_flag.current_value = (
@@ -690,7 +771,7 @@ class AgentController:
         logger.info(f'Local metrics for delegate: {delegate_metrics}')
 
         # close the delegate controller before adding new events
-        asyncio.get_event_loop().run_until_complete(self.delegate.close())
+        await self.delegate.close()
 
         if delegate_state in (AgentState.FINISHED, AgentState.REJECTED):
             # retrieve delegate result
@@ -734,8 +815,40 @@ class AgentController:
 
         self.event_stream.add_event(obs, EventSource.AGENT)
 
+        # Log agent switch back to parent if logging is enabled
+        if self.agent_switch_logging and not self.headless_mode:
+            try:
+                from openhands.cli.tui import log_agent_switch
+                
+                delegate_name = getattr(self.delegate.agent, 'name', 'エージェント')
+                parent_name = getattr(self.agent, 'name', 'オーケストレーター')
+                
+                if delegate_state == AgentState.FINISHED:
+                    reason = 'タスク完了'
+                    switch_type = 'return'
+                elif delegate_state == AgentState.REJECTED:
+                    reason = 'タスク拒否'
+                    switch_type = 'return'
+                else:
+                    reason = 'エラー発生'
+                    switch_type = 'error'
+                
+                log_agent_switch(
+                    from_agent=delegate_name,
+                    to_agent=parent_name,
+                    reason=reason,
+                    switch_type=switch_type
+                )
+            except ImportError:
+                # Fallback if TUI is not available
+                self.log('info', f'Agent switch: {getattr(self.delegate.agent, "name", "エージェント")} -> {getattr(self.agent, "name", "オーケストレーター")}')
+            except Exception as e:
+                self.log('warning', f'Error logging agent switch: {e}')
+        
         # unset delegate so parent can resume normal handling
         self.delegate = None
+        
+        return True
 
     async def _step(self) -> None:
         """Executes a single step of the parent or delegate agent. Detects stuck agents and limits on the number of iterations and the task budget."""

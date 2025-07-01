@@ -39,3 +39,5 @@ Thumbs.db
 # ログ
 logs/
 *.log
+
+.claude_data/

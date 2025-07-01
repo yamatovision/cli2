@@ -1,0 +1,229 @@
+{
+  "analyzed_files": 10,
+  "total_patterns": {
+    "file_paths": [
+      "https://cdn.jsdelivr.net/npm/chart.js"
+    ],
+    "imports": [
+      "@heroui/react",
+      "@tailwindcss/typography"
+    ],
+    "requires": [
+      "os",
+      "./process_monitor",
+      "./memory_monitor",
+      "vscode",
+      "child_process"
+    ],
+    "error_messages": [
+      "\\n",
+      ", the produced Response\n  // instance will have status code set to 0. Since it",
+      ", error);\n                return;\n            }\n\n            // Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            // Set the webview"
+    ],
+    "source_maps": [],
+    "module_names": []
+  },
+  "common_directories": {
+    "vscode": 6,
+    "os": 4,
+    "n": 2,
+    "child_process": 2,
+    "https:": 2,
+    " Set the webview": 2,
+    "process_monitor": 2,
+    "cdn.jsdelivr.net": 2,
+    " Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            ": 2,
+    ", error);\n                return;\n            }\n\n            ": 2,
+    "npm": 2,
+    "memory_monitor": 2,
+    "@heroui": 1,
+    "@tailwindcss": 1,
+    "react": 1,
+    "typography": 1,
+    ", the produced Response\n  ": 1,
+    " instance will have status code set to 0. Since it": 1
+  },
+  "file_analysis": {
+    "openhands/runtime/utils/vscode-extensions/hello-world/extension.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "vscode"
+      ],
+      "error_messages": [],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "vscode"
+      ]
+    },
+    "openhands/runtime/utils/vscode-extensions/memory-monitor/process_monitor.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "child_process",
+        "os"
+      ],
+      "error_messages": [
+        "\\n",
+        "\\n",
+        "\\n"
+      ],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "os",
+        "n",
+        "child_process"
+      ]
+    },
+    "openhands/runtime/utils/vscode-extensions/memory-monitor/memory_monitor.js": {
+      "file_paths": [
+        "https://cdn.jsdelivr.net/npm/chart.js"
+      ],
+      "imports": [],
+      "requires": [
+        "os",
+        "vscode",
+        "./process_monitor"
+      ],
+      "error_messages": [
+        ", error);\n                return;\n            }\n\n            // Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            // Set the webview"
+      ],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "https:",
+        "os",
+        " Set the webview",
+        "process_monitor",
+        "cdn.jsdelivr.net",
+        " Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            ",
+        ", error);\n                return;\n            }\n\n            ",
+        "npm",
+        "vscode"
+      ]
+    },
+    "openhands/runtime/utils/vscode-extensions/memory-monitor/extension.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "vscode",
+        "./memory_monitor"
+      ],
+      "error_messages": [],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "memory_monitor",
+        "vscode"
+      ]
+    },
+    "reference/OpenHands-main/frontend/tailwind.config.js": {
+      "file_paths": [],
+      "imports": [
+        "@heroui/react",
+        "@tailwindcss/typography"
+      ],
+      "requires": [],
+      "error_messages": [],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "@heroui",
+        "@tailwindcss",
+        "react",
+        "typography"
+      ]
+    },
+    "reference/OpenHands-main/frontend/public/mockServiceWorker.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [],
+      "error_messages": [
+        ", the produced Response\n  // instance will have status code set to 0. Since it"
+      ],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        ", the produced Response\n  ",
+        " instance will have status code set to 0. Since it"
+      ]
+    },
+    "reference/OpenHands-main/openhands/runtime/utils/vscode-extensions/hello-world/extension.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "vscode"
+      ],
+      "error_messages": [],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "vscode"
+      ]
+    },
+    "reference/OpenHands-main/openhands/runtime/utils/vscode-extensions/memory-monitor/process_monitor.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "child_process",
+        "os"
+      ],
+      "error_messages": [
+        "\\n",
+        "\\n",
+        "\\n"
+      ],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "os",
+        "n",
+        "child_process"
+      ]
+    },
+    "reference/OpenHands-main/openhands/runtime/utils/vscode-extensions/memory-monitor/memory_monitor.js": {
+      "file_paths": [
+        "https://cdn.jsdelivr.net/npm/chart.js"
+      ],
+      "imports": [],
+      "requires": [
+        "os",
+        "vscode",
+        "./process_monitor"
+      ],
+      "error_messages": [
+        ", error);\n                return;\n            }\n\n            // Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            // Set the webview"
+      ],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "https:",
+        "os",
+        " Set the webview",
+        "process_monitor",
+        "cdn.jsdelivr.net",
+        " Create HTML content for the webview\n            const htmlContent = this.generateHtmlReport(\n                usedMemMB, freeMemMB, totalMemMB,\n                rss, heapTotal, heapUsed,\n                processInfo\n            );\n\n            ",
+        ", error);\n                return;\n            }\n\n            ",
+        "npm",
+        "vscode"
+      ]
+    },
+    "reference/OpenHands-main/openhands/runtime/utils/vscode-extensions/memory-monitor/extension.js": {
+      "file_paths": [],
+      "imports": [],
+      "requires": [
+        "vscode",
+        "./memory_monitor"
+      ],
+      "error_messages": [],
+      "source_maps": [],
+      "module_names": [],
+      "directory_names": [
+        "memory_monitor",
+        "vscode"
+      ]
+    }
+  }
+}

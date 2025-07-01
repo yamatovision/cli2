@@ -6,7 +6,7 @@ requires = [
 
 [tool.poetry]
 name = "bluelamp-ai"
-version = "0.45.0"
+version = "0.45.1"
 description = "BlueLamp: 日本人向けAI開発アシスタント"
 authors = [ "BlueLamp" ]
 license = "MIT"
@@ -151,7 +151,8 @@ datasets = "*"
 joblib = "*"
 
 [tool.poetry.scripts]
-openhands = "openhands.cli.main:main"
+bluelamp = "openhands.cli.main:main"
+"ブルーランプ" = "openhands.cli.main:main"
 
 [tool.poetry.group.testgeneval.dependencies]
 fuzzywuzzy = "^0.18.0"

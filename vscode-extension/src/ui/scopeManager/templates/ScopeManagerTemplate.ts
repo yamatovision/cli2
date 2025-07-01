@@ -189,10 +189,15 @@ export class ScopeManagerTemplate {
           <div class="content-area">
             <div class="card">
               <!-- タブバー -->
-              <div class="tabs">
-                <div class="project-display">
-                  <span class="project-name">${projectName}</span>
-                  <span class="project-path-display">${projectPath}</span>
+              <div class="tabs" style="display: flex; justify-content: flex-end;">
+                <div class="project-display" style="display: flex; justify-content: space-between; align-items: center;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="project-name">${projectName}</span>
+                    <button id="edit-progress-button" class="icon-button" title="VSCodeで編集" style="padding: 4px;">
+                      <span class="material-icons-outlined">edit</span>
+                    </button>
+                  </div>
+                  <span class="project-path-display" style="margin-left: 16px;">${projectPath}</span>
                 </div>
               </div>
               <!-- 進捗状況コンテンツ（ヘッダーなしで直接表示） -->

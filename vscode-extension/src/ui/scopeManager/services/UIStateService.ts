@@ -278,6 +278,11 @@ export class UIStateService implements IUIStateService {
                             <span class="tab-icon">🌲</span>構造
                         </button>
                     </div>
+                    <div class="tab-actions">
+                        <button id="edit-progress-button" class="icon-button edit-button" title="進捗ファイルを編集">
+                            <span class="icon">✏️</span>
+                        </button>
+                    </div>
 
                     <!-- タブコンテンツ部分 -->
                     <div class="tab-content-container">

@@ -23,6 +23,12 @@ export const AuthProvider = ({ children }) => {
   // 認証状態の更新
   const updateAuthState = () => {
     const user = simpleAuthService.getCurrentStoredUser();
+    console.log('AuthContext: ストレージからユーザー情報取得', { 
+      user: user, 
+      hasUser: !!user,
+      role: user?.role,
+      userKeys: user ? Object.keys(user) : 'no user'
+    });
     setAuthState({
       isAuthenticated: !!user,
       user: user,
@@ -77,9 +83,22 @@ export const AuthProvider = ({ children }) => {
     // メソッド
     login: async (email, password) => {
       try {
+        console.log('AuthContext: ログイン処理開始');
         const result = await simpleAuthService.login(email, password);
+        console.log('AuthContext: ログインレスポンス', result);
+        
         if (result.success) {
+          console.log('AuthContext: ログイン成功、認証状態を更新');
           updateAuthState();
+          
+          // ログイン成功後にサーバーから最新のユーザー情報を取得
+          try {
+            await simpleAuthService.getCurrentUser(true); // 強制更新
+            updateAuthState(); // 再度更新
+            console.log('AuthContext: ログイン後のユーザー情報取得完了');
+          } catch (getUserError) {
+            console.warn('AuthContext: ログイン後のユーザー情報取得エラー:', getUserError);
+          }
         }
         return result;
       } catch (error) {
@@ -101,7 +120,9 @@ export const AuthProvider = ({ children }) => {
     
     getCurrentUser: async () => {
       try {
+        console.log('AuthContext: サーバーからユーザー情報取得中...');
         const result = await simpleAuthService.getCurrentUser();
+        console.log('AuthContext: サーバーレスポンス', result);
         updateAuthState();
         return result;
       } catch (error) {

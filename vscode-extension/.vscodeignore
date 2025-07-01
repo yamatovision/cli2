@@ -16,6 +16,7 @@ test_script/**
 AI/**
 参考/**
 reference/**
+mockups/**
 .env
 .env.*
 *.vsix

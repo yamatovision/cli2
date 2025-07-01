@@ -1062,6 +1062,21 @@
       case 'startLoading':
         fileList.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
         break;
+        
+      case 'setSearchQuery':
+        // 検索ボックスに値を設定してフィルタリングを実行
+        if (fileFilter) {
+          fileFilter.value = message.searchQuery;
+          filterFileList();
+        }
+        break;
+        
+      case 'openFile':
+        // ファイルを開く
+        if (message.filePath) {
+          openFile(message.filePath);
+        }
+        break;
     }
   });
 

@@ -57,21 +57,6 @@ try {
    * イベントリスナーの設定
    */
   function setupEventListeners() {
-    // 実装開始ボタン
-    const implementButton = document.getElementById('implement-button');
-    if (implementButton) {
-      implementButton.addEventListener('click', () => {
-        vscode.postMessage({ command: 'startImplementation' });
-      });
-    }
-
-    // スコープ新規作成ボタン
-    const createScopeButton = document.getElementById('create-scope-button');
-    if (createScopeButton) {
-      createScopeButton.addEventListener('click', () => {
-        vscode.postMessage({ command: 'addNewScope' });
-      });
-    }
 
     // FABボタンのイベント設定
     const openFilesBtn = document.getElementById('open-files-btn');
@@ -93,6 +78,14 @@ try {
       launchBluelampBtn.addEventListener('click', () => {
         // ターミナルモード選択ダイアログを表示
         dialogManager.showBluelampLaunchDialog();
+      });
+    }
+
+    // 進捗ファイル編集ボタン
+    const editProgressButton = document.getElementById('edit-progress-button');
+    if (editProgressButton) {
+      editProgressButton.addEventListener('click', () => {
+        vscode.postMessage({ command: 'openFileInEditor', filePath: 'SCOPE_PROGRESS.md' });
       });
     }
   }

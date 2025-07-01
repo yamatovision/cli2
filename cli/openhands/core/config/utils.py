@@ -289,6 +289,19 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
             logger.openhands_logger.warning(
                 f'Cannot parse [extended] config from toml, values have not been applied.\nError: {e}'
             )
+    
+    # Process portal section if present
+    if 'portal' in toml_config:
+        try:
+            if 'base_url' in toml_config['portal']:
+                cfg.portal_base_url = toml_config['portal']['base_url']
+            if 'api_key' in toml_config['portal']:
+                from pydantic import SecretStr
+                cfg.portal_api_key = SecretStr(toml_config['portal']['api_key'])
+        except (TypeError, KeyError, ValidationError) as e:
+            logger.openhands_logger.warning(
+                f'Cannot parse [portal] config from toml, values have not been applied.\nError: {e}'
+            )
 
     # Check for unknown sections
     known_sections = {
@@ -301,6 +314,7 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
         'condenser',
         'mcp',
         'kubernetes',
+        'portal',
     }
     for key in toml_config:
         if key.lower() not in known_sections:

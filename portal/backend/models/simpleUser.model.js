@@ -150,7 +150,7 @@ const SimpleUserSchema = new mongoose.Schema({
     key: {
       type: String,
       required: true,
-      unique: true
+      // unique: true を削除（配列内でのユニーク制約は問題を引き起こす可能性がある）
     },
     createdAt: {
       type: Date,
@@ -366,9 +366,16 @@ SimpleUserSchema.methods.updateSessionActivity = function() {
 };
 
 // CLI APIキー管理メソッド
-SimpleUserSchema.methods.generateCliApiKey = function() {
+SimpleUserSchema.methods.generateCliApiKey = async function() {
   const crypto = require('crypto');
   const key = 'CLI_' + crypto.randomBytes(32).toString('hex');
+  
+  console.log('generateCliApiKey: 新しいキーを生成:', key);
+  
+  // cliApiKeysが未定義の場合は初期化
+  if (!this.cliApiKeys) {
+    this.cliApiKeys = [];
+  }
   
   // 既存のキーをすべて無効化
   this.cliApiKeys.forEach(apiKey => {
@@ -382,7 +389,22 @@ SimpleUserSchema.methods.generateCliApiKey = function() {
     isActive: true
   });
   
-  return this.save().then(() => key);
+  try {
+    const savedUser = await this.save();
+    console.log('generateCliApiKey: 保存成功');
+    console.log('generateCliApiKey: 保存後のcliApiKeys数:', savedUser.cliApiKeys.length);
+    console.log('generateCliApiKey: 最新のキー:', savedUser.cliApiKeys[savedUser.cliApiKeys.length - 1]);
+    console.log('generateCliApiKey: キーを返す:', key);
+    return key;
+  } catch (error) {
+    console.error('generateCliApiKey: 保存エラー:', error);
+    console.error('generateCliApiKey: エラー名:', error.name);
+    console.error('generateCliApiKey: エラーコード:', error.code);
+    if (error.errors) {
+      console.error('generateCliApiKey: バリデーションエラー:', error.errors);
+    }
+    throw error;
+  }
 };
 
 SimpleUserSchema.methods.deactivateCliApiKey = function(key) {

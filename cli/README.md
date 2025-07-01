@@ -1,158 +1,166 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <img src="./docs/static/img/logo.png" alt="Logo" width="200">
-  <h1 align="center">BlueLamp: 日本人向けAI開発アシスタント</h1>
+  <h1 align="center">🔵 BlueLamp CLI</h1>
+  <p align="center">日本人向けAI開発アシスタント - 16専門エージェントシステム</p>
 </div>
-
 
 <div align="center">
-  <a href="https://github.com/All-Hands-AI/OpenHands/graphs/contributors"><img src="https://img.shields.io/github/contributors/All-Hands-AI/OpenHands?style=for-the-badge&color=blue" alt="Contributors"></a>
-  <a href="https://github.com/All-Hands-AI/OpenHands/stargazers"><img src="https://img.shields.io/github/stars/All-Hands-AI/OpenHands?style=for-the-badge&color=blue" alt="Stargazers"></a>
-  <a href="https://github.com/All-Hands-AI/OpenHands/blob/main/LICENSE"><img src="https://img.shields.io/github/license/All-Hands-AI/OpenHands?style=for-the-badge&color=blue" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.12+">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
+  <img src="https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge" alt="Active Development">
   <br/>
-  <a href="https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A"><img src="https://img.shields.io/badge/Slack-Join%20Us-red?logo=slack&logoColor=white&style=for-the-badge" alt="Join our Slack community"></a>
-  <a href="https://discord.gg/ESHStjSjD4"><img src="https://img.shields.io/badge/Discord-Join%20Us-purple?logo=discord&logoColor=white&style=for-the-badge" alt="Join our Discord community"></a>
-  <a href="https://github.com/All-Hands-AI/OpenHands/blob/main/CREDITS.md"><img src="https://img.shields.io/badge/Project-Credits-blue?style=for-the-badge&color=FFE165&logo=github&logoColor=white" alt="Credits"></a>
-  <br/>
-  <a href="https://docs.all-hands.dev/usage/getting-started"><img src="https://img.shields.io/badge/Documentation-000?logo=googledocs&logoColor=FFE165&style=for-the-badge" alt="Check out the documentation"></a>
-  <a href="https://arxiv.org/abs/2407.16741"><img src="https://img.shields.io/badge/Paper%20on%20Arxiv-000?logoColor=FFE165&logo=arxiv&style=for-the-badge" alt="Paper on Arxiv"></a>
-  <a href="https://docs.google.com/spreadsheets/d/1wOUdFCMyY6Nt0AIqF705KN4JKOWgeI4wUGUP60krXXs/edit?gid=0#gid=0"><img src="https://img.shields.io/badge/Benchmark%20score-000?logoColor=FFE165&logo=huggingface&style=for-the-badge" alt="Evaluation Benchmark Score"></a>
-
-  <!-- Keep these links. Translations will automatically update with the README. -->
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=de">Deutsch</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=es">Español</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=fr">français</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=ja">日本語</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=ko">한국어</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=pt">Português</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=ru">Русский</a> |
-  <a href="https://www.readme-i18n.com/All-Hands-AI/OpenHands?lang=zh">中文</a>
-
-  <hr>
+  <img src="https://img.shields.io/badge/Powered%20by-OpenHands-orange?style=for-the-badge" alt="Powered by OpenHands">
+  <img src="https://img.shields.io/badge/Agents-16%20Specialists-purple?style=for-the-badge" alt="16 Specialist Agents">
 </div>
 
-Welcome to OpenHands (formerly OpenDevin), a platform for software development agents powered by AI.
+---
 
-OpenHands agents can do anything a human developer can: modify code, run commands, browse the web,
-call APIs, and yes—even copy code snippets from StackOverflow.
+## 🌟 概要
 
-Learn more at [docs.all-hands.dev](https://docs.all-hands.dev), or [sign up for OpenHands Cloud](https://app.all-hands.dev) to get started.
+BlueLamp CLIは、OpenHandsをベースにした日本人開発者向けのAI開発アシスタントです。16の専門エージェントが連携し、プロジェクトの企画から実装、デプロイまでの全工程を支援します。
 
-> [!IMPORTANT]
-> Using OpenHands for work? We'd love to chat! Fill out
-> [this short form](https://docs.google.com/forms/d/e/1FAIpQLSet3VbGaz8z32gW9Wm-Grl4jpt5WgMXPgJ4EDPVmCETCBpJtQ/viewform)
-> to join our Design Partner program, where you'll get early access to commercial features and the opportunity to provide input on our product roadmap.
+### ✨ 主な特徴
 
-![App screenshot](./docs/static/img/screenshot.png)
+- **16専門エージェントシステム**: 各開発フェーズに特化した専門エージェント
+- **日本語完全対応**: 日本人開発者に最適化されたインターフェース
+- **統合開発環境**: コード生成、テスト、デバッグ、デプロイを一元管理
+- **最小構成設計**: 大規模コードクリーンアップにより実現した軽量アーキテクチャ
 
-## ☁️ OpenHands Cloud
-The easiest way to get started with OpenHands is on [OpenHands Cloud](https://app.all-hands.dev),
-which comes with $20 in free credits for new users.
+## 🤖 16専門エージェントシステム
 
-## 💻 Running OpenHands Locally
+BlueLamp CLIは以下の16の専門エージェントで構成されています：
 
-OpenHands can also run on your local system using Docker.
-See the [Running OpenHands](https://docs.all-hands.dev/usage/installation) guide for
-system requirements and more information.
+### 📋 企画・設計フェーズ
+- **00-orchestrator**: プロジェクト全体の統括・調整
+- **01-requirements-engineer**: 要件定義・分析
+- **02-uiux-designer**: UI/UXデザイン設計
+- **03-data-modeling-engineer**: データモデル設計
+- **04-system-architect**: システムアーキテクチャ設計
 
-> [!WARNING]
-> On a public network? See our [Hardened Docker Installation Guide](https://docs.all-hands.dev/usage/runtimes/docker#hardened-docker-installation)
-> to secure your deployment by restricting network binding and implementing additional security measures.
+### 🛠️ 開発フェーズ
+- **05-implementation-consultant**: 実装方針・技術選定
+- **06-environment-setup**: 開発環境構築
+- **07-prototype-implementation**: プロトタイプ開発
+- **08-backend-implementation**: バックエンド実装
+- **09-test-quality-verification**: テスト・品質保証
 
+### 🚀 統合・運用フェーズ
+- **10-api-integration**: API統合・連携
+- **11-debug-detective**: デバッグ・問題解決
+- **12-deploy-specialist**: デプロイ・運用
+- **13-github-manager**: Git・GitHub管理
+- **14-typescript-manager**: TypeScript専門管理
+
+### 🔄 保守・拡張フェーズ
+- **15-feature-expansion**: 機能拡張・新機能開発
+- **16-refactoring-expert**: リファクタリング・最適化
+
+## 🚀 クイックスタート
+
+### 前提条件
+- Python 3.12+
+- Poetry
+- Docker (オプション)
+
+### インストール
 
 ```bash
-docker pull docker.all-hands.dev/all-hands-ai/runtime:0.45-nikolaik
+# リポジトリをクローン
+git clone https://github.com/your-username/bluelamp-cli.git
+cd bluelamp-cli
 
-docker run -it --rm --pull=always \
-    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.45-nikolaik \
-    -e LOG_ALL_EVENTS=true \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v ~/.openhands:/.openhands \
-    -p 3000:3000 \
-    --add-host host.docker.internal:host-gateway \
-    --name openhands-app \
-    docker.all-hands.dev/all-hands-ai/openhands:0.45
+# 依存関係をインストール
+poetry install
+
+# BlueLamp CLIを実行
+./bluelamp --help
 ```
 
-> **Note**: If you used OpenHands before version 0.44, you may want to run `mv ~/.openhands-state ~/.openhands` to migrate your conversation history to the new location.
+### 基本的な使用方法
 
-You'll find OpenHands running at [http://localhost:3000](http://localhost:3000)!
+```bash
+# 対話モードで開始
+./bluelamp
 
-When you open the application, you'll be asked to choose an LLM provider and add an API key.
-[Anthropic's Claude Sonnet 4](https://www.anthropic.com/api) (`anthropic/claude-sonnet-4-20250514`)
-works best, but you have [many options](https://docs.all-hands.dev/usage/llms).
+# 特定のエージェントを指定
+./bluelamp --agent requirements-engineer
 
-## 💡 Other ways to run OpenHands
-
-> [!CAUTION]
-> OpenHands is meant to be run by a single user on their local workstation.
-> It is not appropriate for multi-tenant deployments where multiple users share the same instance. There is no built-in authentication, isolation, or scalability.
->
-> If you're interested in running OpenHands in a multi-tenant environment, please
-> [get in touch with us](https://docs.google.com/forms/d/e/1FAIpQLSet3VbGaz8z32gW9Wm-Grl4jpt5WgMXPgJ4EDPVmCETCBpJtQ/viewform)
-> for advanced deployment options.
-
-You can also [connect OpenHands to your local filesystem](https://docs.all-hands.dev/usage/runtimes/docker#connecting-to-your-filesystem),
-run OpenHands in a scriptable [headless mode](https://docs.all-hands.dev/usage/how-to/headless-mode),
-interact with it via a [friendly CLI](https://docs.all-hands.dev/usage/how-to/cli-mode),
-or run it on tagged issues with [a github action](https://docs.all-hands.dev/usage/how-to/github-action).
-
-Visit [Running OpenHands](https://docs.all-hands.dev/usage/installation) for more information and setup instructions.
-
-If you want to modify the OpenHands source code, check out [Development.md](https://github.com/All-Hands-AI/OpenHands/blob/main/Development.md).
-
-Having issues? The [Troubleshooting Guide](https://docs.all-hands.dev/usage/troubleshooting) can help.
-
-## 📖 Documentation
-  <a href="https://deepwiki.com/All-Hands-AI/OpenHands"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" title="Autogenerated Documentation by DeepWiki"></a>
-
-To learn more about the project, and for tips on using OpenHands,
-check out our [documentation](https://docs.all-hands.dev/usage/getting-started).
-
-There you'll find resources on how to use different LLM providers,
-troubleshooting resources, and advanced configuration options.
-
-## 🤝 How to Join the Community
-
-OpenHands is a community-driven project, and we welcome contributions from everyone. We do most of our communication
-through Slack, so this is the best place to start, but we also are happy to have you contact us on Discord or Github:
-
-- [Join our Slack workspace](https://join.slack.com/t/openhands-ai/shared_invite/zt-34zm4j0gj-Qz5kRHoca8DFCbqXPS~f_A) - Here we talk about research, architecture, and future development.
-- [Join our Discord server](https://discord.gg/ESHStjSjD4) - This is a community-run server for general discussion, questions, and feedback.
-- [Read or post Github Issues](https://github.com/All-Hands-AI/OpenHands/issues) - Check out the issues we're working on, or add your own ideas.
-
-See more about the community in [COMMUNITY.md](./COMMUNITY.md) or find details on contributing in [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-## 📈 Progress
-
-See the monthly OpenHands roadmap [here](https://github.com/orgs/All-Hands-AI/projects/1) (updated at the maintainer's meeting at the end of each month).
-
-<p align="center">
-  <a href="https://star-history.com/#All-Hands-AI/OpenHands&Date">
-    <img src="https://api.star-history.com/svg?repos=All-Hands-AI/OpenHands&type=Date" width="500" alt="Star History Chart">
-  </a>
-</p>
-
-## 📜 License
-
-Distributed under the MIT License. See [`LICENSE`](./LICENSE) for more information.
-
-## 🙏 Acknowledgements
-
-OpenHands is built by a large number of contributors, and every contribution is greatly appreciated! We also build upon other open source projects, and we are deeply thankful for their work.
-
-For a list of open source projects and licenses used in OpenHands, please see our [CREDITS.md](./CREDITS.md) file.
-
-## 📚 Cite
-
+# ヘルプを表示
+./bluelamp --help
 ```
-@inproceedings{
-  wang2025openhands,
-  title={OpenHands: An Open Platform for {AI} Software Developers as Generalist Agents},
-  author={Xingyao Wang and Boxuan Li and Yufan Song and Frank F. Xu and Xiangru Tang and Mingchen Zhuge and Jiayi Pan and Yueqi Song and Bowen Li and Jaskirat Singh and Hoang H. Tran and Fuqiang Li and Ren Ma and Mingzhang Zheng and Bill Qian and Yanjun Shao and Niklas Muennighoff and Yizhe Zhang and Binyuan Hui and Junyang Lin and Robert Brennan and Hao Peng and Heng Ji and Graham Neubig},
-  booktitle={The Thirteenth International Conference on Learning Representations},
-  year={2025},
-  url={https://openreview.net/forum?id=OJd3ayDDoF}
-}
+
+## 🔧 設定
+
+### LLMプロバイダーの設定
+
+BlueLamp CLIは複数のLLMプロバイダーに対応しています：
+
+- **Anthropic Claude** (推奨): `anthropic/claude-sonnet-4-20250514`
+- **OpenAI GPT**: `openai/gpt-4o`
+- **Google Gemini**: `google/gemini-pro`
+
+### 環境変数の設定
+
+```bash
+# .envファイルを作成
+cp .env.example .env
+
+# APIキーを設定
+export ANTHROPIC_API_KEY="your-api-key-here"
+export OPENAI_API_KEY="your-api-key-here"
 ```
+
+## 📚 ドキュメント
+
+詳細なドキュメントは`docs/`ディレクトリに含まれています：
+
+- [セットアップガイド](./docs/setup.md)
+- [エージェント使用方法](./docs/agents.md)
+- [トラブルシューティング](./docs/troubleshooting.md)
+- [開発者ガイド](./docs/development.md)
+
+## 🤝 コントリビューション
+
+BlueLamp CLIへの貢献を歓迎します！
+
+1. このリポジトリをフォーク
+2. 機能ブランチを作成 (`git checkout -b feature/amazing-feature`)
+3. 変更をコミット (`git commit -m 'Add amazing feature'`)
+4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
+5. プルリクエストを作成
+
+## 📈 開発状況
+
+- ✅ 大規模コードクリーンアップ完了
+- ✅ 最小構成アーキテクチャ実現
+- ✅ 16専門エージェントシステム統合
+- 🔄 継続的な機能改善・最適化
+
+## 📜 ライセンス
+
+このプロジェクトはMITライセンスの下で配布されています。詳細は[`LICENSE`](./LICENSE)ファイルをご覧ください。
+
+## 🙏 謝辞
+
+BlueLamp CLIは[OpenHands](https://github.com/All-Hands-AI/OpenHands)プロジェクトをベースに開発されています。OpenHandsチームと貢献者の皆様に深く感謝いたします。
+
+### 使用技術・ライブラリ
+
+- **OpenHands**: AI開発エージェントプラットフォーム
+- **Python**: メイン開発言語
+- **Poetry**: 依存関係管理
+- **Docker**: コンテナ化技術
+
+## 🔗 関連リンク
+
+- [OpenHands公式サイト](https://docs.all-hands.dev/)
+- [OpenHands GitHub](https://github.com/All-Hands-AI/OpenHands)
+- [OpenHands論文](https://arxiv.org/abs/2407.16741)
+
+---
+
+<div align="center">
+  <p>Made with ❤️ for Japanese developers</p>
+  <p>Powered by <a href="https://github.com/All-Hands-AI/OpenHands">OpenHands</a></p>
+</div>

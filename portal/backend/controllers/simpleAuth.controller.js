@@ -8,8 +8,7 @@ const jwt = require('jsonwebtoken');
 const simpleAuthConfig = require('../config/simple-auth.config');
 // 認証ヘルパーを追加
 const authHelper = require('../utils/simpleAuth.helper');
-// AnthropicApiKeyモデルを事前に読み込み
-const AnthropicApiKey = require('../models/anthropicApiKey.model');
+// AnthropicApiKeyモデルは廃止済み（レガシーコード削除）
 // セッション管理サービスを追加
 const SessionService = require('../services/session.service');
 
@@ -125,9 +124,42 @@ exports.login = async (req, res) => {
     // ヘルパー関数を使用してリフレッシュトークンを生成
     const refreshToken = authHelper.generateRefreshToken(user._id);
     
-    // リフレッシュトークンをユーザーに保存
-    user.refreshToken = refreshToken;
-    await user.save();
+    // CLI認証の場合、CLI APIキーを自動発行（リフレッシュトークン保存前に実行）
+    let cliApiKey = null;
+    if (clientType === 'cli') {
+      console.log("CLI認証: CLI APIキーを自動発行");
+      console.log("CLI認証: clientType確認", clientType);
+      console.log("CLI認証: user._id", user._id);
+      console.log("CLI認証: user.cliApiKeys数", user.cliApiKeys ? user.cliApiKeys.length : 0);
+      try {
+        // 最新のユーザー情報を再取得（バージョン競合を避けるため）
+        const freshUser = await SimpleUser.findById(user._id);
+        console.log("CLI認証: generateCliApiKey呼び出し前");
+        cliApiKey = await freshUser.generateCliApiKey();
+        console.log("CLI認証: generateCliApiKeyの返り値", cliApiKey);
+        console.log("CLI認証: CLI APIキー発行完了", cliApiKey ? cliApiKey.substring(0, 8) + '...' : 'null');
+        console.log("CLI認証: cliApiKey変数の値", cliApiKey);
+        console.log("CLI認証: typeof cliApiKey", typeof cliApiKey);
+        
+        // リフレッシュトークンも同じユーザーオブジェクトに保存
+        freshUser.refreshToken = refreshToken;
+        await freshUser.save();
+        
+        // 元のuserオブジェクトを更新
+        user = freshUser;
+      } catch (error) {
+        console.error("CLI認証: CLI APIキー発行エラー", error);
+        console.error("CLI認証: エラースタック", error.stack);
+        console.error("CLI認証: エラー詳細", error.message);
+        // エラーが発生した場合は通常のリフレッシュトークン保存を実行
+        user.refreshToken = refreshToken;
+        await user.save();
+      }
+    } else {
+      // CLI以外の場合は通常通りリフレッシュトークンを保存
+      user.refreshToken = refreshToken;
+      await user.save();
+    }
     
     // CORS対応ヘッダー設定
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -135,65 +167,60 @@ exports.login = async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
     
-    // APIキー情報を取得
+    // APIキー情報を取得（シンプル化）
     let apiKeyInfo = null;
-    
-    // 新方式：ユーザーに直接保存されているAPIキー値を優先
     if (user.apiKeyValue) {
       apiKeyInfo = {
-        id: user.apiKeyId || 'direct_key',
-        keyValue: user.apiKeyValue,  // ユーザーモデルに保存されているAPIキー値
+        keyValue: user.apiKeyValue,
         status: 'active'
       };
-    } 
-    // 旧方式：AnthropicApiKeyテーブルから取得
-    else if (user.apiKeyId) {
-      try {
-        // AnthropicApiKeyはモジュールの先頭で読み込み済み
-        const apiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
-        
-        if (apiKey && apiKey.apiKeyFull) {
-          apiKeyInfo = {
-            id: apiKey.apiKeyId,
-            keyValue: apiKey.apiKeyFull,
-            status: apiKey.status
-          };
-          
-          // 移行処理：APIキー値をユーザーモデルにも保存
-          user.apiKeyValue = apiKey.apiKeyFull;
-          await user.save();
-          console.log(`ログイン時にユーザー ${user.name} (${user._id}) のAPIキー値をAnthropicApiKeyモデルからユーザーモデルに保存しました`);
-        }
-      } catch (err) {
-        console.error('AnthropicApiKeyモデルの読み込みエラー:', err);
-        // エラーは無視して続行
-      }
     }
     
     // APIキー取得後のログ記録
     console.log("============ シンプル認証コントローラー: ログイン成功 ============");
     console.log(`ログイン成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}, ID=${user._id}`);
-    console.log("APIキー情報:", apiKeyInfo ? `ID=${apiKeyInfo.id}, 状態=${apiKeyInfo.status}` : "なし");
+    console.log("APIキー情報:", apiKeyInfo ? `状態=${apiKeyInfo.status}` : "なし");
+    console.log("CLI APIキー:", cliApiKey ? `発行済み (${cliApiKey.substring(0, 8)}...)` : "なし");
     console.log("==================================================================");
     
     // レスポンス
+    const responseData = {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organizationId,
+        apiKeyId: user.apiKeyId,
+        apiKeyValue: user.apiKeyValue
+      },
+      apiKey: apiKeyInfo
+    };
+    
+    // CLI認証の場合、CLI APIキーをレスポンスに含める
+    console.log("CLI認証: レスポンス構築前", { 
+      clientType, 
+      cliApiKey: cliApiKey ? 'あり' : 'なし',
+      cliApiKeyValue: cliApiKey,
+      cliApiKeyType: typeof cliApiKey
+    });
+    if (clientType === 'cli' && cliApiKey) {
+      console.log("CLI認証: cliApiKeyをレスポンスに追加", cliApiKey.substring(0, 8) + '...');
+      responseData.cliApiKey = cliApiKey;
+    } else if (clientType === 'cli') {
+      console.log("CLI認証: cliApiKeyがnullまたはundefinedのためレスポンスに追加されません");
+      console.log("CLI認証: cliApiKey詳細", { value: cliApiKey, type: typeof cliApiKey });
+    }
+    
+    console.log("CLI認証: 最終レスポンスデータのキー", Object.keys(responseData));
+    console.log("CLI認証: responseData.cliApiKey", responseData.cliApiKey);
+    
     return res.status(200).json({
       success: true,
       message: 'ログインに成功しました',
-      data: {
-        accessToken,
-        refreshToken,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          organizationId: user.organizationId,
-          apiKeyId: user.apiKeyId,
-          apiKeyValue: user.apiKeyValue  // APIキー値をユーザー情報に含める
-        },
-        apiKey: apiKeyInfo
-      }
+      data: responseData
     });
   } catch (error) {
     console.error('ログインエラー:', error);
@@ -475,66 +502,13 @@ exports.checkAuth = async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
     
-    // APIキー情報を取得
+    // APIキー情報を取得（シンプル化）
     let apiKeyInfo = null;
-    
-    // 新方式：AnthropicApiKeyモデルからAPIキーを取得
-    if (user.apiKeyId) {
-      try {
-        // AnthropicApiKeyはモジュールの先頭で読み込み済み
-        
-        // APIキーIDと一致するAnthropicApiKeyを検索
-        const anthropicApiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
-        
-        if (anthropicApiKey && anthropicApiKey.apiKeyFull) {
-          apiKeyInfo = {
-            id: anthropicApiKey.apiKeyId,
-            keyValue: anthropicApiKey.apiKeyFull,
-            keyHint: anthropicApiKey.keyHint,
-            status: anthropicApiKey.status
-          };
-          console.log(`認証チェック時にユーザー ${user.name} (${user._id}) のAPIキーをAnthropicApiKeyモデルから取得しました`);
-        }
-      } catch (apiKeyError) {
-        console.error('AnthropicApiKeyモデルからの取得失敗:', apiKeyError);
-      }
-    }
-    
-    // フォールバック: ユーザーに直接保存されているAPIキー値を使用
-    if (!apiKeyInfo && user.apiKeyValue) {
+    if (user.apiKeyValue) {
       apiKeyInfo = {
-        id: user.apiKeyId || 'direct_key',
-        keyValue: user.apiKeyValue,  // ユーザーモデルに保存されているAPIキー値
+        keyValue: user.apiKeyValue,
         status: 'active'
       };
-    } 
-    // レガシー対応：他のユーザーからAPIキー値を探す
-    else if (!apiKeyInfo && user.apiKeyId) {
-      // 同じAPIキーIDを持つ他のユーザーを探す
-      const userWithKey = await SimpleUser.findOne({
-        apiKeyId: user.apiKeyId,
-        apiKeyValue: { $ne: null }
-      });
-      
-      if (userWithKey && userWithKey.apiKeyValue) {
-        apiKeyInfo = {
-          id: user.apiKeyId,
-          keyValue: userWithKey.apiKeyValue,
-          status: 'active'
-        };
-        
-        // APIキー値をこのユーザーにも保存（移行処理）
-        user.apiKeyValue = userWithKey.apiKeyValue;
-        await user.save();
-        console.log(`認証チェック時にユーザー ${user.name} (${user._id}) のAPIキー値を他のユーザーからコピーしました`);
-      } else {
-        // APIキー値が見つからない場合はダミーデータを返す
-        apiKeyInfo = {
-          id: user.apiKeyId,
-          keyValue: user.apiKeyId, // ダミーではなくAPIキーIDをそのまま使用
-          status: 'active'
-        };
-      }
     }
     
     // 成功レスポンス
@@ -547,16 +521,101 @@ exports.checkAuth = async (req, res) => {
           email: user.email,
           role: user.role,
           organizationId: user.organizationId,
-          apiKeyId: user.apiKeyId,
-          apiKeyValue: user.apiKeyValue  // APIキー値をユーザー情報に含める
-        },
-        apiKey: apiKeyInfo
+          apiKeyValue: user.apiKeyValue  // シンプルに
+        }
       }
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: '認証チェック中にエラーが発生しました'
+    });
+  }
+};
+
+/**
+ * CLI専用ログアウト
+ * @route POST /api/simple/auth/cli-logout
+ */
+exports.cliLogout = async (req, res) => {
+  try {
+    console.log("=============================================================");
+    console.log("CLI認証: ログアウトリクエスト受信");
+    console.log("ヘッダー:", req.headers);
+    console.log("=============================================================");
+    
+    // APIキーの取得（ヘッダーから）
+    const apiKey = req.headers['x-api-key'];
+    
+    if (!apiKey) {
+      console.log("CLI認証: APIキーが提供されていません");
+      return res.status(401).json({
+        success: false,
+        error: 'API key is required'
+      });
+    }
+    
+    // APIキーの形式チェック
+    if (!apiKey.startsWith('CLI_')) {
+      console.log("CLI認証: 不正なAPIキー形式");
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid API key format'
+      });
+    }
+    
+    // ユーザーを検索
+    console.log("CLI認証: APIキーでユーザー検索");
+    const user = await SimpleUser.findByCliApiKey(apiKey);
+    
+    if (!user) {
+      console.log("CLI認証: 有効なユーザーが見つかりません");
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid API key'
+      });
+    }
+    
+    console.log(`CLI認証: ログアウト処理開始 - ユーザー: ${user.name} (${user._id})`);
+    
+    // CLI APIキーを無効化
+    try {
+      await user.deactivateCliApiKey(apiKey);
+      console.log("CLI認証: APIキー無効化完了");
+    } catch (error) {
+      console.error("CLI認証: APIキー無効化エラー", error);
+      // エラーが発生してもログアウト処理は継続
+    }
+    
+    // CLIセッションをクリア
+    try {
+      await SessionService.clearSessionForClient(user._id, 'cli');
+      console.log("CLI認証: CLIセッションクリア完了");
+    } catch (error) {
+      console.error("CLI認証: セッションクリアエラー", error);
+      // エラーが発生してもログアウト処理は継続
+    }
+    
+    console.log("============ CLI認証: ログアウト完了 ============");
+    console.log(`ログアウト完了: ユーザー=${user.name}, メール=${user.email}`);
+    console.log("================================================");
+    
+    // CORS対応ヘッダー設定
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,X-API-Key');
+    
+    return res.status(200).json({
+      success: true,
+      message: 'CLI logout successful'
+    });
+  } catch (error) {
+    console.error('CLI認証: ログアウトエラー:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during logout',
+      message: error.message
     });
   }
 };
@@ -579,40 +638,15 @@ exports.getUserAnthropicApiKey = async (req, res) => {
       });
     }
     
-    // APIキー情報を取得
+    // APIキー情報を取得（シンプル化）
     let apiKeyData = null;
-    
-    // 新方式：AnthropicApiKeyモデルからAPIキーを取得
-    if (user.apiKeyId) {
-      try {
-        // AnthropicApiKeyはモジュールの先頭で読み込み済み
-        
-        // APIキーIDと一致するAnthropicApiKeyを検索
-        const anthropicApiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
-        
-        if (anthropicApiKey && anthropicApiKey.apiKeyFull) {
-          apiKeyData = {
-            id: anthropicApiKey.apiKeyId,
-            apiKeyFull: anthropicApiKey.apiKeyFull,
-            keyHint: anthropicApiKey.keyHint,
-            status: anthropicApiKey.status
-          };
-          console.log(`anthropic-api-key エンドポイントがユーザー ${user.name} (${user._id}) のAPIキーをAnthropicApiKeyモデルから取得しました`);
-        }
-      } catch (apiKeyError) {
-        console.error('AnthropicApiKeyモデルからの取得失敗:', apiKeyError);
-      }
-    }
-    
-    // フォールバック: ユーザーに直接保存されているAPIキー値を使用
-    if (!apiKeyData && user.apiKeyValue) {
+    if (user.apiKeyValue) {
       apiKeyData = {
-        id: user.apiKeyId || 'direct_key',
         apiKeyFull: user.apiKeyValue,
-        keyHint: user.apiKeyValue ? user.apiKeyValue.substring(0, 5) + '...' : '',
+        keyHint: user.apiKeyValue.substring(0, 5) + '...',
         status: 'active'
       };
-      console.log(`anthropic-api-key エンドポイントがユーザー ${user.name} (${user._id}) のAPIキーをユーザーモデルから取得しました`);
+      console.log(`anthropic-api-key エンドポイントがユーザー ${user.name} (${user._id}) のAPIキーを取得しました`);
     }
     
     // APIキーが見つからない場合
@@ -745,27 +779,6 @@ exports.forceLogin = async (req, res) => {
         keyValue: user.apiKeyValue,
         status: 'active'
       };
-    } 
-    // 旧方式：AnthropicApiKeyテーブルから取得
-    else if (user.apiKeyId) {
-      try {
-        const apiKey = await AnthropicApiKey.findOne({ apiKeyId: user.apiKeyId });
-        
-        if (apiKey && apiKey.apiKeyFull) {
-          apiKeyInfo = {
-            id: apiKey.apiKeyId,
-            keyValue: apiKey.apiKeyFull,
-            status: apiKey.status
-          };
-          
-          // 移行処理：APIキー値をユーザーモデルにも保存
-          user.apiKeyValue = apiKey.apiKeyFull;
-          await user.save();
-          console.log(`強制ログイン時にユーザー ${user.name} (${user._id}) のAPIキー値をAnthropicApiKeyモデルからユーザーモデルに保存しました`);
-        }
-      } catch (err) {
-        console.error('AnthropicApiKeyモデルの読み込みエラー:', err);
-      }
     }
     
     console.log("============ シンプル認証コントローラー: 強制ログイン成功 ============");

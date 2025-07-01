@@ -109,6 +109,10 @@ class OpenHandsConfig(BaseModel):
     mcp_host: str = Field(default=f'localhost:{os.getenv("port", 3000)}')
     mcp: MCPConfig = Field(default_factory=MCPConfig)
     kubernetes: KubernetesConfig = Field(default_factory=KubernetesConfig)
+    portal_base_url: str | None = Field(
+        default=os.getenv("PORTAL_BASE_URL", "https://bluelamp-235426778039.asia-northeast1.run.app/api")
+    )
+    portal_api_key: SecretStr | None = Field(default=None)
 
     defaults_dict: ClassVar[dict] = {}
 

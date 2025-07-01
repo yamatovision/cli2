@@ -336,9 +336,12 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		// ファイルビューワーを開くコマンド（旧マークダウンビューワーの代替）
 		context.subscriptions.push(
-			vscode.commands.registerCommand('appgenius-ai.openFileViewer', (projectPath?: string) => {
+			vscode.commands.registerCommand('appgenius-ai.openFileViewer', (projectPath?: string, fileInfo?: any) => {
 				try {
 					Logger.info(`ファイルビューワーを開くコマンドが実行されました: ${projectPath || 'パスなし'}`);
+					if (fileInfo) {
+						Logger.info(`ファイル情報: ${JSON.stringify(fileInfo)}`);
+					}
 					
 					// プロジェクトパスが指定されていない場合は、アクティブプロジェクトまたはワークスペースから取得
 					if (!projectPath) {
@@ -354,7 +357,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 					
 					// ファイルビューワーパネルを表示
-					FileViewerPanel.createOrShow(context.extensionUri);
+					FileViewerPanel.createOrShow(context.extensionUri, projectPath, fileInfo);
 					Logger.info('ファイルビューワーパネルを表示しました');
 				} catch (error) {
 					Logger.error('ファイルビューワーを開く際にエラーが発生しました', error as Error);

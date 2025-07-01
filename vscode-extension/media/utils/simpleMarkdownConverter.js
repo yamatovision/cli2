@@ -73,6 +73,22 @@ class SimpleMarkdownConverter {
     // インラインコード処理 - インラインスタイルを使用
     html = html.replace(/`([^`]+)`/g, '<code style="font-family:var(--vscode-editor-font-family,monospace); background-color:#1E1E1E; color:#FFFFFF; padding:0.2em 0.4em; border-radius:3px; font-size:0.85em; border:1px solid #3E3E3E;">$1</code>');
     
+    // ファイルパスをクリック可能なリンクに変換
+    // 一般的なファイルパスのパターンを検出（拡張子付きのパス）
+    const filePathPattern = /\b((?:[\w\-]+\/)*[\w\-]+\.(?:ts|tsx|js|jsx|json|md|css|scss|html|xml|py|java|cpp|c|h|go|rs|php|rb|swift|kt|dart|vue|yaml|yml|toml|ini|conf|txt|log|sh|bat|cmd|ps1|sql|graphql|proto))\b/g;
+    let filePathCount = 0;
+    html = html.replace(filePathPattern, (match, filePath) => {
+      // すでにコードブロック内の場合はスキップ
+      if (html.substring(html.lastIndexOf('<code', html.indexOf(match)), html.indexOf(match)).includes('<code')) {
+        console.log('コードブロック内のファイルパスをスキップ:', filePath);
+        return match;
+      }
+      filePathCount++;
+      console.log(`ファイルパス検出[${filePathCount}]:`, filePath);
+      return `<span class="file-link" data-file-path="${filePath}" style="color:#4a69bd; text-decoration:underline; cursor:pointer;">${filePath}</span>`;
+    });
+    console.log(`マークダウン変換完了 - 検出したファイルパス数: ${filePathCount}`);
+    
     // 太字処理
     const boldPattern = /\*\*(.*?)\*\*/g;
     

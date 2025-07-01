@@ -17,7 +17,7 @@ import httpx
 
 from openhands.core.config import OpenHandsConfig, SandboxConfig
 from openhands.core.config.mcp_config import MCPConfig, MCPStdioServerConfig
-from openhands.core.exceptions import AgentRuntimeDisconnectedError
+from openhands.core.exceptions import AgentRuntimeDisconnectedError, LLMMalformedActionError
 from openhands.core.logger import openhands_logger as logger
 from openhands.events import EventSource, EventStream, EventStreamSubscriber
 from openhands.events.action import (
@@ -296,9 +296,9 @@ class Runtime(FileEditRuntimeMixin):
                     f'Failed to add env vars [{env_vars.keys()}] to .bashrc: {obs.content}'
                 )
 
-    def on_event(self, event: Event) -> None:
+    async def on_event(self, event: Event) -> None:
         if isinstance(event, Action):
-            asyncio.get_event_loop().run_until_complete(self._handle_action(event))
+            await self._handle_action(event)
 
     async def _export_latest_git_provider_tokens(self, event: Action) -> None:
         """
@@ -350,6 +350,21 @@ class Runtime(FileEditRuntimeMixin):
                 e, AgentRuntimeDisconnectedError
             ):
                 err_id = 'STATUS$ERROR_RUNTIME_DISCONNECTED'
+            elif isinstance(e, LLMMalformedActionError):
+                # Handle path access errors gracefully - create ErrorObservation instead of stopping
+                error_message = f'Path access denied: {str(e)}. Please use paths within the allowed workspace.'
+                observation = ErrorObservation(
+                    content=error_message,
+                    error_id='PATH_ACCESS_DENIED'
+                )
+                observation._cause = event.id  # type: ignore[attr-defined]
+                observation.tool_call_metadata = event.tool_call_metadata
+                
+                source = event.source if event.source else EventSource.AGENT
+                self.event_stream.add_event(observation, source)  # type: ignore[arg-type]
+                self.log('warning', f'Path access denied for action: {str(event)}')
+                return
+            
             error_message = f'{type(e).__name__}: {str(e)}'
             self.log('error', f'Unexpected error while running action: {error_message}')
             self.log('error', f'Problematic action: {str(event)}')

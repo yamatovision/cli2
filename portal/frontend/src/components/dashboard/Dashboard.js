@@ -33,7 +33,8 @@ import {
   Delete as DeleteIcon,
   Person as PersonIcon,
   Key as KeyIcon,
-  ContentCopy as ContentCopyIcon
+  ContentCopy as ContentCopyIcon,
+  Description as PromptIcon
 } from '@mui/icons-material';
 import './dashboard-user.css';
 import { 
@@ -44,11 +45,20 @@ import {
   generateCliApiKey,
   deactivateCliApiKey
 } from '../../services/simple/simpleUser.service';
+import { useAuth } from '../../auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+  const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [users, setUsers] = useState([]);
+  
+  // 現在のユーザーの権限を確認
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+  const isAdmin = currentUser?.role === 'Admin' || isSuperAdmin;
+  const canManageUsers = isAdmin; // Admin以上はユーザー管理可能
   
   // ダイアログの状態管理
   const [openUserDialog, setOpenUserDialog] = useState(false);
@@ -146,7 +156,7 @@ const Dashboard = () => {
     try {
       if (editingUser) {
         // 編集の場合
-        await updateUser(editingUser._id, formData.name, formData.email, formData.password || null);
+        await updateUser(editingUser._id, formData.name, formData.email, formData.password || null, null, formData.role);
       } else {
         // 新規作成の場合
         await createUser(formData.name, formData.email, formData.password, formData.role);
@@ -242,14 +252,16 @@ const Dashboard = () => {
             <PersonIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
             ユーザー一覧
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenUserDialog()}
-            className="simple-button primary"
-          >
-            新規ユーザー追加
-          </Button>
+          {canManageUsers && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenUserDialog()}
+              className="simple-button primary"
+            >
+              新規ユーザー追加
+            </Button>
+          )}
         </Box>
         
         {error && (
@@ -258,16 +270,45 @@ const Dashboard = () => {
           </Alert>
         )}
         
+        {/* ナビゲーションカード - SuperAdminのみ表示 */}
+        {isSuperAdmin && (
+          <Box sx={{ mb: 4, display: 'flex', gap: 2 }}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                flex: 1, 
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3
+                }
+              }}
+              onClick={() => navigate('/prompts')}
+            >
+              <Box display="flex" alignItems="center">
+                <PromptIcon sx={{ fontSize: 48, color: 'primary.main', mr: 2 }} />
+                <Box>
+                  <Typography variant="h6">プロンプト管理</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    プロンプトの作成・編集・管理
+                  </Typography>
+                </Box>
+              </Box>
+            </Paper>
+          </Box>
+        )}
+        
         {/* ユーザー一覧テーブル */}
-        <TableContainer component={Paper} className="simple-user-table-container">
-          <Table>
+        <TableContainer component={Paper} className="simple-user-table-container" sx={{ maxHeight: 600 }}>
+          <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>名前</TableCell>
-                <TableCell>メールアドレス</TableCell>
-                <TableCell>ロール</TableCell>
-                <TableCell>CLI APIキー</TableCell>
-                <TableCell>操作</TableCell>
+                <TableCell sx={{ minWidth: 150 }}>名前</TableCell>
+                <TableCell sx={{ minWidth: 250 }}>メールアドレス</TableCell>
+                <TableCell sx={{ minWidth: 120 }}>ロール</TableCell>
+                <TableCell sx={{ minWidth: 300 }}>CLI APIキー</TableCell>
+                <TableCell sx={{ minWidth: 120 }}>操作</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -319,25 +360,33 @@ const Dashboard = () => {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Tooltip title="編集">
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleOpenUserDialog(user)}
-                        className="simple-button secondary small"
-                      >
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="削除">
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleOpenDeleteDialog(user)}
-                        className="simple-button danger small"
-                        sx={{ ml: 1 }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    {canManageUsers ? (
+                      <>
+                        <Tooltip title="編集">
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleOpenUserDialog(user)}
+                            className="simple-button secondary small"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="削除">
+                          <IconButton 
+                            size="small" 
+                            onClick={() => handleOpenDeleteDialog(user)}
+                            className="simple-button danger small"
+                            sx={{ ml: 1 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        -
+                      </Typography>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -385,7 +434,10 @@ const Dashboard = () => {
                 >
                   <MenuItem value="User">ユーザー</MenuItem>
                   <MenuItem value="Admin">管理者</MenuItem>
-                  <MenuItem value="SuperAdmin">スーパー管理者</MenuItem>
+                  {/* SuperAdminはSuperAdminのみが設定可能 */}
+                  {isSuperAdmin && (
+                    <MenuItem value="SuperAdmin">スーパー管理者</MenuItem>
+                  )}
                 </Select>
               </FormControl>
             </Box>

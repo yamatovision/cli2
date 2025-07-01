@@ -26,6 +26,7 @@ class Settings(BaseModel):
     max_iterations: int | None = None
     security_analyzer: str | None = None
     confirmation_mode: bool | None = None
+    agent_switch_confirmation: bool | None = None
     llm_model: str | None = None
     llm_api_key: SecretStr | None = None
     llm_base_url: str | None = None
@@ -126,6 +127,7 @@ class Settings(BaseModel):
             max_iterations=app_config.max_iterations,
             security_analyzer=security.security_analyzer,
             confirmation_mode=security.confirmation_mode,
+            agent_switch_confirmation=security.agent_switch_confirmation,
             llm_model=llm_config.model,
             llm_api_key=llm_config.api_key,
             llm_base_url=llm_config.base_url,
