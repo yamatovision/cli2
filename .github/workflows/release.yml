@@ -1,0 +1,88 @@
+name: Release Build and Publish
+
+on:
+  push:
+    tags:
+      - 'v*'  # v0.1.0 のようなタグがプッシュされたら実行
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest  # Pythonパッケージはプラットフォーム非依存
+        
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: latest
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction --no-root
+        
+    - name: Build obfuscated package
+      run: |
+        python scripts/build_obfuscated_package.py
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          dist/*.whl
+          dist/*.tar.gz
+        draft: false
+        prerelease: false
+        body: |
+          # BlueLamp ${{ github.ref_name }}
+          
+          AI-Powered Development Assistant for Japanese Developers
+          
+          ## インストール方法
+          
+          ### 方法1: 直接インストール（推奨）
+          ```bash
+          pip install https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/bluelamp_ai-${{ github.ref_name }}-py3-none-any.whl
+          ```
+          
+          ### 方法2: ダウンロード後にインストール
+          1. 下記のAssetsから `.whl` ファイルをダウンロード
+          2. インストール:
+             ```bash
+             pip install bluelamp_ai-${{ github.ref_name }}-py3-none-any.whl
+             ```
+          
+          ## 使い方
+          
+          ```bash
+          # ログイン
+          bluelamp login
+          
+          # プロジェクトで実行
+          bluelamp /path/to/your/project
+          ```
+          
+          ## 要件
+          - Python 3.12以上
+          - インターネット接続（Portal認証用）
+          
+          ## 変更点
+          - セキュリティ強化（難読化済み）
+          - パフォーマンス改善
+          - バグ修正
+          
+          ## サポート
+          - [Issues](https://github.com/${{ github.repository }}/issues)
+          - [Documentation](https://github.com/${{ github.repository }}/tree/main/docs)
+          
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
