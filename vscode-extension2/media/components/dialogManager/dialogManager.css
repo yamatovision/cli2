@@ -1,0 +1,400 @@
+/* ダイアログマネージャーのスタイル */
+
+/* 通知コンテナ */
+.dialog-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  width: 320px;
+}
+
+/* 通知 */
+.notification {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transform: translateX(120%);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.notification.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.notification.hide {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+/* 通知タイプ */
+.notification.error {
+  background-color: var(--vscode-errorForeground);
+  color: white;
+}
+
+.notification.success {
+  background-color: var(--vscode-terminal-ansiGreen, #4caf50);
+  color: white;
+}
+
+.notification.info {
+  background-color: var(--vscode-terminal-ansiBlue, #2196f3);
+  color: white;
+}
+
+.notification.warning {
+  background-color: var(--vscode-terminal-ansiYellow, #ff9800);
+  color: white;
+}
+
+/* 通知の内部要素 */
+.notification-icon {
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: 14px;
+}
+
+.notification-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0;
+  margin-left: 10px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-close:hover {
+  opacity: 1;
+}
+
+/* ダイアログオーバーレイ */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(3px);
+}
+
+/* ターミナルモードのオーバーレイには特別なスタイル */
+#terminal-mode-overlay,
+#modal-terminal-mode-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ダイアログ */
+.dialog {
+  background-color: var(--vscode-editor-background, #fff);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  width: 440px;
+  max-width: 90%;
+  animation: scaleIn 0.2s ease;
+  overflow: hidden;
+  border: 1px solid var(--vscode-panel-border, rgba(0,0,0,0.1));
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ダイアログヘッダー */
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--vscode-sideBar-background, #f5f5f5);
+  border-bottom: 1px solid var(--vscode-panel-border, rgba(0,0,0,0.1));
+}
+
+.dialog-title {
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--vscode-foreground, #333);
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  color: var(--vscode-foreground, #666);
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.7;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.dialog-close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* ダイアログコンテンツ */
+.dialog-content {
+  padding: 24px 20px;
+  color: var(--vscode-foreground, #444);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.dialog-content p {
+  margin: 0 0 16px 0;
+}
+
+/* プロジェクト情報表示スタイル */
+.project-info {
+  margin: 8px 0 16px;
+  padding: 10px;
+  background-color: var(--vscode-editor-inactiveSelectionBackground, rgba(0, 0, 0, 0.05));
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+}
+
+.current-project-name {
+  font-weight: bold;
+  color: var(--vscode-badge-foreground, #0078d4);
+}
+
+.dialog-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 12px;
+  border: 1px solid var(--vscode-input-border, #ccc);
+  background-color: var(--vscode-input-background, #fff);
+  color: var(--vscode-input-foreground, #333);
+  border-radius: 6px;
+  outline: none;
+  font-size: 14px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dialog-input:focus {
+  border-color: var(--vscode-focusBorder, #0078d4);
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+}
+
+/* ダイアログフッター */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 20px;
+  background-color: var(--vscode-sideBar-background, #f9f9f9);
+  border-top: 1px solid var(--vscode-panel-border, rgba(0,0,0,0.1));
+}
+
+.dialog-button {
+  padding: 8px 16px;
+  margin-left: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: var(--vscode-button-secondaryBackground, #f3f3f3);
+  color: var(--vscode-button-secondaryForeground, #444);
+  border: 1px solid var(--vscode-button-border, #ddd);
+  transition: all 0.2s ease;
+  min-width: 100px;
+  text-align: center;
+}
+
+.dialog-button.primary-button {
+  background-color: var(--vscode-button-background, #0078d4);
+  color: var(--vscode-button-foreground, #fff);
+  border-color: transparent;
+}
+
+.dialog-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.dialog-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ターミナルモード選択ダイアログ専用スタイル */
+#terminal-mode-dialog,
+#modal-terminal-mode-dialog {
+  max-width: 500px;
+  background-color: #ffffff;
+  box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ダイアログヘッダー - MUI スタイル */
+#terminal-mode-dialog .dialog-header,
+#modal-terminal-mode-dialog .dialog-header {
+  background-color: #3f51b5;
+  color: white;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: none;
+}
+
+#terminal-mode-dialog .dialog-title,
+#modal-terminal-mode-dialog .dialog-title {
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+#terminal-mode-dialog .dialog-close,
+#modal-terminal-mode-dialog .dialog-close {
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+#terminal-mode-dialog .dialog-close:hover,
+#modal-terminal-mode-dialog .dialog-close:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ダイアログコンテンツ - MUI スタイル */
+#terminal-mode-dialog .dialog-content,
+#modal-terminal-mode-dialog .dialog-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #333333;
+}
+
+#terminal-mode-dialog .dialog-content p,
+#modal-terminal-mode-dialog .dialog-content p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+/* プロジェクト情報表示 - MUI スタイル */
+#terminal-mode-dialog .project-info,
+#modal-terminal-mode-dialog .project-info {
+  margin: 8px 0 16px;
+  padding: 10px 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  width: 100%;
+  border-left: 4px solid #3f51b5;
+}
+
+#terminal-mode-dialog .current-project-name,
+#modal-terminal-mode-dialog .current-project-name {
+  font-weight: bold;
+  color: #3f51b5;
+}
+
+/* ダイアログフッター - MUI スタイル */
+#terminal-mode-dialog .dialog-footer,
+#modal-terminal-mode-dialog .dialog-footer {
+  justify-content: center;
+  padding: 16px 24px 24px;
+  border-top: none;
+  background-color: #ffffff;
+  display: flex;
+  gap: 16px;
+}
+
+/* ボタン - MUI スタイル */
+#terminal-mode-dialog .dialog-button,
+#modal-terminal-mode-dialog .dialog-button {
+  min-width: 180px;
+  padding: 10px 24px;
+  font-weight: 500;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  border: none;
+  background-color: #f5f5f5;
+  color: #333333;
+}
+
+#terminal-mode-dialog .dialog-button:hover,
+#modal-terminal-mode-dialog .dialog-button:hover {
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  background-color: #e0e0e0;
+}
+
+#terminal-mode-dialog .dialog-button:active,
+#modal-terminal-mode-dialog .dialog-button:active {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+#terminal-mode-dialog .dialog-button.primary-button,
+#modal-terminal-mode-dialog .dialog-button.primary-button {
+  background-color: #3f51b5;
+  color: #ffffff;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
