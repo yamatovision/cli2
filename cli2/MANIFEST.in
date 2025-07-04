@@ -1,5 +1,3 @@
-include README.md
-include LICENSE
 include pyproject.toml
 include config.template.toml
 recursive-include openhands *.py
