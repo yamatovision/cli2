@@ -1,5 +1,6 @@
 import asyncio
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 from openhands.events.event import Event
 from openhands.events.event_store import EventStore

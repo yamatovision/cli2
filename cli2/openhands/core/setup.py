@@ -58,7 +58,7 @@ def create_runtime(
     # set up the security analyzer
     if config.security.security_analyzer:
         options.SecurityAnalyzers.get(
-            config.security.security_analyzer, SecurityAnalyzer
+            config.security.security_analyzer, SecurityAnalyzer,
         )(event_stream)
 
     # agent class
@@ -69,7 +69,7 @@ def create_runtime(
 
     # runtime and tools
     runtime_cls = get_runtime_cls(config.runtime)
-    logger.debug(f'Initializing runtime: {runtime_cls.__name__}')
+    logger.debug(f"Initializing runtime: {runtime_cls.__name__}")
     runtime: Runtime = runtime_cls(
         config=config,
         event_stream=event_stream,
@@ -79,14 +79,14 @@ def create_runtime(
     )
 
     logger.debug(
-        f'Runtime created with plugins: {[plugin.name for plugin in runtime.plugins]}'
+        f"Runtime created with plugins: {[plugin.name for plugin in runtime.plugins]}",
     )
 
     return runtime
 
 
 def initialize_repository_for_runtime(
-    runtime: Runtime, selected_repository: str | None = None
+    runtime: Runtime, selected_repository: str | None = None,
 ) -> str | None:
     """Initialize the repository for the runtime.
 
@@ -99,16 +99,16 @@ def initialize_repository_for_runtime(
     """
     # clone selected repository if provided
     provider_tokens = {}
-    if 'GITHUB_TOKEN' in os.environ:
-        github_token = SecretStr(os.environ['GITHUB_TOKEN'])
+    if "GITHUB_TOKEN" in os.environ:
+        github_token = SecretStr(os.environ["GITHUB_TOKEN"])
         provider_tokens[ProviderType.GITHUB] = ProviderToken(token=github_token)
 
-    if 'GITLAB_TOKEN' in os.environ:
-        gitlab_token = SecretStr(os.environ['GITLAB_TOKEN'])
+    if "GITLAB_TOKEN" in os.environ:
+        gitlab_token = SecretStr(os.environ["GITLAB_TOKEN"])
         provider_tokens[ProviderType.GITLAB] = ProviderToken(token=gitlab_token)
 
-    if 'BITBUCKET_TOKEN' in os.environ:
-        bitbucket_token = SecretStr(os.environ['BITBUCKET_TOKEN'])
+    if "BITBUCKET_TOKEN" in os.environ:
+        bitbucket_token = SecretStr(os.environ["BITBUCKET_TOKEN"])
         provider_tokens[ProviderType.BITBUCKET] = ProviderToken(token=bitbucket_token)
 
     secret_store = (
@@ -116,7 +116,7 @@ def initialize_repository_for_runtime(
     )
     immutable_provider_tokens = secret_store.provider_tokens if secret_store else None
 
-    logger.debug(f'Selected repository {selected_repository}.')
+    logger.debug(f"Selected repository {selected_repository}.")
     repo_directory = call_async_from_sync(
         runtime.clone_or_init_repo,
         GENERAL_TIMEOUT,
@@ -166,7 +166,7 @@ def create_memory(
 
         # loads microagents from repo/.openhands/microagents
         microagents: list[BaseMicroagent] = runtime.get_microagents_from_selected_repo(
-            selected_repository
+            selected_repository,
         )
         memory.load_user_workspace_microagents(microagents)
 
@@ -200,13 +200,13 @@ def create_controller(
     initial_state = None
     try:
         logger.debug(
-            f'Trying to restore agent state from session {event_stream.sid} if available'
+            f"Trying to restore agent state from session {event_stream.sid} if available",
         )
         initial_state = State.restore_from_session(
-            event_stream.sid, event_stream.file_store
+            event_stream.sid, event_stream.file_store,
         )
     except Exception as e:
-        logger.debug(f'Cannot restore agent state: {e}')
+        logger.debug(f"Cannot restore agent state: {e}")
 
     controller = AgentController(
         agent=agent,
@@ -227,5 +227,5 @@ def generate_sid(config: OpenHandsConfig, session_name: str | None = None) -> st
     session_name = session_name or str(uuid.uuid4())
     jwt_secret = config.jwt_secret
 
-    hash_str = hashlib.sha256(f'{session_name}{jwt_secret}'.encode('utf-8')).hexdigest()
-    return f'{session_name}-{hash_str[:16]}'
+    hash_str = hashlib.sha256(f"{session_name}{jwt_secret}".encode()).hexdigest()
+    return f"{session_name}-{hash_str[:16]}"

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Callable, Protocol
 
-import openhands.agenthub  # noqa F401 (we import this to get the agents registered)
+import openhands.agenthub
 import openhands.cli.suppress_warnings  # noqa: F401
 from openhands.controller.agent import Agent
 from openhands.controller.replay import ReplayManager
@@ -137,7 +137,7 @@ async def run_controller(
         # Add OpenHands' MCP server by default
         _, openhands_mcp_stdio_servers = (
             OpenHandsMCPConfigImpl.create_default_mcp_server_config(
-                config.mcp_host, config, None
+                config.mcp_host, config, None,
             )
         )
         runtime.config.mcp.stdio_servers.extend(openhands_mcp_stdio_servers)
@@ -146,22 +146,22 @@ async def run_controller(
 
     replay_events: list[Event] | None = None
     if config.replay_trajectory_path:
-        logger.info('Trajectory replay is enabled')
+        logger.info("Trajectory replay is enabled")
         assert isinstance(initial_user_action, NullAction)
         replay_events, initial_user_action = load_replay_log(
-            config.replay_trajectory_path
+            config.replay_trajectory_path,
         )
 
     controller, initial_state = create_controller(
-        agent, runtime, config, replay_events=replay_events
+        agent, runtime, config, replay_events=replay_events,
     )
 
     assert isinstance(initial_user_action, Action), (
-        f'initial user actions must be an Action, got {type(initial_user_action)}'
+        f"initial user actions must be an Action, got {type(initial_user_action)}"
     )
     logger.debug(
-        f'Agent Controller Initialized: Running agent {agent.name}, model '
-        f'{agent.llm.config.model}, with actions: {initial_user_action}'
+        f"Agent Controller Initialized: Running agent {agent.name}, model "
+        f"{agent.llm.config.model}, with actions: {initial_user_action}",
     )
 
     # start event is a MessageAction with the task, either resumed or new
@@ -171,7 +171,7 @@ async def run_controller(
             MessageAction(
                 content=(
                     "Let's get back on track. If you experienced errors before, do "
-                    'NOT resume your task. Ask me about it.'
+                    "NOT resume your task. Ask me about it."
                 ),
             ),
             EventSource.USER,
@@ -184,7 +184,7 @@ async def run_controller(
         if isinstance(event, AgentStateChangedObservation):
             if event.agent_state == AgentState.AWAITING_USER_INPUT:
                 if exit_on_message:
-                    message = '/exit'
+                    message = "/exit"
                 elif fake_user_response_fn is None:
                     message = read_input(config.cli_multiline_input)
                 else:
@@ -205,14 +205,14 @@ async def run_controller(
     try:
         await run_agent_until_done(controller, runtime, memory, end_states)
     except Exception as e:
-        logger.error(f'Exception in main loop: {e}')
+        logger.error(f"Exception in main loop: {e}")
 
     # save session when we're about to close
-    if config.file_store is not None and config.file_store != 'memory':
+    if config.file_store is not None and config.file_store != "memory":
         end_state = controller.get_state()
         # NOTE: the saved state does not include delegates events
         end_state.save_to_session(
-            event_stream.sid, event_stream.file_store, event_stream.user_id
+            event_stream.sid, event_stream.file_store, event_stream.user_id,
         )
 
     await controller.close(set_stop_state=False)
@@ -223,12 +223,12 @@ async def run_controller(
     if config.save_trajectory_path is not None:
         # if save_trajectory_path is a folder, use session id as file name
         if os.path.isdir(config.save_trajectory_path):
-            file_path = os.path.join(config.save_trajectory_path, sid + '.json')
+            file_path = os.path.join(config.save_trajectory_path, sid + ".json")
         else:
             file_path = config.save_trajectory_path
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         histories = controller.get_trajectory(config.save_screenshots_in_trajectory)
-        with open(file_path, 'w') as f:  # noqa: ASYNC101
+        with open(file_path, "w") as f:
             json.dump(histories, f, indent=4)
 
     return state
@@ -243,9 +243,9 @@ def auto_continue_response(
     Tell the agent to proceed without asking for more input, or finish the interaction.
     """
     message = (
-        'Please continue on whatever approach you think is suitable.\n'
-        'If you think you have solved the task, please finish the interaction.\n'
-        'IMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN RESPONSE.\n'
+        "Please continue on whatever approach you think is suitable.\n"
+        "If you think you have solved the task, please finish the interaction.\n"
+        "IMPORTANT: YOU SHOULD NEVER ASK FOR HUMAN RESPONSE.\n"
     )
     return message
 
@@ -261,20 +261,20 @@ def load_replay_log(trajectory_path: str) -> tuple[list[Event] | None, Action]:
         path = Path(trajectory_path).resolve()
 
         if not path.exists():
-            raise ValueError(f'Trajectory file not found: {path}')
+            raise ValueError(f"Trajectory file not found: {path}")
 
         if not path.is_file():
-            raise ValueError(f'Trajectory path is a directory, not a file: {path}')
+            raise ValueError(f"Trajectory path is a directory, not a file: {path}")
 
-        with open(path, 'r', encoding='utf-8') as file:
+        with open(path, encoding="utf-8") as file:
             events = ReplayManager.get_replay_events(json.load(file))
             assert isinstance(events[0], MessageAction)
             return events[1:], events[0]
     except json.JSONDecodeError as e:
-        raise ValueError(f'Invalid JSON format in {trajectory_path}: {e}')
+        raise ValueError(f"Invalid JSON format in {trajectory_path}: {e}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_arguments()
 
     config: OpenHandsConfig = setup_config_from_args(args)
@@ -286,11 +286,11 @@ if __name__ == '__main__':
     if config.replay_trajectory_path:
         if task_str:
             raise ValueError(
-                'User-specified task is not supported under trajectory replay mode'
+                "User-specified task is not supported under trajectory replay mode",
             )
     else:
         if not task_str:
-            raise ValueError('No task provided. Please specify a task through -t, -f.')
+            raise ValueError("No task provided. Please specify a task through -t, -f.")
 
         # Create actual initial user action
         initial_user_action = MessageAction(content=task_str)
@@ -307,5 +307,5 @@ if __name__ == '__main__':
             fake_user_response_fn=None
             if args.no_auto_continue
             else auto_continue_response,
-        )
+        ),
     )

@@ -25,7 +25,7 @@ OpenHands（旧OpenDevin）は、AI駆動のソフトウェア開発エージェ
 | `openhands/cli/` | **対話型CLIの実装**。main.py、commands.py、tui.pyを含む | **最高** - CLI機能の直接実装 |
 | `docs/` | プロジェクトドキュメント | **中** - CLI使用方法を含む |
 | `tests/` | テストスイート | **中** - CLI機能のテスト |
-| `containers/` | Docker設定ファイル | **中** - コンテナ化されたCLI環境 |
+
 | `microagents/` | 特定タスク用のマイクロエージェント定義 | **高** - CLI経由で利用可能 |
 | `dev_config/` | 開発環境設定 | **低** - 開発ツール設定 |
 

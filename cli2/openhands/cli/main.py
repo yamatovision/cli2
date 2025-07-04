@@ -7,7 +7,7 @@ from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear
 
-import openhands.agenthub  # noqa F401 (we import this to get the agents registered)
+import openhands.agenthub
 import openhands.cli.suppress_warnings  # noqa: F401
 from openhands.cli.commands import (
     check_folder_security_agreement,
@@ -102,7 +102,7 @@ async def cleanup_session(
         await controller.close()
 
     except Exception as e:
-        logger.error(f'Error during session cleanup: {e}')
+        logger.error(f"Error during session cleanup: {e}")
 
 
 async def run_session(
@@ -128,7 +128,7 @@ async def run_session(
 
     # Show Initialization loader
     loop.run_in_executor(
-        None, display_initialization_animation, 'Initializing...', is_loaded
+        None, display_initialization_animation, "Initializing...", is_loaded,
     )
 
     agent = create_agent(config)
@@ -155,7 +155,7 @@ async def run_session(
         nonlocal reload_microagents, new_session_requested
         while True:
             next_message = await read_prompt_input(
-                agent_state, multiline=config.cli_multiline_input
+                agent_state, multiline=config.cli_multiline_input,
             )
 
             if not next_message.strip():
@@ -215,7 +215,7 @@ async def run_session(
                     return
 
                 confirmation_status = await read_confirmation_input()
-                if confirmation_status == 'yes' or confirmation_status == 'always':
+                if confirmation_status == "yes" or confirmation_status == "always":
                     event_stream.add_event(
                         ChangeAgentStateAction(AgentState.USER_CONFIRMED),
                         EventSource.USER,
@@ -227,7 +227,7 @@ async def run_session(
                     )
 
                 # Set the always_confirm_mode flag if the user wants to always confirm
-                if confirmation_status == 'always':
+                if confirmation_status == "always":
                     always_confirm_mode = True
 
             if event.agent_state == AgentState.PAUSED:
@@ -237,7 +237,7 @@ async def run_session(
             if event.agent_state == AgentState.RUNNING:
                 display_agent_running_message()
                 loop.create_task(
-                    process_agent_pause(is_paused, event_stream)
+                    process_agent_pause(is_paused, event_stream),
                 )  # Create a task to track agent pause requests from the user
 
     def on_event(event: Event) -> None:
@@ -270,7 +270,7 @@ async def run_session(
         # Add OpenHands' MCP server by default
         _, openhands_mcp_stdio_servers = (
             OpenHandsMCPConfigImpl.create_default_mcp_server_config(
-                config.mcp_host, config, None
+                config.mcp_host, config, None,
             )
         )
 
@@ -288,26 +288,26 @@ async def run_session(
     if not skip_banner:
         display_banner(session_id=sid)
 
-    welcome_message = 'What do you want to build?'  # from the application
-    initial_message = ''  # from the user
+    welcome_message = "What do you want to build?"  # from the application
+    initial_message = ""  # from the user
 
     if task_content:
         initial_message = task_content
 
     # If we loaded a state, we are resuming a previous session
     if initial_state is not None:
-        logger.info(f'Resuming session: {sid}')
+        logger.info(f"Resuming session: {sid}")
 
         if initial_state.last_error:
             # If the last session ended in an error, provide a message.
             initial_message = (
-                'NOTE: the last session ended with an error.'
+                "NOTE: the last session ended with an error."
                 "Let's get back on track. Do NOT resume your task. Ask me about it."
             )
         else:
             # If we are resuming, we already have a task
-            initial_message = ''
-            welcome_message += '\nLoading previous conversation.'
+            initial_message = ""
+            welcome_message += "\nLoading previous conversation."
 
     # Show OpenHands welcome
     display_welcome_message(welcome_message)
@@ -320,10 +320,10 @@ async def run_session(
         event_stream.add_event(MessageAction(content=initial_message), EventSource.USER)
     else:
         # No session restored, no initial action: prompt for the user's first message
-        asyncio.create_task(prompt_for_next_task(''))
+        asyncio.create_task(prompt_for_next_task(""))
 
     await run_agent_until_done(
-        controller, runtime, memory, [AgentState.STOPPED, AgentState.ERROR]
+        controller, runtime, memory, [AgentState.STOPPED, AgentState.ERROR],
     )
 
     await cleanup_session(loop, agent, runtime, controller)
@@ -338,10 +338,10 @@ async def run_setup_flow(config: OpenHandsConfig, settings_store: FileSettingsSt
         bool: True if settings were successfully configured, False otherwise.
     """
     # Display the banner with ASCII art first
-    display_banner(session_id='setup')
+    display_banner(session_id="setup")
 
     print_formatted_text(
-        HTML('<grey>No settings found. Starting initial setup...</grey>\n')
+        HTML("<grey>No settings found. Starting initial setup...</grey>\n"),
     )
 
     # Use the existing settings modification function for basic setup
@@ -399,13 +399,13 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
             agent_config = config.get_agent_config(config.default_agent)
             agent_config.condenser = LLMSummarizingCondenserConfig(
                 llm_config=llm_config,
-                type='llm',
+                type="llm",
             )
             config.set_agent_config(agent_config)
             config.enable_default_condenser = True
         else:
             agent_config = config.get_agent_config(config.default_agent)
-            agent_config.condenser = NoOpCondenserConfig(type='noop')
+            agent_config.condenser = NoOpCondenserConfig(type="noop")
             config.set_agent_config(agent_config)
             config.enable_default_condenser = False
 
@@ -413,12 +413,12 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     val_override = args.override_cli_mode
     should_override_cli_defaults = (
         val_override is True
-        or (isinstance(val_override, str) and val_override.lower() in ('true', '1'))
+        or (isinstance(val_override, str) and val_override.lower() in ("true", "1"))
         or (isinstance(val_override, int) and val_override == 1)
     )
 
     if not should_override_cli_defaults:
-        config.runtime = 'cli'
+        config.runtime = "cli"
         if not config.workspace_base:
             config.workspace_base = os.getcwd()
         config.security.confirmation_mode = True
@@ -427,7 +427,7 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     current_dir = config.workspace_base
 
     if not current_dir:
-        raise ValueError('Workspace base directory not specified')
+        raise ValueError("Workspace base directory not specified")
 
     if not check_folder_security_agreement(config, current_dir):
         # User rejected, exit application
@@ -450,7 +450,7 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     # If a new session was requested, run it
     while new_session_requested:
         new_session_requested = await run_session(
-            loop, config, settings_store, current_dir, None
+            loop, config, settings_store, current_dir, None,
         )
 
 
@@ -460,12 +460,12 @@ def main():
     try:
         loop.run_until_complete(main_with_loop(loop))
     except KeyboardInterrupt:
-        print('Received keyboard interrupt, shutting down...')
+        print("Received keyboard interrupt, shutting down...")
     except ConnectionRefusedError as e:
-        print(f'Connection refused: {e}')
+        print(f"Connection refused: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f'An error occurred: {e}')
+        print(f"An error occurred: {e}")
         sys.exit(1)
     finally:
         try:
@@ -478,9 +478,9 @@ def main():
             loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
             loop.close()
         except Exception as e:
-            print(f'Error during cleanup: {e}')
+            print(f"Error during cleanup: {e}")
             sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

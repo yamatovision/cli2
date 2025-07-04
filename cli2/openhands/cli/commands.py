@@ -50,27 +50,27 @@ async def handle_commands(
     reload_microagents = False
     new_session_requested = False
 
-    if command == '/exit':
+    if command == "/exit":
         close_repl = handle_exit_command(
             event_stream,
             usage_metrics,
             sid,
         )
-    elif command == '/help':
+    elif command == "/help":
         handle_help_command()
-    elif command == '/init':
+    elif command == "/init":
         close_repl, reload_microagents = await handle_init_command(
-            config, event_stream, current_dir
+            config, event_stream, current_dir,
         )
-    elif command == '/status':
+    elif command == "/status":
         handle_status_command(usage_metrics, sid)
-    elif command == '/new':
+    elif command == "/new":
         close_repl, new_session_requested = handle_new_command(
-            event_stream, usage_metrics, sid
+            event_stream, usage_metrics, sid,
         )
-    elif command == '/settings':
+    elif command == "/settings":
         await handle_settings_command(config, settings_store)
-    elif command == '/resume':
+    elif command == "/resume":
         close_repl, new_session_requested = await handle_resume_command(event_stream)
     else:
         close_repl = True
@@ -81,12 +81,12 @@ async def handle_commands(
 
 
 def handle_exit_command(
-    event_stream: EventStream, usage_metrics: UsageMetrics, sid: str
+    event_stream: EventStream, usage_metrics: UsageMetrics, sid: str,
 ) -> bool:
     close_repl = False
 
     confirm_exit = (
-        cli_confirm('\nTerminate session?', ['Yes, proceed', 'No, dismiss']) == 0
+        cli_confirm("\nTerminate session?", ["Yes, proceed", "No, dismiss"]) == 0
     )
 
     if confirm_exit:
@@ -105,7 +105,7 @@ def handle_help_command() -> None:
 
 
 async def handle_init_command(
-    config: OpenHandsConfig, event_stream: EventStream, current_dir: str
+    config: OpenHandsConfig, event_stream: EventStream, current_dir: str,
 ) -> tuple[bool, bool]:
     REPO_MD_CREATE_PROMPT = """
         Please explore this repository. Create the file .openhands/microagents/repo.md with:
@@ -118,7 +118,7 @@ async def handle_init_command(
     close_repl = False
     reload_microagents = False
 
-    if config.runtime == 'local':
+    if config.runtime == "local":
         init_repo = await init_repository(current_dir)
         if init_repo:
             event_stream.add_event(
@@ -129,7 +129,7 @@ async def handle_init_command(
             close_repl = True
     else:
         print_formatted_text(
-            '\nRepository initialization through the CLI is only supported for local runtime.\n'
+            "\nRepository initialization through the CLI is only supported for local runtime.\n",
         )
 
     return close_repl, reload_microagents
@@ -140,15 +140,15 @@ def handle_status_command(usage_metrics: UsageMetrics, sid: str) -> None:
 
 
 def handle_new_command(
-    event_stream: EventStream, usage_metrics: UsageMetrics, sid: str
+    event_stream: EventStream, usage_metrics: UsageMetrics, sid: str,
 ) -> tuple[bool, bool]:
     close_repl = False
     new_session_requested = False
 
     new_session_requested = (
         cli_confirm(
-            '\nCurrent session will be terminated and you will lose the conversation history.\n\nContinue?',
-            ['Yes, proceed', 'No, dismiss'],
+            "\nCurrent session will be terminated and you will lose the conversation history.\n\nContinue?",
+            ["Yes, proceed", "No, dismiss"],
         )
         == 0
     )
@@ -171,11 +171,11 @@ async def handle_settings_command(
 ) -> None:
     display_settings(config)
     modify_settings = cli_confirm(
-        '\nWhich settings would you like to modify?',
+        "\nWhich settings would you like to modify?",
         [
-            'Basic',
-            'Advanced',
-            'Go back',
+            "Basic",
+            "Advanced",
+            "Go back",
         ],
     )
 
@@ -195,7 +195,7 @@ async def handle_resume_command(
     new_session_requested = False
 
     event_stream.add_event(
-        MessageAction(content='continue'),
+        MessageAction(content="continue"),
         EventSource.USER,
     )
 
@@ -208,18 +208,18 @@ async def handle_resume_command(
 
 
 async def init_repository(current_dir: str) -> bool:
-    repo_file_path = Path(current_dir) / '.openhands' / 'microagents' / 'repo.md'
+    repo_file_path = Path(current_dir) / ".openhands" / "microagents" / "repo.md"
     init_repo = False
 
     if repo_file_path.exists():
         try:
             # Path.exists() ensures repo_file_path is not None, so we can safely pass it to read_file
             content = await asyncio.get_event_loop().run_in_executor(
-                None, read_file, repo_file_path
+                None, read_file, repo_file_path,
             )
 
             print_formatted_text(
-                'Repository instructions file (repo.md) already exists.\n'
+                "Repository instructions file (repo.md) already exists.\n",
             )
 
             container = Frame(
@@ -229,34 +229,34 @@ async def init_repository(current_dir: str) -> bool:
                     style=COLOR_GREY,
                     wrap_lines=True,
                 ),
-                title='Repository Instructions (repo.md)',
-                style=f'fg:{COLOR_GREY}',
+                title="Repository Instructions (repo.md)",
+                style=f"fg:{COLOR_GREY}",
             )
             print_container(container)
-            print_formatted_text('')  # Add a newline after the frame
+            print_formatted_text("")  # Add a newline after the frame
 
             init_repo = (
                 cli_confirm(
-                    'Do you want to re-initialize?',
-                    ['Yes, re-initialize', 'No, dismiss'],
+                    "Do you want to re-initialize?",
+                    ["Yes, re-initialize", "No, dismiss"],
                 )
                 == 0
             )
 
             if init_repo:
-                write_to_file(repo_file_path, '')
+                write_to_file(repo_file_path, "")
         except Exception:
-            print_formatted_text('Error reading repository instructions file (repo.md)')
+            print_formatted_text("Error reading repository instructions file (repo.md)")
             init_repo = False
     else:
         print_formatted_text(
-            '\nRepository instructions file will be created by exploring the repository.\n'
+            "\nRepository instructions file will be created by exploring the repository.\n",
         )
 
         init_repo = (
             cli_confirm(
-                'Do you want to proceed?',
-                ['Yes, create', 'No, dismiss'],
+                "Do you want to proceed?",
+                ["Yes, create", "No, dismiss"],
             )
             == 0
         )
@@ -281,23 +281,23 @@ def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -
         security_frame = Frame(
             TextArea(
                 text=(
-                    f' Do you trust the files in this folder?\n\n'
-                    f'   {current_dir}\n\n'
-                    ' OpenHands may read and execute files in this folder with your permission.'
+                    f" Do you trust the files in this folder?\n\n"
+                    f"   {current_dir}\n\n"
+                    " OpenHands may read and execute files in this folder with your permission."
                 ),
                 style=COLOR_GREY,
                 read_only=True,
                 wrap_lines=True,
             ),
-            style=f'fg:{COLOR_GREY}',
+            style=f"fg:{COLOR_GREY}",
         )
 
         clear()
         print_container(security_frame)
-        print_formatted_text('')
+        print_formatted_text("")
 
         confirm = (
-            cli_confirm('Do you wish to continue?', ['Yes, proceed', 'No, exit']) == 0
+            cli_confirm("Do you wish to continue?", ["Yes, proceed", "No, exit"]) == 0
         )
 
         if confirm:
