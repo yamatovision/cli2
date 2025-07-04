@@ -1,5 +1,14 @@
-# Exclude all Python bytecode files
-global-exclude *.pyc
-
-# Exclude Python cache directories
-global-exclude __pycache__
+include README.md
+include LICENSE
+include pyproject.toml
+include config.template.toml
+recursive-include openhands *.py
+recursive-include openhands *.j2
+recursive-include openhands *.json
+recursive-include openhands *.toml
+recursive-include openhands *.yaml
+recursive-include openhands *.yml
+recursive-include openhands *.md
+recursive-include openhands *.txt
+recursive-exclude openhands *.pyc
+recursive-exclude openhands __pycache__
