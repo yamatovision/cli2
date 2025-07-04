@@ -67,7 +67,14 @@ def call_async_from_sync(
 
     try:
         future = EXECUTOR.submit(run)
-        futures.wait([future], timeout=timeout or None)
+        done, not_done = futures.wait([future], timeout=timeout or None)
+        
+        if not_done:
+            # タイムアウトした場合
+            logger.warning(f"THREADPOOL_DEBUG: Task timed out after {timeout}s, cancelling...")
+            future.cancel()
+            raise asyncio.TimeoutError(f"Task timed out after {timeout} seconds")
+        
         result = future.result()
         return result
     except RuntimeError as e:

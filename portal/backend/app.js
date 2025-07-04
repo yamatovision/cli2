@@ -101,7 +101,8 @@ app.get('/api', (req, res) => {
     version: "1.0.0",
     endpoints: [
       { path: "/api/prompts", description: "プロンプト管理API" },
-      { path: "/api/simple", description: "シンプル版API" }
+      { path: "/api/simple", description: "シンプル版API" },
+      { path: "/api/cli", description: "CLI認証API" }
     ]
   });
 });
@@ -110,6 +111,12 @@ app.get('/api', (req, res) => {
 // シンプル認証システムのみを使用する (2025/3/24)
 app.use('/api/prompts', require('./routes/prompt.routes')); // プロンプト管理
 app.use('/api/simple', require('./routes/simple.routes')); // シンプル版API
+app.use('/api/cli', require('./routes/cli.routes')); // CLI認証API (P-004)
+
+// 開発・テスト用ルート（本番では無効化される）
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/test', require('./routes/test.routes')); // テスト用エンドポイント
+}
 
 // エラーログ
 app.use((err, req, res, next) => {

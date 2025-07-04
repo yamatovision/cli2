@@ -1,0 +1,127 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: '2.1.2'
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+      
+    - name: Install project
+      run: poetry install --no-interaction
+      
+    - name: Set version (if manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        poetry version ${{ github.event.inputs.version }}
+        echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+        
+    - name: Extract version from tag (if tag trigger)
+      if: github.event_name == 'push'
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        poetry version $VERSION
+        echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+        
+    - name: Build release package
+      run: |
+        cd cli
+        python scripts/build_release.py --project-root .
+      env:
+        RELEASE_BUILD: 'true'
+        
+    - name: Verify build
+      run: |
+        cd cli
+        ls -la dist/
+        echo "Build verification:"
+        for file in dist/*; do
+          echo "  $(basename $file): $(du -h $file | cut -f1)"
+        done
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ env.RELEASE_VERSION }}
+        name: BlueLamp CLI v${{ env.RELEASE_VERSION }}
+        body: |
+          ## BlueLamp CLI v${{ env.RELEASE_VERSION }}
+          
+          ### インストール方法
+          
+          #### pipでのインストール（推奨）
+          ```bash
+          pip install https://github.com/BlueLamp-AI/BlueLamp/releases/download/v${{ env.RELEASE_VERSION }}/bluelamp_ai-${{ env.RELEASE_VERSION }}-py3-none-any.whl
+          ```
+          
+          #### pipxでのインストール（推奨）
+          ```bash
+          pipx install https://github.com/BlueLamp-AI/BlueLamp/releases/download/v${{ env.RELEASE_VERSION }}/bluelamp_ai-${{ env.RELEASE_VERSION }}-py3-none-any.whl
+          ```
+          
+          #### 使用方法
+          ```bash
+          # ログイン
+          bluelamp login
+          
+          # プロジェクト開始
+          bluelamp /path/to/your/project
+          ```
+          
+          ### 変更内容
+          - セキュリティ強化実装
+          - Portal連携システム
+          - 迷宮入りのループ型セキュリティ戦略
+          
+          ### システム要件
+          - Python 3.12以上
+          - インターネット接続（Portal認証用）
+          
+        files: |
+          cli/dist/*.whl
+          cli/dist/*.tar.gz
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Cleanup
+      if: always()
+      run: |
+        cd cli
+        python scripts/generate_decoy_files.py --cleanup --target-dir . || true

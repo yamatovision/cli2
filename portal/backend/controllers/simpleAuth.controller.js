@@ -124,42 +124,9 @@ exports.login = async (req, res) => {
     // ヘルパー関数を使用してリフレッシュトークンを生成
     const refreshToken = authHelper.generateRefreshToken(user._id);
     
-    // CLI認証の場合、CLI APIキーを自動発行（リフレッシュトークン保存前に実行）
-    let cliApiKey = null;
-    if (clientType === 'cli') {
-      console.log("CLI認証: CLI APIキーを自動発行");
-      console.log("CLI認証: clientType確認", clientType);
-      console.log("CLI認証: user._id", user._id);
-      console.log("CLI認証: user.cliApiKeys数", user.cliApiKeys ? user.cliApiKeys.length : 0);
-      try {
-        // 最新のユーザー情報を再取得（バージョン競合を避けるため）
-        const freshUser = await SimpleUser.findById(user._id);
-        console.log("CLI認証: generateCliApiKey呼び出し前");
-        cliApiKey = await freshUser.generateCliApiKey();
-        console.log("CLI認証: generateCliApiKeyの返り値", cliApiKey);
-        console.log("CLI認証: CLI APIキー発行完了", cliApiKey ? cliApiKey.substring(0, 8) + '...' : 'null');
-        console.log("CLI認証: cliApiKey変数の値", cliApiKey);
-        console.log("CLI認証: typeof cliApiKey", typeof cliApiKey);
-        
-        // リフレッシュトークンも同じユーザーオブジェクトに保存
-        freshUser.refreshToken = refreshToken;
-        await freshUser.save();
-        
-        // 元のuserオブジェクトを更新
-        user = freshUser;
-      } catch (error) {
-        console.error("CLI認証: CLI APIキー発行エラー", error);
-        console.error("CLI認証: エラースタック", error.stack);
-        console.error("CLI認証: エラー詳細", error.message);
-        // エラーが発生した場合は通常のリフレッシュトークン保存を実行
-        user.refreshToken = refreshToken;
-        await user.save();
-      }
-    } else {
-      // CLI以外の場合は通常通りリフレッシュトークンを保存
-      user.refreshToken = refreshToken;
-      await user.save();
-    }
+    // リフレッシュトークンを保存
+    user.refreshToken = refreshToken;
+    await user.save();
     
     // CORS対応ヘッダー設定
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -180,7 +147,6 @@ exports.login = async (req, res) => {
     console.log("============ シンプル認証コントローラー: ログイン成功 ============");
     console.log(`ログイン成功: ユーザー=${user.name}, メール=${user.email}, ロール=${user.role}, ID=${user._id}`);
     console.log("APIキー情報:", apiKeyInfo ? `状態=${apiKeyInfo.status}` : "なし");
-    console.log("CLI APIキー:", cliApiKey ? `発行済み (${cliApiKey.substring(0, 8)}...)` : "なし");
     console.log("==================================================================");
     
     // レスポンス
@@ -199,23 +165,6 @@ exports.login = async (req, res) => {
       apiKey: apiKeyInfo
     };
     
-    // CLI認証の場合、CLI APIキーをレスポンスに含める
-    console.log("CLI認証: レスポンス構築前", { 
-      clientType, 
-      cliApiKey: cliApiKey ? 'あり' : 'なし',
-      cliApiKeyValue: cliApiKey,
-      cliApiKeyType: typeof cliApiKey
-    });
-    if (clientType === 'cli' && cliApiKey) {
-      console.log("CLI認証: cliApiKeyをレスポンスに追加", cliApiKey.substring(0, 8) + '...');
-      responseData.cliApiKey = cliApiKey;
-    } else if (clientType === 'cli') {
-      console.log("CLI認証: cliApiKeyがnullまたはundefinedのためレスポンスに追加されません");
-      console.log("CLI認証: cliApiKey詳細", { value: cliApiKey, type: typeof cliApiKey });
-    }
-    
-    console.log("CLI認証: 最終レスポンスデータのキー", Object.keys(responseData));
-    console.log("CLI認証: responseData.cliApiKey", responseData.cliApiKey);
     
     return res.status(200).json({
       success: true,

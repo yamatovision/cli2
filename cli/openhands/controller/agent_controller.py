@@ -469,12 +469,16 @@ class AgentController:
         if observation.llm_metrics is not None:
             self.state_tracker.merge_metrics(observation.llm_metrics)
 
+        # Check for timed out pending actions
+        self._check_pending_action_timeout()
+
         # this happens for runnable actions and microagent actions
         if self._pending_action and self._pending_action.id == observation.cause:
             if self.state.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
                 return
 
             self._pending_action = None
+            self._pending_action_info = None
 
             # Commented out: Task completion confirmation handling
             # This was causing the repeated confirmation prompts issue
@@ -514,6 +518,7 @@ class AgentController:
 
             recall_action = RecallAction(query=action.content, recall_type=recall_type)
             self._pending_action = recall_action
+            self._pending_action_info = (recall_action, time.time())
             # this is source=USER because the user message is the trigger for the microagent retrieval
             self.event_stream.add_event(recall_action, EventSource.USER)
 
@@ -556,6 +561,7 @@ class AgentController:
 
         # reset the pending action, this will be called when the agent is STOPPED or ERROR
         self._pending_action = None
+        self._pending_action_info = None
         self.agent.reset()
 
     async def set_agent_state_to(self, new_state: AgentState) -> None:
@@ -952,6 +958,7 @@ class AgentController:
                     ActionConfirmationStatus.AWAITING_CONFIRMATION
                 )
             self._pending_action = action
+            self._pending_action_info = (action, time.time())
 
         if not isinstance(action, NullAction):
             if (
@@ -1309,6 +1316,94 @@ class AgentController:
             f'{accumulated_usage.completion_tokens}',
             extra={'msg_type': 'METRICS'},
         )
+
+    def _check_pending_action_timeout(self) -> None:
+        """Check if pending action has timed out and force clear it if necessary."""
+        if not self._pending_action_info:
+            return
+            
+        action, timestamp = self._pending_action_info
+        current_time = time.time()
+        elapsed_time = current_time - timestamp
+        
+        # Force clear actions that have been pending for more than 10 minutes (600 seconds)
+        TIMEOUT_THRESHOLD = 600  # 10 minutes
+        
+        if elapsed_time > TIMEOUT_THRESHOLD:
+            action_id = getattr(action, 'id', 'unknown')
+            action_type = type(action).__name__
+            
+            # Log the timeout
+            self.log(
+                'warning',
+                f'Force clearing timed out pending action: {action_type}(id={action_id}) '
+                f'after {elapsed_time:.2f} seconds',
+                extra={'msg_type': 'TIMEOUT'}
+            )
+            
+            # Create a timeout error observation
+            from openhands.events.observation.error import ErrorObservation
+            timeout_obs = ErrorObservation(
+                content=f'Action {action_type}(id={action_id}) timed out after {elapsed_time:.2f} seconds and was force cleared',
+                cause=action.id if hasattr(action, 'id') else None,
+            )
+            
+            # Add the timeout observation to the event stream
+            self.event_stream.add_event(timeout_obs, EventSource.AGENT)
+            
+            # Clear the pending action
+            self._pending_action = None
+            self._pending_action_info = None
+            
+            # Log summary of current status
+            self.log(
+                'info',
+                f'Pending action {action_type}(id={action_id}) force cleared due to timeout',
+                extra={'msg_type': 'TIMEOUT_CLEARED'}
+            )
+
+    def force_clear_hanging_actions(self) -> None:
+        """Force clear any hanging pending actions immediately."""
+        if self._pending_action_info:
+            action, timestamp = self._pending_action_info
+            action_id = getattr(action, 'id', 'unknown')
+            action_type = type(action).__name__
+            current_time = time.time()
+            elapsed_time = current_time - timestamp
+            
+            # Log the force clear
+            self.log(
+                'warning',
+                f'Force clearing hanging pending action: {action_type}(id={action_id}) '
+                f'after {elapsed_time:.2f} seconds',
+                extra={'msg_type': 'FORCE_CLEAR'}
+            )
+            
+            # Create a force clear error observation
+            from openhands.events.observation.error import ErrorObservation
+            force_clear_obs = ErrorObservation(
+                content=f'Action {action_type}(id={action_id}) was force cleared after {elapsed_time:.2f} seconds due to hanging state',
+                cause=action.id if hasattr(action, 'id') else None,
+            )
+            
+            # Add the force clear observation to the event stream
+            self.event_stream.add_event(force_clear_obs, EventSource.AGENT)
+            
+            # Clear the pending action
+            self._pending_action = None
+            self._pending_action_info = None
+            
+            self.log(
+                'info',
+                f'Hanging action {action_type}(id={action_id}) force cleared',
+                extra={'msg_type': 'FORCE_CLEARED'}
+            )
+        else:
+            self.log(
+                'info',
+                'No hanging pending actions to clear',
+                extra={'msg_type': 'FORCE_CLEAR_CHECK'}
+            )
 
     def __repr__(self) -> str:
         pending_action_info = '<none>'

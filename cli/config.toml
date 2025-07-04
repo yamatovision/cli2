@@ -1,15 +1,33 @@
+# BlueLamp Configuration for OpenHands
+
 [core]
-workspace_base = "/tmp/openhands_workspace"
+# workspace_baseを指定しない場合、現在のディレクトリが使用される
+# workspace_base="./workspace"
+workspace_mount_path="/workspace"
+max_iterations=500
+cache_dir="./cache"
 
-[security]
-confirmation_mode = false
-agent_switch_confirmation = true
-agent_switch_logging = true
+[runtime]
+runtime="cli"
 
-[condenser]
-type = "noop"
+# デフォルトエージェント設定 - agent_configs.tomlと整合性を取る
+default_agent="orchestration"
 
+[agent]
+# 最小限のツールのみ有効化
+enable_browsing=false      # ブラウジング無効
+enable_jupyter=false       # Jupyter無効
+enable_cmd=true           # bashコマンド有効
+enable_editor=true        # ファイル編集有効
+enable_mcp=false          # MCP無効
+enable_think=true         # 思考ツール有効
+
+# Portal連携設定
 [portal]
-# Portal API configuration
-base_url = "http://localhost:8080/api"  # for development
-# base_url = "https://bluelamp-235426778039.asia-northeast1.run.app/api"  # for production
+enable_portal = true
+# portal_base_url = "https://your-portal-url.com"  # 必要に応じて設定
+
+
+[llm]
+model="claude-sonnet-4-20250514"
+api_key="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"

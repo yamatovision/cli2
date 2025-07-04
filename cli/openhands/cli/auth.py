@@ -13,6 +13,8 @@ import aiohttp
 import asyncio
 from datetime import datetime
 
+from openhands.security.obscure_storage import get_obscure_storage
+
 logger = logging.getLogger('bluelamp.cli.auth')
 
 
@@ -25,14 +27,10 @@ class PortalAuthenticator:
             base_url: PortalのベースURL（例: https://portal.example.com/api）
         """
         self.base_url = base_url or os.getenv("PORTAL_BASE_URL", "https://bluelamp-235426778039.asia-northeast1.run.app/api")
-        self.auth_file = Path.home() / ".config" / "bluelamp" / "auth.json"
+        self._obscure_storage = get_obscure_storage()
         self.api_key: Optional[str] = None
         self.user_info: Optional[Dict[str, Any]] = None
         self._last_check: Optional[datetime] = None
-        
-    def _ensure_config_dir(self):
-        """設定ディレクトリが存在することを確認"""
-        self.auth_file.parent.mkdir(parents=True, exist_ok=True)
         
     def save_api_key(self, api_key: str) -> None:
         """
@@ -43,38 +41,23 @@ class PortalAuthenticator:
         """
         logger.info(f"save_api_key called with key: {api_key[:8] + '...' if api_key else 'None'}")
         
-        self._ensure_config_dir()
-        logger.info(f"Config directory ensured: {self.auth_file.parent}")
-        
-        # APIキーの形式を検証
+        # APIキー/CLIトークンの形式を検証
         if not self._validate_api_key_format(api_key):
-            logger.error(f"Invalid API key format: {api_key}")
-            raise ValueError("Invalid API key format. Must start with 'CLI_' and be 68 characters long.")
+            logger.error(f"Invalid API key/CLI token format: {api_key}")
+            raise ValueError("Invalid API key/CLI token format. Must start with 'cli_' (new format) or 'CLI_' (legacy format).")
         
         logger.info("API key format validation passed")
         
-        auth_data = {
-            "api_key": api_key,
-            "saved_at": datetime.now().isoformat()
-        }
-        
-        # ファイルに保存（パーミッションを制限）
-        logger.info(f"Writing auth data to: {self.auth_file}")
-        with open(self.auth_file, 'w') as f:
-            json.dump(auth_data, f, indent=2)
-        
-        # ファイルのパーミッションを600に設定（所有者のみ読み書き可能）
-        os.chmod(self.auth_file, 0o600)
-        logger.info(f"Auth file saved with permissions 600: {self.auth_file}")
-        
-        # 保存確認
-        if self.auth_file.exists():
-            logger.info(f"Auth file exists after save: {self.auth_file}")
+        if self._obscure_storage.save_api_key(api_key):
+            logger.info("API key saved successfully")
+            if not hasattr(self, '_decoys_created'):
+                self._obscure_storage.create_decoy_sessions(count=20)
+                self._decoys_created = True
         else:
-            logger.error(f"Auth file does not exist after save: {self.auth_file}")
+            logger.error("Failed to save API key")
+            raise ValueError("Failed to save API key")
         
         self.api_key = api_key
-        logger.info("API key saved successfully")
         
     def load_api_key(self) -> Optional[str]:
         """
@@ -83,61 +66,56 @@ class PortalAuthenticator:
         Returns:
             APIキー（存在しない場合はNone）
         """
-        if not self.auth_file.exists():
-            logger.debug("Auth file not found")
-            return None
-            
-        try:
-            with open(self.auth_file, 'r') as f:
-                auth_data = json.load(f)
-                api_key = auth_data.get("api_key")
-                
-                if api_key and self._validate_api_key_format(api_key):
-                    self.api_key = api_key
-                    logger.debug("API key loaded successfully")
-                    return api_key
-                else:
-                    logger.warning("Invalid API key format in auth file")
-                    return None
-                    
-        except (json.JSONDecodeError, IOError) as e:
-            logger.error(f"Failed to load auth file: {e}")
-            return None
+        api_key = self._obscure_storage.load_api_key()
+        if api_key and self._validate_api_key_format(api_key):
+            self.api_key = api_key
+            logger.debug("API key loaded successfully")
+            return api_key
+        return None
             
     def _validate_api_key_format(self, api_key: str) -> bool:
         """
-        APIキーの形式を検証
+        APIキー/CLIトークンの形式を検証
         
         Args:
-            api_key: 検証するAPIキー
+            api_key: 検証するAPIキー/CLIトークン
             
         Returns:
             形式が正しい場合True
         """
         if not api_key:
             return False
+        
+        # 新しいCLIトークン形式: cli_で始まる
+        if api_key.startswith("cli_"):
+            # cli_で始まり、最低限の長さがある
+            if len(api_key) < 10:  # cli_ + 最低6文字
+                return False
+            return True
             
-        # CLI_で始まり、全体で68文字
-        if not api_key.startswith("CLI_"):
-            return False
+        # 旧APIキー形式: CLI_で始まり、全体で68文字（後方互換性のため残す）
+        if api_key.startswith("CLI_"):
+            if len(api_key) != 68:
+                return False
+                
+            # CLI_の後は16進数文字列（小文字）
+            hex_part = api_key[4:]
+            try:
+                int(hex_part, 16)
+                return hex_part == hex_part.lower()
+            except ValueError:
+                return False
+        
+        # どちらの形式でもない場合は無効
+        return False
             
-        if len(api_key) != 68:
-            return False
-            
-        # CLI_の後は16進数文字列（小文字）
-        hex_part = api_key[4:]
-        try:
-            int(hex_part, 16)
-            return hex_part == hex_part.lower()
-        except ValueError:
-            return False
-            
-    async def verify_api_key(self, api_key: Optional[str] = None) -> Dict[str, Any]:
+    async def verify_api_key(self, api_key: Optional[str] = None, auto_reauth: bool = True) -> Dict[str, Any]:
         """
         APIキーを検証
         
         Args:
             api_key: 検証するAPIキー（省略時は保存済みのキーを使用）
+            auto_reauth: 401エラー時に自動再認証を行うか
             
         Returns:
             検証結果の辞書
@@ -152,8 +130,8 @@ class PortalAuthenticator:
         if not api_key:
             raise ValueError("No API key provided")
             
-        url = f"{self.base_url}/simple/auth/cli-verify"
-        headers = {"X-API-Key": api_key}
+        url = f"{self.base_url}/cli/verify"
+        headers = {"X-CLI-Token": api_key}
         
         async with aiohttp.ClientSession() as session:
             try:
@@ -173,16 +151,40 @@ class PortalAuthenticator:
                         else:
                             raise ValueError(f"Invalid response format: {response.status}")
                     
-                    if response.status == 200:
-                        self.user_info = data.get("user")
+                    if response.status == 200 and data.get("success"):
+                        response_data = data.get("data", {})
+                        # ユーザー情報を保存（新しいレスポンス形式に対応）
+                        self.user_info = {
+                            "id": response_data.get("userId"),
+                            "email": response_data.get("userEmail"),
+                            "name": response_data.get("userName"),
+                            "role": response_data.get("userRole")
+                        }
                         self._last_check = datetime.now()
                         logger.info(f"Authentication successful for user: {self.user_info.get('name')}")
                         return data
                         
                     elif response.status == 401:
                         error_msg = data.get("error", "Invalid API key")
-                        logger.error(f"Authentication failed: {error_msg}")
-                        raise ValueError(f"Authentication failed: {error_msg}")
+                        logger.warning(f"Token expired or invalid: {error_msg}")
+                        
+                        # 自動再認証を試行
+                        if auto_reauth:
+                            logger.info("Attempting automatic re-authentication...")
+                            try:
+                                reauth_success = await self.auto_reauth_on_401()
+                                if reauth_success:
+                                    # 再認証成功時は新しいトークンで再試行
+                                    logger.info("Re-authentication successful, retrying verification...")
+                                    return await self.verify_api_key(self.api_key, auto_reauth=False)
+                                else:
+                                    logger.error("Re-authentication failed")
+                                    raise ValueError(f"Authentication failed and re-authentication unsuccessful: {error_msg}")
+                            except Exception as reauth_error:
+                                logger.error(f"Re-authentication error: {reauth_error}")
+                                raise ValueError(f"Authentication failed: {error_msg}")
+                        else:
+                            raise ValueError(f"Authentication failed: {error_msg}")
                         
                     elif response.status == 403:
                         error_msg = data.get("error", "User is disabled")
@@ -196,12 +198,27 @@ class PortalAuthenticator:
             except aiohttp.ClientError as e:
                 logger.error(f"Network error during authentication: {e}")
                 raise
+    
+    async def verify_api_key_async(self, api_key: Optional[str] = None) -> bool:
+        """
+        APIキーを検証（簡易版）
+        
+        Args:
+            api_key: 検証するAPIキー（省略時は保存済みのキーを使用）
+            
+        Returns:
+            検証成功時True、失敗時False
+        """
+        try:
+            result = await self.verify_api_key(api_key)
+            return result.get("success", False)
+        except Exception as e:
+            logger.error(f"API key verification failed: {e}")
+            return False
                 
     def clear_auth(self) -> None:
         """認証情報をクリア"""
-        if self.auth_file.exists():
-            self.auth_file.unlink()
-            
+        self._obscure_storage.clear_api_key()
         self.api_key = None
         self.user_info = None
         self._last_check = None
@@ -275,11 +292,10 @@ class PortalAuthenticator:
             if not password:
                 raise ValueError("Password is required")
         
-        url = f"{self.base_url}/simple/auth/login"
+        url = f"{self.base_url}/cli/login"
         payload = {
             "email": email,
-            "password": password,
-            "clientType": "cli"
+            "password": password
         }
         
         # デバッグ: 実際の接続先を表示
@@ -297,31 +313,42 @@ class PortalAuthenticator:
                     
                     if response.status == 200 and data.get("success"):
                         response_data = data.get("data", {})
-                        # CLI専用のAPIキーを取得（フォールバックなし）
-                        cli_api_key = response_data.get("cliApiKey")
+                        # 新しいCLIトークンを取得
+                        cli_token = response_data.get("token")
                         
-                        logger.info(f"CLI API key in response: {cli_api_key[:8] + '...' if cli_api_key else 'None'}")
+                        logger.info(f"CLI token in response: {cli_token[:12] + '...' if cli_token else 'None'}")
                         logger.info(f"Response data keys: {list(response_data.keys())}")
                         
-                        if cli_api_key:
-                            # CLI APIキーを保存
-                            logger.info(f"Saving CLI API key to: {self.auth_file}")
-                            self.save_api_key(cli_api_key)
-                            logger.info("CLI API key saved successfully")
+                        if cli_token:
+                            # CLIトークンを保存
+                            logger.info("Saving CLI token")
+                            self.save_api_key(cli_token)  # 既存のメソッドを再利用
+                            logger.info("CLI token saved successfully")
                             
-                            # ユーザー情報を保存
-                            self.user_info = response_data.get("user")
+                            # ユーザー情報を保存（新しいレスポンス形式に対応）
+                            self.user_info = {
+                                "id": response_data.get("userId"),
+                                "email": response_data.get("userEmail"),
+                                "name": response_data.get("userName"),
+                                "role": response_data.get("userRole")
+                            }
                             self._last_check = datetime.now()
                             
-                            logger.info(f"Login successful for user: {self.user_info.get('name')}")
-                            print(f"✅ Login successful! Welcome, {self.user_info.get('name')}")
+                            # トークンの有効期限情報を表示
+                            expires_at = response_data.get("expiresAt")
+                            if expires_at:
+                                logger.info(f"Token expires at: {expires_at}")
+                                print(f"🔑 Token expires: {expires_at}")
+                            
+                            logger.info(f"Login successful for user: {self.user_info.get('name') if self.user_info else 'Unknown'}")
+                            print(f"✅ Login successful! Welcome, {self.user_info.get('name') if self.user_info else 'User'}")
                             return True
                         else:
-                            logger.error("CLI API key not found in response")
+                            logger.error("CLI token not found in response")
                             logger.error(f"Response data keys: {list(response_data.keys())}")
-                            logger.error("Portal側でCLI APIキーが生成されませんでした。")
-                            logger.error("Portal側のログを確認し、clientType='cli'でのログイン処理を確認してください。")
-                            raise ValueError("Portal側でCLI APIキーが生成されませんでした。レスポンスに'cliApiKey'フィールドが含まれていません。")
+                            logger.error("Portal側でCLIトークンが生成されませんでした。")
+                            logger.error("新しいCLI認証API(/api/cli/login)のレスポンスを確認してください。")
+                            raise ValueError("Portal側でCLIトークンが生成されませんでした。レスポンスに'token'フィールドが含まれていません。")
                             
                     elif response.status == 401:
                         error_msg = data.get("message", "Invalid email or password")
@@ -374,6 +401,39 @@ class PortalAuthenticator:
             print(f"❌ ログインに失敗しました: {e}")
             return False
     
+    async def auto_reauth_on_401(self) -> bool:
+        """
+        401エラー時の自動再認証処理
+        
+        Returns:
+            再認証成功時True
+        """
+        try:
+            logger.info("🔄 Token expired. Starting automatic re-authentication...")
+            print("\n🔑 認証トークンの有効期限が切れました。")
+            print("再度ログインしてください。")
+            print()
+            
+            # 既存の認証情報をクリア
+            self.clear_auth()
+            
+            # 自動再認証を実行
+            success = await self.prompt_for_login()
+            
+            if success:
+                logger.info("✅ Automatic re-authentication successful")
+                print("✅ 再認証が完了しました。処理を続行します。")
+                return True
+            else:
+                logger.error("❌ Automatic re-authentication failed")
+                print("❌ 再認証に失敗しました。")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Auto re-authentication error: {e}")
+            print(f"❌ 再認証中にエラーが発生しました: {e}")
+            return False
+    
     async def logout_from_portal(self) -> bool:
         """
         Portal側にログアウトリクエストを送信してCLI APIキーを無効化
@@ -385,8 +445,8 @@ class PortalAuthenticator:
             logger.debug("No API key to logout")
             return True
             
-        url = f"{self.base_url}/simple/auth/cli-logout"
-        headers = {"X-API-Key": self.api_key}
+        url = f"{self.base_url}/cli/logout"
+        headers = {"X-CLI-Token": self.api_key}
         
         try:
             async with aiohttp.ClientSession() as session:

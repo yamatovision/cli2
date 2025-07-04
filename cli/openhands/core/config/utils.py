@@ -67,7 +67,7 @@ def load_from_env(
     # helper function to set attributes based on env vars
     def set_attr_from_env(sub_config: BaseModel, prefix: str = '') -> None:
         """Set attributes of a config model based on environment variables."""
-        for field_name, field_info in sub_config.model_fields.items():
+        for field_name, field_info in sub_config.__class__.model_fields.items():
             field_value = getattr(sub_config, field_name)
             field_type = field_info.annotation
 
@@ -863,5 +863,12 @@ def setup_config_from_args(args: argparse.Namespace) -> OpenHandsConfig:
     # Read selected repository in config for use by CLI and main.py
     if args.selected_repo is not None:
         config.sandbox.selected_repo = args.selected_repo
+
+    # Set working directory if provided
+    if hasattr(args, 'directory') and args.directory is not None:
+        # Use the new volumes configuration instead of deprecated workspace_base
+        import os
+        abs_directory = os.path.abspath(args.directory)
+        config.sandbox.volumes = f"{abs_directory}:/workspace:rw"
 
     return config

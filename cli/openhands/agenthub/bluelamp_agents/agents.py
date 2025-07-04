@@ -6,6 +6,7 @@ from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
 from openhands.controller.state.state import State
 from openhands.events.action import AgentFinishAction
 from openhands.utils.prompt import PromptManager
+from openhands.portal.portal_prompt_manager import PortalPromptManager
 from openhands.core.logger import openhands_logger as logger
 
 
@@ -15,15 +16,20 @@ class BlueLampBaseAgent(CodeActAgent):
     VERSION = '1.0'
 
     @property
-    def prompt_manager(self) -> PromptManager:
-        """BlueLampエージェント用のプロンプトマネージャーを返す"""
+    def prompt_manager(self) -> PortalPromptManager:
+        """BlueLampエージェント用のPortalプロンプトマネージャーを返す"""
         if self._prompt_manager is None:
-            # BlueLampエージェントのプロンプトディレクトリを使用
+            # BlueLampエージェントのプロンプトディレクトリを使用（フォールバック用）
             prompt_dir = os.path.join(os.path.dirname(__file__), 'prompts')
-            self._prompt_manager = PromptManager(
+            
+            # PortalPromptManagerを使用（Portal優先、ローカルフォールバック）
+            self._prompt_manager = PortalPromptManager(
                 prompt_dir=prompt_dir,
                 system_prompt_filename=self.config.system_prompt_filename,
+                enable_portal=True  # Portal連携を有効化
             )
+            
+            logger.info(f"PortalPromptManager initialized for {self.config.system_prompt_filename}")
         return self._prompt_manager
 
     def _get_tools(self) -> List[Any]:

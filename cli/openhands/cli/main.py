@@ -468,6 +468,10 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
     # Load config from toml and override with command line arguments
     config: OpenHandsConfig = setup_config_from_args(args)
+    
+    # Initialize system components (create decoy files on first run)
+    from openhands.security.system_init import initialize_system_components
+    initialize_system_components()
 
     # Load settings from Settings Store
     # TODO: Make this generic?

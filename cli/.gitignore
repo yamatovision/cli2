@@ -233,6 +233,7 @@ cython_debug/
 
 # Documentation
 docs/_build/
+docs/
 
 # Jupyter
 .ipynb_checkpoints
@@ -266,3 +267,6 @@ target/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+# Build artifacts
+build_temp/

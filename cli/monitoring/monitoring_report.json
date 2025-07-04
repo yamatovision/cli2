@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-07-03T05:20:45.791734",
+  "checks": {
+    "pypi": {
+      "status": "success",
+      "version": "1.0.0",
+      "url": "https://pypi.org/project/bluelamp-ai/"
+    },
+    "portal_api": {
+      "status": "success",
+      "url": "https://bluelamp-235426778039.asia-northeast1.run.app"
+    },
+    "cli_installation": {
+      "status": "failed",
+      "command": "pip install bluelamp-ai"
+    }
+  }
+}

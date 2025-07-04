@@ -105,7 +105,8 @@ const Dashboard = () => {
         name: user.name || '',
         email: user.email || '',
         password: '',
-        role: user.role || 'User'
+        role: user.role || 'User',
+        status: user.status || 'active'
       });
     } else {
       setEditingUser(null);
@@ -113,7 +114,8 @@ const Dashboard = () => {
         name: '',
         email: '',
         password: '',
-        role: 'User'
+        role: 'User',
+        status: 'active'
       });
     }
     setOpenUserDialog(true);
@@ -127,7 +129,8 @@ const Dashboard = () => {
       name: '',
       email: '',
       password: '',
-      role: 'User'
+      role: 'User',
+      status: 'active'
     });
   };
 
@@ -156,7 +159,7 @@ const Dashboard = () => {
     try {
       if (editingUser) {
         // 編集の場合
-        await updateUser(editingUser._id, formData.name, formData.email, formData.password || null, null, formData.role);
+        await updateUser(editingUser._id, formData.name, formData.email, formData.password || null, null, formData.role, formData.status);
       } else {
         // 新規作成の場合
         await createUser(formData.name, formData.email, formData.password, formData.role);
@@ -440,6 +443,20 @@ const Dashboard = () => {
                   )}
                 </Select>
               </FormControl>
+              {/* 編集時のみステータス選択を表示 */}
+              {editingUser && (
+                <FormControl fullWidth>
+                  <InputLabel>ステータス</InputLabel>
+                  <Select
+                    value={formData.status}
+                    onChange={(e) => handleFormChange('status', e.target.value)}
+                    label="ステータス"
+                  >
+                    <MenuItem value="active">有効</MenuItem>
+                    <MenuItem value="disabled">無効</MenuItem>
+                  </Select>
+                </FormControl>
+              )}
             </Box>
           </DialogContent>
           <DialogActions>

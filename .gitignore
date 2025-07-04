@@ -38,3 +38,8 @@ private/
 # OpenHands logs
 cli/OpenHands/logs/
 OpenHands-main/logs/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class

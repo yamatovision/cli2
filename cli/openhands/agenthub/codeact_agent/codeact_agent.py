@@ -1,7 +1,7 @@
 import os
 import sys
 from collections import deque
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 if TYPE_CHECKING:
     from litellm import ChatCompletionToolParam
@@ -40,6 +40,7 @@ from openhands.runtime.plugins import (
     PluginRequirement,
 )
 from openhands.utils.prompt import PromptManager
+from openhands.portal.portal_prompt_manager import PortalPromptManager
 
 
 class CodeActAgent(Agent):
@@ -96,9 +97,12 @@ class CodeActAgent(Agent):
     @property
     def prompt_manager(self) -> PromptManager:
         if self._prompt_manager is None:
-            self._prompt_manager = PromptManager(
+            # Portal連携を有効にしてPromptManagerを作成
+            # BlueLampオーケストレーターの場合はPortal APIから取得
+            self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
                 system_prompt_filename=self.config.system_prompt_filename,
+                enable_portal=True
             )
 
         return self._prompt_manager
@@ -181,13 +185,12 @@ class CodeActAgent(Agent):
         # to the conversation manager for processing, but if we get a condensation
         # event we'll just return that instead of an action. The controller will
         # immediately ask the agent to step again with the new view.
-        condensed_history: list[Event] = []
-        match self.condenser.condensed_history(state):
-            case View(events=events):
-                condensed_history = events
-
-            case Condensation(action=condensation_action):
-                return condensation_action
+        condensed_history: List[Event] = []
+        condensed_result = self.condenser.condensed_history(state)
+        if isinstance(condensed_result, View):
+            condensed_history = condensed_result.events
+        elif isinstance(condensed_result, Condensation):
+            return condensed_result.action
 
         logger.debug(
             f'Processing {len(condensed_history)} events from a total of {len(state.history)} events'

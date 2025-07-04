@@ -1,10 +1,17 @@
 import os
 
-__package_name__ = 'openhands_ai'
+__package_name__ = 'bluelamp-ai'
 
 
 def get_version():
-    # Try getting the version from pyproject.toml
+    # Try getting the version from importlib.metadata first (modern approach)
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+        return version(__package_name__)
+    except (ImportError, PackageNotFoundError):
+        pass
+
+    # Try getting the version from pyproject.toml (development environment)
     try:
         root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         with open(os.path.join(root_dir, 'pyproject.toml'), 'r') as f:
@@ -14,21 +21,8 @@ def get_version():
     except FileNotFoundError:
         pass
 
-    try:
-        from importlib.metadata import PackageNotFoundError, version
-
-        return version(__package_name__)
-    except (ImportError, PackageNotFoundError):
-        pass
-
-    try:
-        from pkg_resources import DistributionNotFound, get_distribution  # type: ignore
-
-        return get_distribution(__package_name__).version
-    except (ImportError, DistributionNotFound):
-        pass
-
-    return 'unknown'
+    # Fallback to hardcoded version
+    return '1.0.12'
 
 
 try:

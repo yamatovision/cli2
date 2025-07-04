@@ -259,7 +259,6 @@ exports.createUser = async (req, res) => {
       role: role || 'User',
       organizationId: organizationId || null,
       apiKeyId: apiKeyId || null,
-      apiKeyValue: apiKeyValue || null,  // 取得したAPIキー値を設定
       status: 'active'
     });
     

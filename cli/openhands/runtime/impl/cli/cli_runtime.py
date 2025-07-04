@@ -5,7 +5,6 @@ It does not implement browser functionality.
 
 import asyncio
 import os
-import select
 import shutil
 import signal
 import subprocess
@@ -291,16 +290,18 @@ class CLIRuntime(Runtime):
             logger.error(f'Error: {e}')
 
     def _execute_powershell_command(
-        self, command: str, timeout: float
+        self, action: CmdRunAction, timeout: float
     ) -> CmdOutputObservation | ErrorObservation:
         """
         Execute a command using PowerShell session on Windows.
         Args:
-            command: The command to execute
+            action: The CmdRunAction containing the command to execute
             timeout: Timeout in seconds for the command
         Returns:
             CmdOutputObservation containing the complete output and exit code
         """
+        command = action.command
+        
         if self._powershell_session is None:
             return ErrorObservation(
                 content='PowerShell session is not available.',
@@ -308,14 +309,11 @@ class CLIRuntime(Runtime):
             )
 
         try:
-            # Create a CmdRunAction for the PowerShell session
-            from openhands.events.action import CmdRunAction
-
-            ps_action = CmdRunAction(command=command)
-            ps_action.set_hard_timeout(timeout)
+            # Set timeout on the action and execute directly
+            action.set_hard_timeout(timeout)
 
             # Execute the command using the PowerShell session
-            return self._powershell_session.execute(ps_action)
+            return self._powershell_session.execute(action)
 
         except Exception as e:
             logger.error(f'Error executing PowerShell command "{command}": {e}')
@@ -325,16 +323,17 @@ class CLIRuntime(Runtime):
             )
 
     def _execute_shell_command(
-        self, command: str, timeout: float
+        self, action: CmdRunAction, timeout: float
     ) -> CmdOutputObservation:
         """
         Execute a shell command and stream its output to a callback function.
         Args:
-            command: The shell command to execute
+            action: The CmdRunAction containing the command to execute
             timeout: Timeout in seconds for the command
         Returns:
             CmdOutputObservation containing the complete output and exit code
         """
+        command = action.command
         output_lines = []
         timed_out = False
         start_time = time.monotonic()
@@ -356,46 +355,67 @@ class CLIRuntime(Runtime):
         exit_code = None
 
         try:
-            if process.stdout:
-                while process.poll() is None:
-                    if (
-                        timeout is not None
-                        and (time.monotonic() - start_time) > timeout
-                    ):
-                        logger.debug(
-                            f'Command "{command}" timed out after {timeout:.1f} seconds. Terminating.'
-                        )
-                        # Attempt to terminate the process group (SIGTERM)
-                        self._safe_terminate_process(
-                            process, signal_to_send=signal.SIGTERM
-                        )
-                        timed_out = True
-                        break
-
-                    ready_to_read, _, _ = select.select([process.stdout], [], [], 0.1)
-
-                    if ready_to_read:
-                        line = process.stdout.readline()
+            # Use communicate() for safer and more reliable process handling
+            # This avoids the select.select() issues on macOS
+            try:
+                stdout_data, _ = process.communicate(timeout=timeout)
+                
+                if stdout_data:
+                    # Process the output line by line
+                    for line in stdout_data.splitlines(keepends=True):
                         if line:
                             logger.debug(f'LINE: {line}')
                             output_lines.append(line)
                             if self._shell_stream_callback:
                                 self._shell_stream_callback(line)
-
-            # Attempt to read any remaining data from stdout
-            if process.stdout and not process.stdout.closed:
+                
+            except subprocess.TimeoutExpired:
+                logger.debug(
+                    f'Command "{command}" timed out after {timeout:.1f} seconds. Terminating.'
+                )
+                # Attempt to terminate the process group (SIGTERM)
+                self._safe_terminate_process(
+                    process, signal_to_send=signal.SIGTERM
+                )
+                
+                # Wait for process to terminate gracefully
+                logger.debug(f'Waiting for process {process.pid} to terminate after SIGTERM...')
                 try:
-                    while line:
-                        line = process.stdout.readline()
-                        if line:
-                            logger.debug(f'LINE: {line}')
-                            output_lines.append(line)
-                            if self._shell_stream_callback:
-                                self._shell_stream_callback(line)
-                except Exception as e:
-                    logger.warning(
-                        f'Error reading directly from stdout after loop for "{command}": {e}'
+                    stdout_data, _ = process.communicate(timeout=5.0)  # Wait up to 5 seconds for graceful termination
+                    logger.debug(f'Process {process.pid} terminated gracefully after SIGTERM')
+                    
+                    # Process any remaining output
+                    if stdout_data:
+                        for line in stdout_data.splitlines(keepends=True):
+                            if line:
+                                logger.debug(f'LINE: {line}')
+                                output_lines.append(line)
+                                if self._shell_stream_callback:
+                                    self._shell_stream_callback(line)
+                                    
+                except subprocess.TimeoutExpired:
+                    logger.warning(f'Process {process.pid} did not terminate after SIGTERM, sending SIGKILL')
+                    # Force kill if SIGTERM didn't work
+                    self._safe_terminate_process(
+                        process, signal_to_send=signal.SIGKILL
                     )
+                    try:
+                        stdout_data, _ = process.communicate(timeout=2.0)  # Wait up to 2 seconds for force kill
+                        logger.debug(f'Process {process.pid} terminated after SIGKILL')
+                        
+                        # Process any remaining output
+                        if stdout_data:
+                            for line in stdout_data.splitlines(keepends=True):
+                                if line:
+                                    logger.debug(f'LINE: {line}')
+                                    output_lines.append(line)
+                                    if self._shell_stream_callback:
+                                        self._shell_stream_callback(line)
+                                        
+                    except subprocess.TimeoutExpired:
+                        logger.error(f'Process {process.pid} failed to terminate even after SIGKILL')
+                
+                timed_out = True
 
             exit_code = process.returncode
 
@@ -408,7 +428,13 @@ class CLIRuntime(Runtime):
                 f'Outer exception in _execute_shell_command for "{command}": {e}'
             )
             if process and process.poll() is None:
+                logger.debug(f'Terminating process {process.pid} due to exception')
                 self._safe_terminate_process(process, signal_to_send=signal.SIGKILL)
+                try:
+                    process.wait(timeout=2.0)  # Wait for process to be killed
+                    logger.debug(f'Process {process.pid} terminated after exception handling')
+                except subprocess.TimeoutExpired:
+                    logger.error(f'Process {process.pid} failed to terminate even after SIGKILL in exception handler')
             return CmdOutputObservation(
                 command=command,
                 content=''.join(output_lines) + f'\nError during execution: {e}',
@@ -431,13 +457,15 @@ class CLIRuntime(Runtime):
             content=complete_output,
             exit_code=exit_code,
             metadata=obs_metadata,
+            cause=action.id if hasattr(action, 'id') else None,
         )
 
     def run(self, action: CmdRunAction) -> Observation:
         """Run a command using subprocess."""
         if not self._runtime_initialized:
             return ErrorObservation(
-                f'Runtime not initialized for command: {action.command}'
+                content=f'Runtime not initialized for command: {action.command}',
+                cause=action.id if hasattr(action, 'id') else None,
             )
 
         if action.is_input:
@@ -449,6 +477,7 @@ class CLIRuntime(Runtime):
             return ErrorObservation(
                 content=f"CLIRuntime does not support interactive input from the agent (e.g., 'C-c'). The command '{action.command}' was not sent to any process.",
                 error_id='AGENT_ERROR$BAD_ACTION',
+                cause=action.id if hasattr(action, 'id') else None,
             )
 
         try:
@@ -465,18 +494,19 @@ class CLIRuntime(Runtime):
             # Use PowerShell on Windows if available, otherwise use subprocess
             if self._is_windows and self._powershell_session is not None:
                 return self._execute_powershell_command(
-                    action.command, timeout=effective_timeout
+                    action, timeout=effective_timeout
                 )
             else:
                 return self._execute_shell_command(
-                    action.command, timeout=effective_timeout
+                    action, timeout=effective_timeout
                 )
         except Exception as e:
             logger.error(
                 f'Error in CLIRuntime.run for command "{action.command}": {str(e)}'
             )
             return ErrorObservation(
-                f'Error running command "{action.command}": {str(e)}'
+                content=f'Error running command "{action.command}": {str(e)}',
+                cause=action.id if hasattr(action, 'id') else None,
             )
 
     def run_ipython(self, action: IPythonRunCellAction) -> Observation:

@@ -157,7 +157,7 @@ Response (Error):
 
 ### 2. プロンプト取得API
 ```
-POST /api/prompts/{promptId}
+GET /api/cli/prompts/{promptId}
 Headers:
   X-CLI-Token: cli_token_xxxxx
 

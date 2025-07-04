@@ -4,7 +4,12 @@ import tempfile
 from abc import ABC, abstractmethod
 from typing import Any
 
-from openhands_aci.utils.diff import get_diff  # type: ignore
+try:
+    from openhands_aci.utils.diff import get_diff  # type: ignore
+except ImportError:
+    # Fallback when openhands-aci is not available
+    def get_diff(old_content: str, new_content: str) -> str:
+        return f"Diff not available - openhands-aci not installed\nOld: {old_content[:100]}...\nNew: {new_content[:100]}..."
 
 from openhands.core.config import OpenHandsConfig
 from openhands.core.logger import openhands_logger as logger

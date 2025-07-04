@@ -144,7 +144,7 @@ export const getSimpleUser = async (userId) => {
 };
 
 // ユーザー情報を更新
-export const updateUser = async (userId, name, email, password = null, apiKeyId = null, role = null) => {
+export const updateUser = async (userId, name, email, password = null, apiKeyId = null, role = null, status = null) => {
   try {
     const data = { name, email };
     
@@ -161,6 +161,11 @@ export const updateUser = async (userId, name, email, password = null, apiKeyId 
     // ロールが提供された場合のみ含める
     if (role) {
       data.role = role;
+    }
+    
+    // ステータスが提供された場合のみ含める
+    if (status) {
+      data.status = status;
     }
     
     const response = await axios.put(

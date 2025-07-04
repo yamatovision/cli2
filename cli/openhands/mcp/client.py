@@ -4,7 +4,7 @@ from fastmcp import Client
 from fastmcp.client.transports import SSETransport, StreamableHttpTransport
 from mcp import McpError
 from mcp.types import CallToolResult
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from openhands.core.config.mcp_config import MCPSHTTPServerConfig, MCPSSEServerConfig
 from openhands.core.logger import openhands_logger as logger
@@ -21,8 +21,7 @@ class MCPClient(BaseModel):
     tools: list[MCPClientTool] = Field(default_factory=list)
     tool_map: dict[str, MCPClientTool] = Field(default_factory=dict)
 
-    class Config:
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     async def _initialize_and_list_tools(self) -> None:
         """Initialize session and populate tool map."""
