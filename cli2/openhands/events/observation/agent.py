@@ -7,7 +7,7 @@ from openhands.events.observation.observation import Observation
 
 @dataclass
 class AgentStateChangedObservation(Observation):
-    """This data class represents the result from delegating to another agent"""
+    """This data class represents the result from delegating to another agent."""
 
     agent_state: str
     reason: str = ''
@@ -46,8 +46,7 @@ class AgentThinkObservation(Observation):
 
 @dataclass
 class MicroagentKnowledge:
-    """
-    Represents knowledge from a triggered microagent.
+    """Represents knowledge from a triggered microagent.
 
     Attributes:
         name: The name of the microagent that was triggered

@@ -29,18 +29,18 @@ from openhands.integrations.provider import PROVIDER_TOKEN_TYPE
 from openhands.runtime.impl.action_execution.action_execution_client import (
     ActionExecutionClient,
 )
-from openhands.runtime.impl.docker.docker_runtime import (
-    APP_PORT_RANGE_1,
-    APP_PORT_RANGE_2,
-    EXECUTION_SERVER_PORT_RANGE,
-    VSCODE_PORT_RANGE,
-)
 from openhands.runtime.plugins import PluginRequirement
 from openhands.runtime.runtime_status import RuntimeStatus
 from openhands.runtime.utils import find_available_tcp_port
 from openhands.runtime.utils.command import get_action_execution_server_startup_command
 from openhands.utils.async_utils import call_sync_from_async
 from openhands.utils.tenacity_stop import stop_if_should_exit
+
+# Port ranges for local runtime
+APP_PORT_RANGE_1 = (3000, 3010)
+APP_PORT_RANGE_2 = (8000, 8010)
+EXECUTION_SERVER_PORT_RANGE = (9000, 9010)
+VSCODE_PORT_RANGE = (5000, 5010)
 
 
 @dataclass

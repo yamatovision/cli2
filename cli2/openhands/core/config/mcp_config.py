@@ -116,8 +116,7 @@ class MCPConfig(BaseModel):
 
     @classmethod
     def from_toml_section(cls, data: dict) -> dict[str, 'MCPConfig']:
-        """
-        Create a mapping of MCPConfig instances from a toml dictionary representing the [mcp] section.
+        """Create a mapping of MCPConfig instances from a toml dictionary representing the [mcp] section.
 
         The configuration is built from all keys in data.
 
@@ -167,7 +166,7 @@ class MCPConfig(BaseModel):
 class OpenHandsMCPConfig:
     @staticmethod
     def add_search_engine(app_config: 'OpenHandsConfig') -> MCPStdioServerConfig | None:
-        """Add search engine to the MCP config"""
+        """Add search engine to the MCP config."""
         if (
             app_config.search_api_key
             and app_config.search_api_key.get_secret_value().startswith('tvly-')
@@ -187,8 +186,7 @@ class OpenHandsMCPConfig:
     def create_default_mcp_server_config(
         host: str, config: 'OpenHandsConfig', user_id: str | None = None,
     ) -> tuple[MCPSHTTPServerConfig, list[MCPStdioServerConfig]]:
-        """
-        Create a default MCP server configuration.
+        """Create a default MCP server configuration.
 
         Args:
             host: Host string

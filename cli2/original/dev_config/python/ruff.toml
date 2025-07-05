@@ -1,3 +1,8 @@
+# Exclude original/ directory from checks (evaluation/benchmark code, not for CLI distribution)
+exclude = [
+    "original/",
+]
+
 [lint]
 select = [
     "E",

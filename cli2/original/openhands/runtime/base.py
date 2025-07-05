@@ -194,8 +194,7 @@ class Runtime(FileEditRuntimeMixin):
             self.add_env_vars(self.config.sandbox.runtime_startup_env_vars)
 
     def close(self) -> None:
-        """
-        This should only be called by conversation manager or closing the session.
+        """This should only be called by conversation manager or closing the session.
         If called for instance by error handling, it could prevent recovery.
         """
         pass
@@ -301,9 +300,7 @@ class Runtime(FileEditRuntimeMixin):
             asyncio.get_event_loop().run_until_complete(self._handle_action(event))
 
     async def _export_latest_git_provider_tokens(self, event: Action) -> None:
-        """
-        Refresh runtime provider tokens when agent attemps to run action with provider token
-        """
+        """Refresh runtime provider tokens when agent attemps to run action with provider token."""
         if not self.user_id:
             return
 
@@ -602,7 +599,6 @@ fi
         Returns:
             Authenticated git URL if credentials are available, otherwise regular HTTPS URL
         """
-
         try:
             provider_handler = ProviderHandler(
                 git_provider_tokens or MappingProxyType({})
@@ -935,9 +931,7 @@ fi
     def _execute_shell_fn_git_handler(
         self, command: str, cwd: str | None
     ) -> CommandResult:
-        """
-        This function is used by the GitHandler to execute shell commands.
-        """
+        """This function is used by the GitHandler to execute shell commands."""
         obs = self.run(CmdRunAction(command=command, is_static=True, cwd=cwd))
         exit_code = 0
         content = ''
@@ -967,8 +961,7 @@ fi
     def subscribe_to_shell_stream(
         self, callback: Callable[[str], None] | None = None
     ) -> bool:
-        """
-        Subscribe to shell command output stream.
+        """Subscribe to shell command output stream.
         This method is meant to be overridden by runtime implementations
         that want to stream shell command output to external consumers.
 

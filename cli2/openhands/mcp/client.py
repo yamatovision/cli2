@@ -12,9 +12,7 @@ from openhands.mcp.tool import MCPClientTool
 
 
 class MCPClient(BaseModel):
-    """
-    A collection of tools that connects to an MCP server and manages available tools through the Model Context Protocol.
-    """
+    """A collection of tools that connects to an MCP server and manages available tools through the Model Context Protocol."""
 
     client: Optional[Client] = None
     description: str = 'MCP client tools for server interaction'
@@ -54,7 +52,7 @@ class MCPClient(BaseModel):
         conversation_id: str | None = None,
         timeout: float = 30.0,
     ):
-        """Connect to MCP server using SHTTP or SSE transport"""
+        """Connect to MCP server using SHTTP or SSE transport."""
         server_url = server.url
         api_key = server.api_key
 

@@ -150,8 +150,7 @@ class GitHubService(BaseGitService, GitService):
     async def _fetch_paginated_repos(
         self, url: str, params: dict, max_repos: int, extract_key: str | None = None
     ) -> list[dict]:
-        """
-        Fetch repositories with pagination support.
+        """Fetch repositories with pagination support.
 
         Args:
             url: The API endpoint URL
@@ -415,7 +414,7 @@ class GitHubService(BaseGitService, GitService):
         )
 
     async def get_branches(self, repository: str) -> list[Branch]:
-        """Get branches for a repository"""
+        """Get branches for a repository."""
         url = f'{self.BASE_URL}/repos/{repository}/branches'
 
         # Set maximum branches to fetch (10 pages with 100 per page)
@@ -469,8 +468,7 @@ class GitHubService(BaseGitService, GitService):
         body: str | None = None,
         draft: bool = True,
     ) -> str:
-        """
-        Creates a PR using user credentials
+        """Creates a PR using user credentials.
 
         Args:
             repo_name: The full name of the repository (owner/repo)
@@ -484,7 +482,6 @@ class GitHubService(BaseGitService, GitService):
             - PR URL when successful
             - Error message when unsuccessful
         """
-
         url = f'{self.BASE_URL}/repos/{repo_name}/pulls'
 
         # Set default body if none provided

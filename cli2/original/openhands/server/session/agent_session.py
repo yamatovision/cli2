@@ -38,7 +38,7 @@ WAIT_TIME_BEFORE_CLOSE_INTERVAL = 5
 
 
 class AgentSession:
-    """Represents a session with an Agent
+    """Represents a session with an Agent.
 
     Attributes:
         controller: The AgentController instance for controlling the agent.
@@ -65,13 +65,12 @@ class AgentSession:
         status_callback: Callable | None = None,
         user_id: str | None = None,
     ) -> None:
-        """Initializes a new instance of the Session class
+        """Initializes a new instance of the Session class.
 
         Parameters:
         - sid: The session ID
         - file_store: Instance of the FileStore
         """
-
         self.sid = sid
         self.event_stream = EventStream(sid, file_store, user_id)
         self.file_store = file_store
@@ -215,7 +214,7 @@ class AgentSession:
                 )
 
     async def close(self) -> None:
-        """Closes the Agent session"""
+        """Closes the Agent session."""
         if self._closed:
             return
         self._closed = True
@@ -250,8 +249,7 @@ class AgentSession:
         agent_to_llm_config: dict[str, LLMConfig] | None,
         agent_configs: dict[str, AgentConfig] | None,
     ) -> MessageAction:
-        """
-        Replays a trajectory from a JSON file. Note that once the replay session
+        """Replays a trajectory from a JSON file. Note that once the replay session
         finishes, the controller will continue to run with further user instructions,
         so we still need to pass llm configs, budget, etc., even though the replay
         itself does not call LLM or cost money.
@@ -271,12 +269,11 @@ class AgentSession:
         return replay_events[0]
 
     def _create_security_analyzer(self, security_analyzer: str | None) -> None:
-        """Creates a SecurityAnalyzer instance that will be used to analyze the agent actions
+        """Creates a SecurityAnalyzer instance that will be used to analyze the agent actions.
 
         Parameters:
         - security_analyzer: The name of the security analyzer to use
         """
-
         if security_analyzer:
             self.logger.debug(f'Using security analyzer: {security_analyzer}')
             self.security_analyzer = options.SecurityAnalyzers.get(
@@ -308,7 +305,7 @@ class AgentSession:
         selected_repository: str | None = None,
         selected_branch: str | None = None,
     ) -> bool:
-        """Creates a runtime instance
+        """Creates a runtime instance.
 
         Parameters:
         - runtime_name: The name of the runtime associated with the session
@@ -318,7 +315,6 @@ class AgentSession:
         Return True on successfully connected, False if could not connect.
         Raises if already created, possibly in other situations.
         """
-
         if self.runtime is not None:
             raise RuntimeError('Runtime already created')
 
@@ -402,7 +398,7 @@ class AgentSession:
         agent_configs: dict[str, AgentConfig] | None = None,
         replay_events: list[Event] | None = None,
     ) -> tuple[AgentController, bool]:
-        """Creates an AgentController instance
+        """Creates an AgentController instance.
 
         Parameters:
         - agent:
@@ -415,7 +411,6 @@ class AgentSession:
         Returns:
             Agent Controller and a bool indicating if state was restored from a previous conversation
         """
-
         if self.controller is not None:
             raise RuntimeError('Controller already created')
         if self.runtime is None:

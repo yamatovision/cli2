@@ -4,8 +4,7 @@ from typing import Callable
 
 @dataclass
 class CommandResult:
-    """
-    Represents the result of a shell command execution.
+    """Represents the result of a shell command execution.
 
     Attributes:
         content (str): The output content of the command.
@@ -17,9 +16,7 @@ class CommandResult:
 
 
 class GitHandler:
-    """
-    A handler for executing Git-related operations via shell commands.
-    """
+    """A handler for executing Git-related operations via shell commands."""
 
     def __init__(
         self,
@@ -29,8 +26,7 @@ class GitHandler:
         self.cwd: str | None = None
 
     def set_cwd(self, cwd: str) -> None:
-        """
-        Sets the current working directory for Git operations.
+        """Sets the current working directory for Git operations.
 
         Args:
             cwd (str): The directory path.
@@ -38,8 +34,7 @@ class GitHandler:
         self.cwd = cwd
 
     def _is_git_repo(self) -> bool:
-        """
-        Checks if the current directory is a Git repository.
+        """Checks if the current directory is a Git repository.
 
         Returns:
             bool: True if inside a Git repository, otherwise False.
@@ -49,8 +44,7 @@ class GitHandler:
         return output.content.strip() == 'true'
 
     def _get_current_file_content(self, file_path: str) -> str:
-        """
-        Retrieves the current content of a given file.
+        """Retrieves the current content of a given file.
 
         Args:
             file_path (str): Path to the file.
@@ -62,8 +56,7 @@ class GitHandler:
         return output.content
 
     def _verify_ref_exists(self, ref: str) -> bool:
-        """
-        Verifies whether a specific Git reference exists.
+        """Verifies whether a specific Git reference exists.
 
         Args:
             ref (str): The Git reference to check.
@@ -76,8 +69,7 @@ class GitHandler:
         return output.exit_code == 0
 
     def _get_valid_ref(self) -> str | None:
-        """
-        Determines a valid Git reference for comparison.
+        """Determines a valid Git reference for comparison.
 
         Returns:
             str | None: A valid Git reference or None if no valid reference is found.
@@ -103,8 +95,7 @@ class GitHandler:
         return None
 
     def _get_ref_content(self, file_path: str) -> str:
-        """
-        Retrieves the content of a file from a valid Git reference.
+        """Retrieves the content of a file from a valid Git reference.
 
         Args:
             file_path (str): The file path in the repository.
@@ -121,8 +112,7 @@ class GitHandler:
         return output.content if output.exit_code == 0 else ''
 
     def _get_default_branch(self) -> str:
-        """
-        Retrieves the primary Git branch name of the repository.
+        """Retrieves the primary Git branch name of the repository.
 
         Returns:
             str: The name of the primary branch.
@@ -132,8 +122,7 @@ class GitHandler:
         return output.content.split()[-1].strip()
 
     def _get_current_branch(self) -> str:
-        """
-        Retrieves the currently selected Git branch.
+        """Retrieves the currently selected Git branch.
 
         Returns:
             str: The name of the current branch.
@@ -143,8 +132,7 @@ class GitHandler:
         return output.content.strip()
 
     def _get_changed_files(self) -> list[str]:
-        """
-        Retrieves a list of changed files compared to a valid Git reference.
+        """Retrieves a list of changed files compared to a valid Git reference.
 
         Returns:
             list[str]: A list of changed file paths.
@@ -162,8 +150,7 @@ class GitHandler:
         return output.content.splitlines()
 
     def _get_untracked_files(self) -> list[dict[str, str]]:
-        """
-        Retrieves a list of untracked files in the repository. This is useful for detecting new files.
+        """Retrieves a list of untracked files in the repository. This is useful for detecting new files.
 
         Returns:
             list[dict[str, str]]: A list of dictionaries containing file paths and statuses.
@@ -178,8 +165,7 @@ class GitHandler:
         )
 
     def get_git_changes(self) -> list[dict[str, str]] | None:
-        """
-        Retrieves the list of changed files in the Git repository.
+        """Retrieves the list of changed files in the Git repository.
 
         Returns:
             list[dict[str, str]] | None: A list of dictionaries containing file paths and statuses. None if not a git repository.
@@ -195,8 +181,7 @@ class GitHandler:
         return result
 
     def get_git_diff(self, file_path: str) -> dict[str, str]:
-        """
-        Retrieves the original and modified content of a file in the repository.
+        """Retrieves the original and modified content of a file in the repository.
 
         Args:
             file_path (str): Path to the file.
@@ -214,8 +199,7 @@ class GitHandler:
 
 
 def parse_git_changes(changes_list: list[str]) -> list[dict[str, str]]:
-    """
-    Parses the list of changed files and extracts their statuses and paths.
+    """Parses the list of changed files and extracts their statuses and paths.
 
     Args:
         changes_list (list[str]): List of changed file entries.

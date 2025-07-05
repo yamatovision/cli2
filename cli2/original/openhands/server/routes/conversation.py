@@ -109,6 +109,7 @@ async def search_events(
     conversation: ServerConversation = Depends(get_conversation),
 ):
     """Search through the event stream with filtering and pagination.
+
     Args:
         request: The incoming request object
         start_id: Starting ID in the event stream. Defaults to 0

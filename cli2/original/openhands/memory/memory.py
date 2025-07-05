@@ -35,8 +35,7 @@ GLOBAL_MICROAGENTS_DIR = os.path.join(
 
 
 class Memory:
-    """
-    Memory is a component that listens to the EventStream for information retrieval actions
+    """Memory is a component that listens to the EventStream for information retrieval actions
     (a RecallAction) and publishes observations with the content (such as RecallObservation).
     """
 
@@ -136,7 +135,6 @@ class Memory:
         This method collects information from all available repo microagents and concatenates their contents.
         Multiple repo microagents are supported, and their contents will be concatenated with newlines between them.
         """
-
         # Create WORKSPACE_CONTEXT info:
         # - repository_info
         # - runtime_info
@@ -198,7 +196,6 @@ class Memory:
         event: RecallAction,
     ) -> RecallObservation | None:
         """When a microagent action triggers microagents, create a RecallObservation with structured data."""
-
         # Find any matched microagents based on the query
         microagent_knowledge = self._find_microagent_knowledge(event.query)
 
@@ -244,8 +241,7 @@ class Memory:
     def load_user_workspace_microagents(
         self, user_microagents: list[BaseMicroagent]
     ) -> None:
-        """
-        This method loads microagents from a user's cloned repo or workspace directory.
+        """This method loads microagents from a user's cloned repo or workspace directory.
 
         This is typically called from agent_session or setup once the workspace is cloned.
         """
@@ -259,9 +255,7 @@ class Memory:
                 self.repo_microagents[user_microagent.name] = user_microagent
 
     def _load_global_microagents(self) -> None:
-        """
-        Loads microagents from the global microagents_dir
-        """
+        """Loads microagents from the global microagents_dir."""
         repo_agents, knowledge_agents = load_microagents_from_dir(
             GLOBAL_MICROAGENTS_DIR
         )
@@ -273,8 +267,7 @@ class Memory:
                 self.repo_microagents[name] = agent
 
     def get_microagent_mcp_tools(self) -> list[MCPConfig]:
-        """
-        Get MCP tools from all repo microagents (always active)
+        """Get MCP tools from all repo microagents (always active).
 
         Returns:
             A list of MCP tools configurations from microagents
@@ -324,9 +317,8 @@ class Memory:
     def set_conversation_instructions(
         self, conversation_instructions: str | None
     ) -> None:
-        """
-        Set contextual information for conversation
-        This is information the agent may require
+        """Set contextual information for conversation
+        This is information the agent may require.
         """
         self.conversation_instructions = ConversationInstructions(
             content=conversation_instructions or ''

@@ -109,8 +109,6 @@ def display_runtime_initialization_message(runtime: str) -> None:
     print_formatted_text('')
     if runtime == 'local':
         print_formatted_text(HTML('<grey>⚙️ Starting local runtime...</grey>'))
-    elif runtime == 'docker':
-        print_formatted_text(HTML('<grey>🐳 Starting Docker runtime...</grey>'))
     print_formatted_text('')
 
 

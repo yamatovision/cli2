@@ -21,7 +21,6 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 from conftest import TEST_IN_CI
-
 from evaluation.utils.shared import (
     EvalException,
     EvalMetadata,
@@ -33,6 +32,7 @@ from evaluation.utils.shared import (
     reset_logger_for_multiprocessing,
     run_evaluation,
 )
+
 from openhands.agenthub import Agent
 from openhands.controller.state.state import State
 from openhands.core.config import (
