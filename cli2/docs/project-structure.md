@@ -53,13 +53,13 @@ EventStreamは、OpenHandsにおけるすべての通信のバックボーンと
 
 ```mermaid
 flowchart LR
-  Agent--Actions-->AgentController
-  AgentController--State-->Agent
-  AgentController--Actions-->EventStream
-  EventStream--Observations-->AgentController
-  Runtime--Observations-->EventStream
-  EventStream--Actions-->Runtime
-  Frontend--Actions-->EventStream
+  CLI_TUI[CLI TUI]--ユーザー入力-->EventStream[イベントストリーム]
+  Agent[エージェント]--アクション-->AgentController[エージェントコントローラー]
+  AgentController--状態-->Agent
+  AgentController--アクション-->EventStream
+  EventStream--観察-->AgentController
+  Runtime[ランタイム]--観察-->EventStream
+  EventStream--アクション-->Runtime
 ```
 
 ## ランタイムアーキテクチャ
@@ -269,7 +269,6 @@ OpenHands（旧OpenDevin）は、AI駆動のソフトウェア開発エージェ
 | `openhands/server/` | 型定義のみ（AppMode等）。Web機能は削除済み | **高** - 型定義として必要 | **最小化済み** |
 | `openhands/integrations/` | 外部サービス連携。GitHub、GitLab、Bitbucket等 | **中** - 特定機能で使用 | **保持** |
 | `openhands/resolver/` | 課題解決機能。PR作成、パッチ適用等 | **中** - 特定タスクで使用 | **保持** |
-| `openhands/experiments/` | 実験的機能。experiment_manager.py | **低** - 開発・研究用 | **削除候補** |
 | `openhands/utils/` | ユーティリティ関数 | **中** - 補助機能 | **保持** |
 | `openhands/critic/` | コードレビュー機能。finish_critic.py等 | **低** - 特定用途 | **削除候補** |
 | `openhands/linter/` | コードリンティング機能 | **低** - 開発支援 | **削除候補** |
@@ -307,10 +306,83 @@ OpenHands（旧OpenDevin）は、AI駆動のソフトウェア開発エージェ
 4. **CLI特化**: 対話型CLI機能に特化したシンプルな構成
 
 #### **実施済みクリーンアップ**
-- ✅ **frontend/ディレクトリ削除** (2024年7月5日)
-  - React.jsベースのWebフロントエンドを削除
-  - CLI機能に影響なし、ビルドも正常
-  - パッケージサイズとNode.js依存関係を大幅削減
+
+**Phase 1: 基盤整備** (2024年7月5日)
+- ✅ **frontend/ディレクトリ完全削除**
+  - 607ファイル、62,661行削除
+  - React.jsベースのWebフロントエンド除去
+  - CLI単体動作に特化
+
+- ✅ **Pythonバージョン設定修正**
+  - pyproject.toml: "^3.9,<3.14" → "^3.12,<3.14"
+  - Poetry環境: Python 3.12.11使用
+
+- ✅ **型エラー完全修正**
+  - mypy CLI関連: 0エラー達成
+  - 型アノテーション完全対応
+
+- ✅ **コード品質改善**
+  - ruff: 17,279エラー → 0エラー
+  - 引用符スタイル統一（ダブル→シングル）
+  - 1,628個のQ000エラー修正
+
+**Phase 2: server/最小化** (2024年7月5日)
+- ✅ **server/ディレクトリ最小化**
+  - 43ファイル、6,155行削除
+  - Web機能完全除去（FastAPI、ルート、セッション）
+  - 型定義のみ保持（AppMode、エラー型）
+  - CLI機能維持・動作確認済み
+
+**累積削除統計**
+```
+frontend/: 607ファイル、62,661行削除
+server/:    43ファイル、 6,155行削除
+─────────────────────────────────────
+合計:      650ファイル、68,816行削除
+```
+
+#### **残された課題**
+
+**Phase 3: テスト・実験機能整理** (予定)
+- ⚠️ **tests/unit/内のserver依存テスト修正**
+  - 25ファイルがserver/への依存を持つ
+  - 削除されたserver機能のテスト除去が必要
+  
+- 🔍 **openhands/experiments/削除検討**
+  - 実験的機能（A/Bテスト、実験管理）
+  - CLI配布では不要な可能性
+
+- 🔍 **最終ビルドテスト**
+  - poetry build動作確認
+  - 配布パッケージサイズ確認
+
+#### **リファクタリング手順**
+
+**実行済み手順** (参照: 実際のコミット履歴)
+1. **構造調査**: `find`、`grep`でディレクトリ構成・依存関係分析
+2. **影響範囲確認**: CLI機能への影響をテストで確認
+3. **段階的削除**: frontend/ → server/ の順で削除実行
+4. **型定義保持**: 必要最小限の型定義（AppMode等）のみ残す
+5. **動作確認**: 各段階でCLI機能の動作確認
+6. **品質チェック**: ruff、mypy による品質確認
+7. **変更コミット**: 段階的にコミット・プッシュ
+
+**使用したコマンド例**
+```bash
+# 構造調査
+find openhands/server/ -name "*.py" | wc -l
+find openhands/server/ -name "*.py" -exec wc -l {} + | tail -1
+
+# 依存関係調査  
+grep -r "from openhands\.server\|import.*openhands\.server" . --include="*.py"
+
+# 段階的削除
+find openhands/server/ -name "*.py" ! -name "types.py" ! -name "__init__.py" -delete
+
+# 動作確認
+poetry run openhands --help
+poetry run ruff check openhands/
+```
 
 ### **Phase 2: カスタマイズ（予定）**
 1. **サブスク機能追加**: 認証、ライセンス管理、使用量制限等
