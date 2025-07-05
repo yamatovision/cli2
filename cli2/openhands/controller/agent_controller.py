@@ -23,7 +23,6 @@ from litellm.exceptions import (  # noqa
 )
 
 from openhands.controller.agent import Agent
-from openhands.controller.replay import ReplayManager
 from openhands.controller.state.state import State
 from openhands.controller.state.state_tracker import StateTracker
 from openhands.controller.stuck import StuckDetector
@@ -113,7 +112,6 @@ class AgentController:
         is_delegate: bool = False,
         headless_mode: bool = True,
         status_callback: Callable | None = None,
-        replay_events: list[Event] | None = None,
     ):
         """Initializes a new instance of the AgentController class.
 
@@ -132,7 +130,6 @@ class AgentController:
             is_delegate: Whether this controller is a delegate.
             headless_mode: Whether the agent is run in headless mode.
             status_callback: Optional callback function to handle status updates.
-            replay_events: A list of logs to replay.
         """
         self.id = sid or event_stream.sid
         self.user_id = user_id
@@ -170,9 +167,6 @@ class AgentController:
         # stuck helper
         self._stuck_detector = StuckDetector(self.state)
         self.status_callback = status_callback
-
-        # replay-related
-        self._replay_manager = ReplayManager(replay_events)
 
         # Add the system message to the event stream
         self._add_system_message()
@@ -801,51 +795,46 @@ class AgentController:
 
         action: Action = NullAction()
 
-        if self._replay_manager.should_replay():
-            # in replay mode, we don't let the agent to proceed
-            # instead, we replay the action from the replay trajectory
-            action = self._replay_manager.step()
-        else:
-            try:
-                action = self.agent.step(self.state)
-                if action is None:
-                    raise LLMNoActionError('No action was returned')
-                action._source = EventSource.AGENT  # type: ignore [attr-defined]
-            except (
-                LLMMalformedActionError,
-                LLMNoActionError,
-                LLMResponseError,
-                FunctionCallValidationError,
-                FunctionCallNotExistsError,
-            ) as e:
-                self.event_stream.add_event(
-                    ErrorObservation(
-                        content=str(e),
-                    ),
-                    EventSource.AGENT,
-                )
-                return
-            except (ContextWindowExceededError, BadRequestError, OpenAIError) as e:
-                # FIXME: this is a hack until a litellm fix is confirmed
-                # Check if this is a nested context window error
-                # We have to rely on string-matching because LiteLLM doesn't consistently
-                # wrap the failure in a ContextWindowExceededError
-                error_str = str(e).lower()
-                if (
-                    'contextwindowexceedederror' in error_str
-                    or 'prompt is too long' in error_str
-                    or 'input length and `max_tokens` exceed context limit' in error_str
-                    or 'please reduce the length of either one'
-                    in error_str  # For OpenRouter context window errors
-                    or isinstance(e, ContextWindowExceededError)
-                ):
-                    if self.agent.config.enable_history_truncation:
-                        self._handle_long_context_error()
-                        return
-                    else:
-                        raise LLMContextWindowExceedError()
+        try:
+            action = self.agent.step(self.state)
+            if action is None:
+                raise LLMNoActionError('No action was returned')
+            action._source = EventSource.AGENT  # type: ignore [attr-defined]
+        except (
+            LLMMalformedActionError,
+            LLMNoActionError,
+            LLMResponseError,
+            FunctionCallValidationError,
+            FunctionCallNotExistsError,
+        ) as e:
+            self.event_stream.add_event(
+                ErrorObservation(
+                    content=str(e),
+                ),
+                EventSource.AGENT,
+            )
+            return
+        except (ContextWindowExceededError, BadRequestError, OpenAIError) as e:
+            # FIXME: this is a hack until a litellm fix is confirmed
+            # Check if this is a nested context window error
+            # We have to rely on string-matching because LiteLLM doesn't consistently
+            # wrap the failure in a ContextWindowExceededError
+            error_str = str(e).lower()
+            if (
+                'contextwindowexceedederror' in error_str
+                or 'prompt is too long' in error_str
+                or 'input length and `max_tokens` exceed context limit' in error_str
+                or 'please reduce the length of either one'
+                in error_str  # For OpenRouter context window errors
+                or isinstance(e, ContextWindowExceededError)
+            ):
+                if self.agent.config.enable_history_truncation:
+                    self._handle_long_context_error()
+                    return
                 else:
-                    raise e
+                    raise LLMContextWindowExceedError()
+            else:
+                raise e
 
         if action.runnable:
             if self.state.confirmation_mode and (

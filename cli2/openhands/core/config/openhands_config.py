@@ -35,7 +35,6 @@ class OpenHandsConfig(BaseModel):
         file_store_web_hook_headers: Optional headers for file_store web hook
         save_trajectory_path: Either a folder path to store trajectories with auto-generated filenames, or a designated trajectory file path.
         save_screenshots_in_trajectory: Whether to save screenshots in trajectory (in encoded image format).
-        replay_trajectory_path: Path to load trajectory and replay. If provided, trajectory would be replayed first before user's instruction.
         search_api_key: API key for Tavily search engine (https://tavily.com/).
         workspace_base (deprecated): Base path for the workspace. Defaults to `./workspace` as absolute path.
         workspace_mount_path (deprecated): Path to mount the workspace. Defaults to `workspace_base`.
@@ -70,7 +69,6 @@ class OpenHandsConfig(BaseModel):
     file_store_web_hook_headers: dict | None = Field(default=None)
     save_trajectory_path: str | None = Field(default=None)
     save_screenshots_in_trajectory: bool = Field(default=False)
-    replay_trajectory_path: str | None = Field(default=None)
     search_api_key: SecretStr | None = Field(
         default=None,
         description='API key for Tavily search engine (https://tavily.com/). Required for search functionality.',

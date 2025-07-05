@@ -194,7 +194,6 @@ def create_controller(
     runtime: Runtime,
     config: OpenHandsConfig,
     headless_mode: bool = True,
-    replay_events: list[Event] | None = None,
 ) -> tuple[AgentController, State | None]:
     event_stream = runtime.event_stream
     initial_state = None
@@ -217,7 +216,6 @@ def create_controller(
         initial_state=initial_state,
         headless_mode=headless_mode,
         confirmation_mode=config.security.confirmation_mode,
-        replay_events=replay_events,
     )
     return (controller, initial_state)
 

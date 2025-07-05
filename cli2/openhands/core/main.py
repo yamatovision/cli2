@@ -7,7 +7,6 @@ from typing import Callable, Protocol
 import openhands.agenthub
 import openhands.cli.suppress_warnings  # noqa: F401
 from openhands.controller.agent import Agent
-from openhands.controller.replay import ReplayManager
 from openhands.controller.state.state import State
 from openhands.core.config import (
     OpenHandsConfig,
@@ -144,16 +143,8 @@ async def run_controller(
 
         await add_mcp_tools_to_agent(agent, runtime, memory)
 
-    replay_events: list[Event] | None = None
-    if config.replay_trajectory_path:
-        logger.info('Trajectory replay is enabled')
-        assert isinstance(initial_user_action, NullAction)
-        replay_events, initial_user_action = load_replay_log(
-            config.replay_trajectory_path,
-        )
-
     controller, initial_state = create_controller(
-        agent, runtime, config, replay_events=replay_events,
+        agent, runtime, config,
     )
 
     assert isinstance(initial_user_action, Action), (
@@ -250,28 +241,6 @@ def auto_continue_response(
     return message
 
 
-def load_replay_log(trajectory_path: str) -> tuple[list[Event] | None, Action]:
-    """Load trajectory from given path, serialize it to a list of events, and return
-    two things:
-    1) A list of events except the first action
-    2) First action (user message, a.k.a. initial task).
-    """
-    try:
-        path = Path(trajectory_path).resolve()
-
-        if not path.exists():
-            raise ValueError(f'Trajectory file not found: {path}')
-
-        if not path.is_file():
-            raise ValueError(f'Trajectory path is a directory, not a file: {path}')
-
-        with open(path, encoding='utf-8') as file:
-            events = ReplayManager.get_replay_events(json.load(file))
-            assert isinstance(events[0], MessageAction)
-            return events[1:], events[0]
-    except json.JSONDecodeError as e:
-        raise ValueError(f'Invalid JSON format in {trajectory_path}: {e}')
-
 
 if __name__ == '__main__':
     args = parse_arguments()
@@ -282,17 +251,11 @@ if __name__ == '__main__':
     task_str = read_task(args, config.cli_multiline_input)
 
     initial_user_action: Action = NullAction()
-    if config.replay_trajectory_path:
-        if task_str:
-            raise ValueError(
-                'User-specified task is not supported under trajectory replay mode',
-            )
-    else:
-        if not task_str:
-            raise ValueError('No task provided. Please specify a task through -t, -f.')
+    if not task_str:
+        raise ValueError('No task provided. Please specify a task through -t, -f.')
 
-        # Create actual initial user action
-        initial_user_action = MessageAction(content=task_str)
+    # Create actual initial user action
+    initial_user_action = MessageAction(content=task_str)
 
     # Set session name
     session_name = args.name
