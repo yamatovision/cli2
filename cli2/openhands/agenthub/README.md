@@ -46,16 +46,14 @@ The agent can add and modify subtasks through the `AddTaskAction` and `ModifyTas
 
 Here is a list of available Actions, which can be returned by `agent.step()`:
 
-- [`CmdRunAction`](../events/action/commands.py) - Runs a command inside a sandboxed terminal
+- [`CmdRunAction`](../events/action/commands.py) - Runs a command in the terminal
 - [`IPythonRunCellAction`](../events/action/commands.py) - Execute a block of Python code interactively (in Jupyter notebook) and receives `CmdOutputObservation`. Requires setting up `jupyter` [plugin](../runtime/plugins) as a requirement.
 - [`FileReadAction`](../events/action/files.py) - Reads the content of a file
 - [`FileWriteAction`](../events/action/files.py) - Writes new content to a file
-- [`BrowseURLAction`](../events/action/browse.py) - Gets the content of a URL
 - [`AddTaskAction`](../events/action/tasks.py) - Adds a subtask to the plan
 - [`ModifyTaskAction`](../events/action/tasks.py) - Changes the state of a subtask.
 - [`AgentFinishAction`](../events/action/agent.py) - Stops the control loop, allowing the user/delegator agent to enter a new task
 - [`AgentRejectAction`](../events/action/agent.py) - Stops the control loop, allowing the user/delegator agent to enter a new task
-- [`AgentFinishAction`](../events/action/agent.py) - Stops the control loop, allowing the user to enter a new task
 - [`MessageAction`](../events/action/message.py) - Represents a message from an agent or the user
 
 To serialize and deserialize an action, you can use:

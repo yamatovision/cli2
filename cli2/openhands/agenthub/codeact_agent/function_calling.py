@@ -207,7 +207,7 @@ def response_to_actions(
             # ================================================
             elif tool_call.function.name == 'browser':
                 raise FunctionCallNotExistsError(
-                    f'Browser functionality is not available in CLI runtime'
+                    'Browser functionality is not available in CLI runtime'
                 )
 
             # ================================================

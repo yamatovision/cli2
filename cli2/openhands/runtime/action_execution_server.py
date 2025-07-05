@@ -56,7 +56,6 @@ from openhands.events.observation import (
     Observation,
 )
 from openhands.events.serialization import event_from_dict, event_to_dict
-from openhands.runtime.browser import browse
 from openhands.runtime.browser.browser_env import BrowserEnv
 from openhands.runtime.file_viewer_server import start_file_viewer_server
 

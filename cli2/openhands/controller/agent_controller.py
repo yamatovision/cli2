@@ -202,6 +202,23 @@ class AgentController:
             )
             logger.debug(f'System message: {preview}')
             self.event_stream.add_event(system_message, EventSource.AGENT)
+            
+        # Add user prompt template content if available
+        if not self.is_delegate and hasattr(self.agent, 'prompt_manager') and self.agent.prompt_manager:
+            user_prompt_content = self.agent.prompt_manager.get_example_user_message()
+            if user_prompt_content:
+                from openhands.events.action import MessageAction
+                user_prompt_message = MessageAction(
+                    content=user_prompt_content,
+                    source='user'
+                )
+                preview = (
+                    user_prompt_content[:50] + '...'
+                    if len(user_prompt_content) > 50
+                    else user_prompt_content
+                )
+                logger.debug(f'User prompt template: {preview}')
+                self.event_stream.add_event(user_prompt_message, EventSource.AGENT)
 
     async def close(self, set_stop_state: bool = True) -> None:
         """Closes the agent controller, canceling any ongoing tasks and unsubscribing from the event stream.
