@@ -60,7 +60,7 @@ class EventStore(EventStoreABC):
             events_dir = get_conversation_events_dir(self.sid, self.user_id)
             events = self.file_store.list(events_dir)
         except FileNotFoundError:
-            logger.debug(f"No events found for session {self.sid} at {events_dir}")
+            logger.debug(f'No events found for session {self.sid} at {events_dir}')
 
         if not events:
             self.cur_id = 0
@@ -148,7 +148,7 @@ class EventStore(EventStoreABC):
         return get_conversation_event_filename(self.sid, id, user_id)
 
     def _get_filename_for_cache(self, start: int, end: int) -> str:
-        return f"{get_conversation_dir(self.sid, self.user_id)}event_cache/{start}-{end}.json"
+        return f'{get_conversation_dir(self.sid, self.user_id)}event_cache/{start}-{end}.json'
 
     def _load_cache_page(self, start: int, end: int) -> _CachePage:
         """Read a page from the cache. Reading individual events is slow when there are a lot of them, so we use pages."""
@@ -169,7 +169,7 @@ class EventStore(EventStoreABC):
     @staticmethod
     def _get_id_from_filename(filename: str) -> int:
         try:
-            return int(filename.split("/")[-1].split(".")[0])
+            return int(filename.split('/')[-1].split('.')[0])
         except ValueError:
-            logger.warning(f"get id from filename ({filename}) failed.")
+            logger.warning(f'get id from filename ({filename}) failed.')
             return -1

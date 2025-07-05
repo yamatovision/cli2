@@ -40,36 +40,36 @@ def display_settings(config: OpenHandsConfig) -> None:
         # Attempt to determine provider, fallback if not directly available
         provider = getattr(
             llm_config,
-            "provider",
-            llm_config.model.split("/")[0] if "/" in llm_config.model else "Unknown",
+            'provider',
+            llm_config.model.split('/')[0] if '/' in llm_config.model else 'Unknown',
         )
         labels_and_values.extend(
             [
-                ("   LLM Provider", str(provider)),
-                ("   LLM Model", str(llm_config.model)),
-                ("   API Key", "********" if llm_config.api_key else "Not Set"),
+                ('   LLM Provider', str(provider)),
+                ('   LLM Model', str(llm_config.model)),
+                ('   API Key', '********' if llm_config.api_key else 'Not Set'),
             ],
         )
     else:
         labels_and_values.extend(
             [
-                ("   Custom Model", str(llm_config.model)),
-                ("   Base URL", str(llm_config.base_url)),
-                ("   API Key", "********" if llm_config.api_key else "Not Set"),
+                ('   Custom Model', str(llm_config.model)),
+                ('   Base URL', str(llm_config.base_url)),
+                ('   API Key', '********' if llm_config.api_key else 'Not Set'),
             ],
         )
 
     # Common settings
     labels_and_values.extend(
         [
-            ("   Agent", str(config.default_agent)),
+            ('   Agent', str(config.default_agent)),
             (
-                "   Confirmation Mode",
-                "Enabled" if config.security.confirmation_mode else "Disabled",
+                '   Confirmation Mode',
+                'Enabled' if config.security.confirmation_mode else 'Disabled',
             ),
             (
-                "   Memory Condensation",
-                "Enabled" if config.enable_default_condenser else "Disabled",
+                '   Memory Condensation',
+                'Enabled' if config.enable_default_condenser else 'Disabled',
             ),
         ],
     )
@@ -88,7 +88,7 @@ def display_settings(config: OpenHandsConfig) -> None:
         f'{label + ":":<{max_label_width + 1}} {value:<}'  # Changed value alignment to left (<)
         for label, value in str_labels_and_values
     ]
-    settings_text = "\n".join(settings_lines)
+    settings_text = '\n'.join(settings_lines)
 
     container = Frame(
         TextArea(
@@ -97,8 +97,8 @@ def display_settings(config: OpenHandsConfig) -> None:
             style=COLOR_GREY,
             wrap_lines=True,
         ),
-        title="Settings",
-        style=f"fg:{COLOR_GREY}",
+        title='Settings',
+        style=f'fg:{COLOR_GREY}',
     )
 
     print_container(container)
@@ -109,7 +109,7 @@ async def get_validated_input(
     prompt_text: str,
     completer=None,
     validator=None,
-    error_message: str = "Input cannot be empty",
+    error_message: str = 'Input cannot be empty',
 ) -> str:
     session.completer = completer
     value = None
@@ -120,14 +120,14 @@ async def get_validated_input(
         if validator:
             is_valid = validator(value)
             if not is_valid:
-                print_formatted_text("")
-                print_formatted_text(HTML(f"<grey>{error_message}: {value}</grey>"))
-                print_formatted_text("")
+                print_formatted_text('')
+                print_formatted_text(HTML(f'<grey>{error_message}: {value}</grey>'))
+                print_formatted_text('')
                 continue
         elif not value:
-            print_formatted_text("")
-            print_formatted_text(HTML(f"<grey>{error_message}</grey>"))
-            print_formatted_text("")
+            print_formatted_text('')
+            print_formatted_text(HTML(f'<grey>{error_message}</grey>'))
+            print_formatted_text('')
             continue
 
         break
@@ -138,8 +138,8 @@ async def get_validated_input(
 def save_settings_confirmation() -> bool:
     return (
         cli_confirm(
-            "\nSave new settings? (They will take effect after restart)",
-            ["Yes, save", "No, discard"],
+            '\nSave new settings? (They will take effect after restart)',
+            ['Yes, save', 'No, discard'],
         )
         == 0
     )
@@ -160,20 +160,20 @@ async def modify_llm_settings_basic(
     session: PromptSession[str] = PromptSession(key_bindings=kb_cancel())
 
     # Set default provider - prefer 'anthropic' if available, otherwise use first
-    provider = "anthropic" if "anthropic" in provider_list else provider_list[0]
+    provider = 'anthropic' if 'anthropic' in provider_list else provider_list[0]
     model = None
     api_key = None
 
     try:
         # Show the default provider but allow changing it
         print_formatted_text(
-            HTML(f"\n<grey>Default provider: </grey><green>{provider}</green>"),
+            HTML(f'\n<grey>Default provider: </grey><green>{provider}</green>'),
         )
 
         # Show verified providers plus "Select another provider" option
-        provider_choices = verified_providers + ["Select another provider"]
+        provider_choices = verified_providers + ['Select another provider']
         provider_choice = cli_confirm(
-            "(Step 1/3) Select LLM Provider:",
+            '(Step 1/3) Select LLM Provider:',
             provider_choices,
         )
 
@@ -194,16 +194,16 @@ async def modify_llm_settings_basic(
                 is_valid = x in organized_models
                 if not is_valid:
                     print_formatted_text(
-                        HTML(f"<grey>Invalid provider selected: {x}</grey>"),
+                        HTML(f'<grey>Invalid provider selected: {x}</grey>'),
                     )
                 return is_valid
 
             provider = await get_validated_input(
                 session,
-                "(Step 1/3) Select LLM Provider (TAB for options, CTRL-c to cancel): ",
+                '(Step 1/3) Select LLM Provider (TAB for options, CTRL-c to cancel): ',
                 completer=provider_completer,
                 validator=provider_validator,
-                error_message="Invalid provider selected",
+                error_message='Invalid provider selected',
             )
 
         # Make sure the provider exists in organized_models
@@ -211,52 +211,52 @@ async def modify_llm_settings_basic(
             # If the provider doesn't exist, prefer 'anthropic' if available,
             # otherwise use the first provider
             provider = (
-                "anthropic"
-                if "anthropic" in organized_models
+                'anthropic'
+                if 'anthropic' in organized_models
                 else next(iter(organized_models.keys()))
             )
 
-        provider_models = organized_models[provider]["models"]
-        if provider == "openai":
+        provider_models = organized_models[provider]['models']
+        if provider == 'openai':
             provider_models = [
                 m for m in provider_models if m not in VERIFIED_OPENAI_MODELS
             ]
             provider_models = VERIFIED_OPENAI_MODELS + provider_models
-        if provider == "anthropic":
+        if provider == 'anthropic':
             provider_models = [
                 m for m in provider_models if m not in VERIFIED_ANTHROPIC_MODELS
             ]
             provider_models = VERIFIED_ANTHROPIC_MODELS + provider_models
-        if provider == "mistral":
+        if provider == 'mistral':
             provider_models = [
                 m for m in provider_models if m not in VERIFIED_MISTRAL_MODELS
             ]
             provider_models = VERIFIED_MISTRAL_MODELS + provider_models
 
         # Set default model to the best verified model for the provider
-        if provider == "anthropic" and VERIFIED_ANTHROPIC_MODELS:
+        if provider == 'anthropic' and VERIFIED_ANTHROPIC_MODELS:
             # Use the first model in the VERIFIED_ANTHROPIC_MODELS list as it's the best/newest
             default_model = VERIFIED_ANTHROPIC_MODELS[0]
-        elif provider == "openai" and VERIFIED_OPENAI_MODELS:
+        elif provider == 'openai' and VERIFIED_OPENAI_MODELS:
             # Use the first model in the VERIFIED_OPENAI_MODELS list as it's the best/newest
             default_model = VERIFIED_OPENAI_MODELS[0]
-        elif provider == "mistral" and VERIFIED_MISTRAL_MODELS:
+        elif provider == 'mistral' and VERIFIED_MISTRAL_MODELS:
             # Use the first model in the VERIFIED_MISTRAL_MODELS list as it's the best/newest
             default_model = VERIFIED_MISTRAL_MODELS[0]
         else:
             # For other providers, use the first model in the list
             default_model = (
-                provider_models[0] if provider_models else "claude-sonnet-4-20250514"
+                provider_models[0] if provider_models else 'claude-sonnet-4-20250514'
             )
 
         # Show the default model but allow changing it
         print_formatted_text(
-            HTML(f"\n<grey>Default model: </grey><green>{default_model}</green>"),
+            HTML(f'\n<grey>Default model: </grey><green>{default_model}</green>'),
         )
         change_model = (
             cli_confirm(
-                "Do you want to use a different model?",
-                [f"Use {default_model}", "Select another model"],
+                'Do you want to use a different model?',
+                [f'Use {default_model}', 'Select another model'],
             )
             == 1
         )
@@ -274,18 +274,18 @@ async def modify_llm_settings_basic(
                 if x not in provider_models:
                     print_formatted_text(
                         HTML(
-                            f"<yellow>Warning: {x} is not in the predefined list for provider {provider}. "
-                            f"Make sure this model name is correct.</yellow>",
+                            f'<yellow>Warning: {x} is not in the predefined list for provider {provider}. '
+                            f'Make sure this model name is correct.</yellow>',
                         ),
                     )
                 return True
 
             model = await get_validated_input(
                 session,
-                "(Step 2/3) Select LLM Model (TAB for options, CTRL-c to cancel): ",
+                '(Step 2/3) Select LLM Model (TAB for options, CTRL-c to cancel): ',
                 completer=model_completer,
                 validator=model_validator,
-                error_message="Model name cannot be empty",
+                error_message='Model name cannot be empty',
             )
         else:
             # Use the default model
@@ -293,8 +293,8 @@ async def modify_llm_settings_basic(
 
         api_key = await get_validated_input(
             session,
-            "(Step 3/3) Enter API Key (CTRL-c to cancel): ",
-            error_message="API Key cannot be empty",
+            '(Step 3/3) Enter API Key (CTRL-c to cancel): ',
+            error_message='API Key cannot be empty',
         )
 
     except (
@@ -324,7 +324,7 @@ async def modify_llm_settings_basic(
     agent_config = config.get_agent_config(config.default_agent)
     agent_config.condenser = LLMSummarizingCondenserConfig(
         llm_config=llm_config,
-        type="llm",
+        type='llm',
     )
     config.set_agent_config(agent_config, config.default_agent)
 
@@ -354,44 +354,44 @@ async def modify_llm_settings_advanced(
     try:
         custom_model = await get_validated_input(
             session,
-            "(Step 1/6) Custom Model (CTRL-c to cancel): ",
-            error_message="Custom Model cannot be empty",
+            '(Step 1/6) Custom Model (CTRL-c to cancel): ',
+            error_message='Custom Model cannot be empty',
         )
 
         base_url = await get_validated_input(
             session,
-            "(Step 2/6) Base URL (CTRL-c to cancel): ",
-            error_message="Base URL cannot be empty",
+            '(Step 2/6) Base URL (CTRL-c to cancel): ',
+            error_message='Base URL cannot be empty',
         )
 
         api_key = await get_validated_input(
             session,
-            "(Step 3/6) API Key (CTRL-c to cancel): ",
-            error_message="API Key cannot be empty",
+            '(Step 3/6) API Key (CTRL-c to cancel): ',
+            error_message='API Key cannot be empty',
         )
 
         agent_list = Agent.list_agents()
         agent_completer = FuzzyWordCompleter(agent_list)
         agent = await get_validated_input(
             session,
-            "(Step 4/6) Agent (TAB for options, CTRL-c to cancel): ",
+            '(Step 4/6) Agent (TAB for options, CTRL-c to cancel): ',
             completer=agent_completer,
             validator=lambda x: x in agent_list,
-            error_message="Invalid agent selected",
+            error_message='Invalid agent selected',
         )
 
         enable_confirmation_mode = (
             cli_confirm(
-                question="(Step 5/6) Confirmation Mode (CTRL-c to cancel):",
-                choices=["Enable", "Disable"],
+                question='(Step 5/6) Confirmation Mode (CTRL-c to cancel):',
+                choices=['Enable', 'Disable'],
             )
             == 0
         )
 
         enable_memory_condensation = (
             cli_confirm(
-                question="(Step 6/6) Memory Condensation (CTRL-c to cancel):",
-                choices=["Enable", "Disable"],
+                question='(Step 6/6) Memory Condensation (CTRL-c to cancel):',
+                choices=['Enable', 'Disable'],
             )
             == 0
         )
@@ -425,10 +425,10 @@ async def modify_llm_settings_advanced(
     if enable_memory_condensation:
         agent_config.condenser = LLMSummarizingCondenserConfig(
             llm_config=llm_config,
-            type="llm",
+            type='llm',
         )
     else:
-        agent_config.condenser = NoOpCondenserConfig(type="noop")
+        agent_config.condenser = NoOpCondenserConfig(type='noop')
     config.set_agent_config(agent_config)
 
     settings = await settings_store.load()

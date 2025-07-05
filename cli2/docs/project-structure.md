@@ -29,6 +29,51 @@ OpenHands（旧OpenDevin）は、AI駆動のソフトウェア開発エージェ
 | `microagents/` | 特定タスク用のマイクロエージェント定義 | **高** - CLI経由で利用可能 |
 | `dev_config/` | 開発環境設定 | **低** - 開発ツール設定 |
 
+### openhands/ ディレクトリ詳細
+
+#### 高CLI関連性（CLI動作に必須）
+
+| ディレクトリ名 | 役割 | CLI関連性 | 配布必要性 |
+|--------------|------|----------|-----------|
+| `openhands/cli/` | **対話型CLIの直接実装**。main.py、commands.py、tui.py、settings.py等 | **最高** - CLI機能の中核 | **必須** |
+| `openhands/core/` | コア機能。設定、ログ、メッセージ処理、メインループ等 | **最高** - CLI動作の基盤 | **必須** |
+| `openhands/controller/` | エージェント制御ロジック。agent_controller.py、action_parser.py等 | **最高** - エージェント実行制御 | **必須** |
+| `openhands/events/` | イベントシステム。Action/Observation、EventStream等 | **最高** - エージェント通信の中核 | **必須** |
+| `openhands/llm/` | 言語モデル統合。LLM接続、ストリーミング、メトリクス等 | **最高** - AI機能の中核 | **必須** |
+| `openhands/memory/` | エージェントメモリ管理。会話履歴、コンテキスト管理等 | **最高** - 対話継続に必須 | **必須** |
+| `openhands/microagent/` | 特化エージェント機能。プロンプト、タイプ定義等 | **高** - 専門タスク対応 | **必須** |
+| `openhands/runtime/` | 実行環境。コマンド実行、ブラウザ操作、Docker等 | **最高** - アクション実行基盤 | **必須** |
+
+#### 中CLI関連性（機能拡張・品質向上）
+
+| ディレクトリ名 | 役割 | CLI関連性 | 配布必要性 |
+|--------------|------|----------|-----------|
+| `openhands/agenthub/` | 各種エージェント実装。codeact、browsing、dummy等 | **高** - エージェント選択肢 | **必須** |
+| `openhands/storage/` | データ永続化。会話保存、ファイル管理等 | **中** - データ保持機能 | **必須** |
+| `openhands/security/` | セキュリティ機能。アクション解析、制限等 | **中** - 安全性確保 | **必須** |
+| `openhands/io/` | 入出力処理。JSON、ファイルI/O等 | **中** - データ交換 | **必須** |
+
+#### 低CLI関連性（特定用途・開発支援）
+
+| ディレクトリ名 | 役割 | CLI関連性 | 配布必要性 |
+|--------------|------|----------|-----------|
+| `openhands/server/` | Webサーバー機能。HTTP API、セッション管理等 | **低** - CLI単体では不要 | **削除候補** |
+| `openhands/integrations/` | 外部サービス連携。GitHub、GitLab、Bitbucket等 | **中** - 特定機能で使用 | **保持** |
+| `openhands/resolver/` | 課題解決機能。PR作成、パッチ適用等 | **中** - 特定タスクで使用 | **保持** |
+| `openhands/experiments/` | 実験的機能。experiment_manager.py | **低** - 開発・研究用 | **削除候補** |
+| `openhands/utils/` | ユーティリティ関数 | **中** - 補助機能 | **保持** |
+| `openhands/critic/` | コードレビュー機能。finish_critic.py等 | **低** - 特定用途 | **削除候補** |
+| `openhands/linter/` | コードリンティング機能 | **低** - 開発支援 | **削除候補** |
+| `openhands/mcp/` | Model Context Protocol実装 | **低** - 特定プロトコル | **削除候補** |
+
+#### 設定・メタファイル
+
+| ファイル名 | 役割 | CLI関連性 | 配布必要性 |
+|-----------|------|----------|-----------|
+| `openhands/__init__.py` | パッケージ初期化、バージョン管理 | **高** - パッケージ定義 | **必須** |
+| `openhands/py.typed` | 型情報マーカー | **低** - 開発支援 | **保持** |
+| `openhands/README.md` | アーキテクチャ説明 | **低** - ドキュメント | **削除候補** |
+
 ### 現在の課題
 
 **配布関係の複雑性**: 元々オープンソースプロジェクトとして設計されているため、配布用にカスタマイズしようとすると以下の問題が発生：
@@ -164,5 +209,10 @@ rm filename.backup
 - `openhands/cli/main.py` - CLI実装の確認
 - `MANIFEST.in` - パッケージング設定の確認
 - `pytest.ini` - テスト設定の確認
+- `openhands/__init__.py` - パッケージ初期化とバージョン管理の確認
+- `openhands/README.md` - OpenHandsアーキテクチャ概要の確認
+- `openhands/` ディレクトリ構造の直接調査（find、ls コマンド使用）
+- 各サブディレクトリの役割分析（CLI関連性の判定）
 - プロジェクトディレクトリ構造の直接調査
 - 2024年12月7日 - サブスク加入者向け配布最適化対応
+- 2025年7月4日 - openhands/ディレクトリ詳細分析追加

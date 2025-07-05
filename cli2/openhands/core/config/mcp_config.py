@@ -72,7 +72,7 @@ class MCPConfig(BaseModel):
     stdio_servers: list[MCPStdioServerConfig] = Field(default_factory=list)
     shttp_servers: list[MCPSHTTPServerConfig] = Field(default_factory=list)
 
-    model_config = {"extra": "forbid"}
+    model_config = {'extra': 'forbid'}
 
     @staticmethod
     def _normalize_servers(servers_data: list[dict | str]) -> list[dict]:
@@ -80,20 +80,20 @@ class MCPConfig(BaseModel):
         normalized = []
         for server in servers_data:
             if isinstance(server, str):
-                normalized.append({"url": server})
+                normalized.append({'url': server})
             else:
                 normalized.append(server)
         return normalized
 
-    @model_validator(mode="before")
+    @model_validator(mode='before')
     def convert_string_urls(cls, data):
         """Convert string URLs to MCPSSEServerConfig objects."""
         if isinstance(data, dict):
-            if "sse_servers" in data:
-                data["sse_servers"] = cls._normalize_servers(data["sse_servers"])
+            if 'sse_servers' in data:
+                data['sse_servers'] = cls._normalize_servers(data['sse_servers'])
 
-            if "shttp_servers" in data:
-                data["shttp_servers"] = cls._normalize_servers(data["shttp_servers"])
+            if 'shttp_servers' in data:
+                data['shttp_servers'] = cls._normalize_servers(data['shttp_servers'])
 
         return data
 
@@ -103,19 +103,19 @@ class MCPConfig(BaseModel):
 
         # Check for duplicate server URLs
         if len(set(urls)) != len(urls):
-            raise ValueError("Duplicate MCP server URLs are not allowed")
+            raise ValueError('Duplicate MCP server URLs are not allowed')
 
         # Validate URLs
         for url in urls:
             try:
                 result = urlparse(url)
                 if not all([result.scheme, result.netloc]):
-                    raise ValueError(f"Invalid URL format: {url}")
+                    raise ValueError(f'Invalid URL format: {url}')
             except Exception as e:
-                raise ValueError(f"Invalid URL {url}: {e!s}")
+                raise ValueError(f'Invalid URL {url}: {e!s}')
 
     @classmethod
-    def from_toml_section(cls, data: dict) -> dict[str, "MCPConfig"]:
+    def from_toml_section(cls, data: dict) -> dict[str, 'MCPConfig']:
         """
         Create a mapping of MCPConfig instances from a toml dictionary representing the [mcp] section.
 
@@ -129,63 +129,63 @@ class MCPConfig(BaseModel):
 
         try:
             # Convert all entries in sse_servers to MCPSSEServerConfig objects
-            if "sse_servers" in data:
-                data["sse_servers"] = cls._normalize_servers(data["sse_servers"])
+            if 'sse_servers' in data:
+                data['sse_servers'] = cls._normalize_servers(data['sse_servers'])
                 servers = []
-                for server in data["sse_servers"]:
+                for server in data['sse_servers']:
                     servers.append(MCPSSEServerConfig(**server))
-                data["sse_servers"] = servers
+                data['sse_servers'] = servers
 
             # Convert all entries in stdio_servers to MCPStdioServerConfig objects
-            if "stdio_servers" in data:
+            if 'stdio_servers' in data:
                 servers = []
-                for server in data["stdio_servers"]:
+                for server in data['stdio_servers']:
                     servers.append(MCPStdioServerConfig(**server))
-                data["stdio_servers"] = servers
+                data['stdio_servers'] = servers
 
-            if "shttp_servers" in data:
-                data["shttp_servers"] = cls._normalize_servers(data["shttp_servers"])
+            if 'shttp_servers' in data:
+                data['shttp_servers'] = cls._normalize_servers(data['shttp_servers'])
                 servers = []
-                for server in data["shttp_servers"]:
+                for server in data['shttp_servers']:
                     servers.append(MCPSHTTPServerConfig(**server))
-                data["shttp_servers"] = servers
+                data['shttp_servers'] = servers
 
             # Create SSE config if present
             mcp_config = MCPConfig.model_validate(data)
             mcp_config.validate_servers()
 
             # Create the main MCP config
-            mcp_mapping["mcp"] = cls(
+            mcp_mapping['mcp'] = cls(
                 sse_servers=mcp_config.sse_servers,
                 stdio_servers=mcp_config.stdio_servers,
             )
         except ValidationError as e:
-            raise ValueError(f"Invalid MCP configuration: {e}")
+            raise ValueError(f'Invalid MCP configuration: {e}')
         return mcp_mapping
 
 
 class OpenHandsMCPConfig:
     @staticmethod
-    def add_search_engine(app_config: "OpenHandsConfig") -> MCPStdioServerConfig | None:
+    def add_search_engine(app_config: 'OpenHandsConfig') -> MCPStdioServerConfig | None:
         """Add search engine to the MCP config"""
         if (
             app_config.search_api_key
-            and app_config.search_api_key.get_secret_value().startswith("tvly-")
+            and app_config.search_api_key.get_secret_value().startswith('tvly-')
         ):
-            logger.info("Adding search engine to MCP config")
+            logger.info('Adding search engine to MCP config')
             return MCPStdioServerConfig(
-                name="tavily",
-                command="npx",
-                args=["-y", "tavily-mcp@0.2.1"],
-                env={"TAVILY_API_KEY": app_config.search_api_key.get_secret_value()},
+                name='tavily',
+                command='npx',
+                args=['-y', 'tavily-mcp@0.2.1'],
+                env={'TAVILY_API_KEY': app_config.search_api_key.get_secret_value()},
             )
-        logger.warning("No search engine API key found, skipping search engine")
+        logger.warning('No search engine API key found, skipping search engine')
         # Do not add search engine to MCP config in SaaS mode since it will be added by the OpenHands server
         return None
 
     @staticmethod
     def create_default_mcp_server_config(
-        host: str, config: "OpenHandsConfig", user_id: str | None = None,
+        host: str, config: 'OpenHandsConfig', user_id: str | None = None,
     ) -> tuple[MCPSHTTPServerConfig, list[MCPStdioServerConfig]]:
         """
         Create a default MCP server configuration.
@@ -201,13 +201,13 @@ class OpenHandsMCPConfig:
         if search_engine_stdio_server:
             stdio_servers.append(search_engine_stdio_server)
 
-        shttp_servers = MCPSHTTPServerConfig(url=f"http://{host}/mcp/mcp", api_key=None)
+        shttp_servers = MCPSHTTPServerConfig(url=f'http://{host}/mcp/mcp', api_key=None)
         return shttp_servers, stdio_servers
 
 
 openhands_mcp_config_cls = os.environ.get(
-    "OPENHANDS_MCP_CONFIG_CLS",
-    "openhands.core.config.mcp_config.OpenHandsMCPConfig",
+    'OPENHANDS_MCP_CONFIG_CLS',
+    'openhands.core.config.mcp_config.OpenHandsMCPConfig',
 )
 
 OpenHandsMCPConfigImpl = get_impl(OpenHandsMCPConfig, openhands_mcp_config_cls)
