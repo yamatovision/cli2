@@ -1,3 +1,212 @@
+# OpenHands アーキテクチャ
+
+このディレクトリには、OpenHandsのコアコンポーネントが含まれています。
+
+この図は、各コンポーネントの役割と、それらがどのように通信・連携するかの概要を示しています。
+![OpenHands システムアーキテクチャ図（2024年7月4日）](../docs/static/img/system_architecture_overview.png)
+
+## クラス
+
+OpenHandsの主要なクラスは以下の通りです：
+
+| クラス名 | 役割 | 詳細 |
+|---------|------|------|
+| **LLM** | 大規模言語モデルとの相互作用を仲介 | LiteLLMのおかげで、あらゆる基盤となる補完モデルと連携可能 |
+| **Agent** | 現在の状態を確認し、アクションを生成 | 最終目標に一歩近づくアクションを生成する責任 |
+| **AgentController** | エージェントの制御とメインループ | エージェントを初期化し、状態を管理し、段階的に前進させる |
+| **State** | エージェントのタスクの現在状態 | 現在のステップ、最近のイベント履歴、長期計画などを含む |
+| **EventStream** | イベントの中央ハブ | 任意のコンポーネントがイベントを公開・監視可能 |
+| **Runtime** | アクションの実行と観察の送信 | アクションを実行し、観察を送り返す責任 |
+| **Server** | HTTP経由でのセッション仲介 | フロントエンドを駆動するためのHTTP仲介 |
+
+### イベントシステム
+
+| 要素 | 種類 | 説明 |
+|------|------|------|
+| **Event** | 基底クラス | アクションまたは観察の基底 |
+| **Action** | イベント | ファイル編集、コマンド実行、メッセージ送信などのリクエスト |
+| **Observation** | イベント | 環境から収集された情報（ファイル内容、コマンド出力など） |
+
+### ランタイムコンポーネント
+
+| コンポーネント | 役割 | 詳細 |
+|---------------|------|------|
+| **Sandbox** | コマンド実行環境 | Docker内でのコマンド実行など |
+| **Session** | セッション管理 | 単一のEventStream、AgentController、Runtimeを保持 |
+| **ConversationManager** | 会話管理 | アクティブセッションのリスト保持とルーティング |
+
+## 制御フロー
+
+エージェントを駆動する基本的なループ（疑似コード）：
+
+```python
+while True:
+  prompt = agent.generate_prompt(state)
+  response = llm.completion(prompt)
+  action = agent.parse_response(response)
+  observation = runtime.run(action)
+  state = state.update(action, observation)
+```
+
+実際には、これらの大部分はEventStreamを介したメッセージパッシングによって実現されます。
+EventStreamは、OpenHandsにおけるすべての通信のバックボーンとして機能します。
+
+```mermaid
+flowchart LR
+  Agent--Actions-->AgentController
+  AgentController--State-->Agent
+  AgentController--Actions-->EventStream
+  EventStream--Observations-->AgentController
+  Runtime--Observations-->EventStream
+  EventStream--Actions-->Runtime
+  Frontend--Actions-->EventStream
+```
+
+## ランタイムアーキテクチャ
+
+OpenHands Docker Runtimeは、AIエージェントのアクションを安全かつ柔軟に実行できるコアコンポーネントです。
+Dockerを使用してサンドボックス環境を作成し、ホストシステムにリスクを与えることなく任意のコードを安全に実行できます。
+
+### なぜサンドボックス化されたランタイムが必要なのか？
+
+OpenHandsが安全で隔離された環境で任意のコードを実行する必要がある理由：
+
+| 理由 | 説明 |
+|------|------|
+| **セキュリティ** | 信頼できないコードの実行は、ホストシステムに重大なリスクをもたらす可能性があります。サンドボックス環境により、悪意のあるコードがホストシステムのリソースにアクセスしたり変更したりすることを防ぎます |
+| **一貫性** | サンドボックス環境により、異なるマシンや設定間でのコード実行の一貫性が保証され、「私のマシンでは動く」問題を排除します |
+| **リソース制御** | サンドボックス化により、リソース割り当てと使用量をより適切に制御でき、暴走プロセスがホストシステムに影響を与えることを防ぎます |
+| **隔離** | 異なるプロジェクトやユーザーが、互いやホストシステムに干渉することなく隔離された環境で作業できます |
+| **再現性** | サンドボックス環境により、実行環境が一貫性があり制御可能であるため、バグや問題の再現が容易になります |
+
+### ランタイムの動作原理
+
+OpenHands Runtimeシステムは、Dockerコンテナで実装されたクライアント・サーバーアーキテクチャを使用します。動作概要：
+
+```mermaid
+graph TD
+    A[ユーザー提供のカスタムDockerイメージ] --> B[OpenHandsバックエンド]
+    B -->|ビルド| C[OH Runtimeイメージ]
+    C -->|起動| D[Action Executor]
+    D -->|初期化| E[ブラウザ]
+    D -->|初期化| F[Bashシェル]
+    D -->|初期化| G[プラグイン]
+    G -->|初期化| L[Jupyterサーバー]
+
+    B -->|生成| H[エージェント]
+    B -->|生成| I[EventStream]
+    I <--->|REST API経由で
+    アクション実行し
+    観察を取得
+    | D
+
+    H -->|アクション生成| I
+    I -->|観察取得| H
+
+    subgraph "Dockerコンテナ"
+    D
+    E
+    F
+    G
+    L
+    end
+```
+
+#### 実行フロー
+
+| ステップ | 説明 |
+|---------|------|
+| **1. ユーザー入力** | ユーザーがカスタムベースDockerイメージを提供 |
+| **2. イメージビルド** | OpenHandsがユーザー提供イメージをベースに新しいDockerイメージ（「OH runtimeイメージ」）をビルド。このイメージにはOpenHands固有のコード（主に「runtimeクライアント」）が含まれる |
+| **3. コンテナ起動** | OpenHands開始時に、OH runtimeイメージを使用してDockerコンテナを起動 |
+| **4. Action Execution Server初期化** | アクション実行サーバーがコンテナ内で`ActionExecutor`を初期化し、bashシェルなどの必要なコンポーネントを設定し、指定されたプラグインを読み込み |
+| **5. 通信** | OpenHandsバックエンド（`openhands/runtime/impl/eventstream/eventstream_runtime.py`）がRESTful API経由でアクション実行サーバーと通信し、アクションを送信して観察を受信 |
+| **6. アクション実行** | runtimeクライアントがバックエンドからアクションを受信し、サンドボックス環境で実行し、観察を送り返す |
+| **7. 観察返却** | アクション実行サーバーが実行結果を観察としてOpenHandsバックエンドに送信 |
+
+#### クライアントの役割
+
+| 機能 | 説明 |
+|------|------|
+| **仲介** | OpenHandsバックエンドとサンドボックス環境間の仲介役 |
+| **実行** | 様々なタイプのアクション（シェルコマンド、ファイル操作、Pythonコードなど）をコンテナ内で安全に実行 |
+| **状態管理** | 現在の作業ディレクトリや読み込まれたプラグインを含む、サンドボックス環境の状態を管理 |
+| **フォーマット** | 観察をバックエンドに返却し、結果処理のための一貫したインターフェースを保証 |
+
+### OH Runtimeイメージのビルドと保守
+
+OpenHandsのランタイムイメージのビルドと管理アプローチは、本番環境と開発環境の両方でDockerイメージを作成・保守する際の効率性、一貫性、柔軟性を保証します。
+
+詳細に興味がある場合は、[関連コード](https://github.com/All-Hands-AI/OpenHands/blob/main/openhands/runtime/utils/runtime_build.py)をご確認ください。
+
+#### イメージタグシステム
+
+OpenHandsは、再現性と柔軟性のバランスを取るために、ランタイムイメージに3つのタグシステムを使用します。
+タグは以下の2つの形式のいずれかになります：
+
+| タグタイプ | 形式 | 例 |
+|-----------|------|-----|
+| **Versioned Tag** | `oh_v{openhands_version}_{base_image}` | `oh_v0.9.9_nikolaik_s_python-nodejs_t_python3.12-nodejs22` |
+| **Lock Tag** | `oh_v{openhands_version}_{16_digit_lock_hash}` | `oh_v0.9.9_1234567890abcdef` |
+| **Source Tag** | `oh_v{openhands_version}_{16_digit_lock_hash}_{16_digit_source_hash}` | `oh_v0.9.9_1234567890abcdef_1234567890abcdef` |
+
+##### Source Tag - 最も具体的
+
+ソースディレクトリのディレクトリハッシュのMD5の最初の16桁です。これにより、openhandsソースのみのハッシュが得られます。
+
+##### Lock Tag
+
+このハッシュは以下のMD5の最初の16桁から構築されます：
+
+- イメージがビルドされたベースイメージの名前（例：`nikolaik/python-nodejs:python3.12-nodejs22`）
+- イメージに含まれる`pyproject.toml`の内容
+- イメージに含まれる`poetry.lock`の内容
+
+これにより、ソースコードとは独立したOpenhandsの依存関係のハッシュが効果的に得られます。
+
+##### Versioned Tag - 最も汎用的
+
+このタグは、openhandsバージョンとベースイメージ名（タグ標準に適合するよう変換）の連結です。
+
+#### ビルドプロセス
+
+イメージ生成時の優先順位：
+
+| 優先度 | 条件 | 動作 | 説明 |
+|--------|------|------|------|
+| **1. 再ビルドなし** | 同じ**最も具体的なsource tag**のイメージが存在 | 既存イメージを使用 | ビルドは実行されない |
+| **2. 最速再ビルド** | **汎用lock tag**のイメージが存在 | lock tagベースでビルド | `poetry install`や`apt-get`などのインストールステップをバイパスし、現在のソースコードをコピーする最終操作のみ実行。新しいイメージは**source**タグのみでタグ付け |
+| **3. 普通の再ビルド** | **source**も**lock**タグも存在しない | versioned tagベースでビルド | versioned tagイメージでは、ほとんどの依存関係が既にインストールされているため時間を節約 |
+| **4. 最遅再ビルド** | 3つのタグすべてが存在しない | ベースイメージから新規ビルド | より遅い操作。新しいイメージは**source**、**lock**、**versioned**タグすべてでタグ付け |
+
+このタグアプローチにより、OpenHandsは開発環境と本番環境の両方を効率的に管理できます：
+
+1. 同一のソースコードとDockerfileは常に同じイメージを生成（ハッシュベースタグ経由）
+2. 軽微な変更が発生した際に、システムは迅速にイメージを再ビルド可能（最近の互換イメージを活用）
+3. **lock**タグ（例：`runtime:oh_v0.9.3_1234567890abcdef`）は、特定のベースイメージ、依存関係、OpenHandsバージョンの組み合わせの最新ビルドを常に指す
+
+### ランタイムプラグインシステム
+
+OpenHands Runtimeは、機能拡張とランタイム環境のカスタマイズを可能にするプラグインシステムをサポートしています。プラグインは、runtimeクライアントの起動時に初期化されます。
+
+独自のプラグインを実装したい場合は、[Jupyterプラグインの例](https://github.com/All-Hands-AI/OpenHands/blob/ecf4aed28b0cf7c18d4d8ff554883ba182fc6bdd/openhands/runtime/plugins/jupyter/__init__.py#L21-L55)をご確認ください。
+
+*プラグインシステムの詳細はまだ構築中です - 貢献を歓迎します！*
+
+#### プラグインシステムの主要側面
+
+| 側面 | 説明 |
+|------|------|
+| **プラグイン定義** | プラグインは、ベース`Plugin`クラスを継承するPythonクラスとして定義 |
+| **プラグイン登録** | 利用可能なプラグインは`ALL_PLUGINS`辞書に登録 |
+| **プラグイン指定** | プラグインは`Agent.sandbox_plugins: list[PluginRequirement]`に関連付け。ユーザーはランタイム初期化時に読み込むプラグインを指定可能 |
+| **初期化** | プラグインは、runtimeクライアント開始時に非同期で初期化 |
+| **使用** | runtimeクライアントは、初期化されたプラグインを使用して機能を拡張可能（例：IPythonセル実行のためのJupyterPlugin） |
+
+`Runtime`について詳しく学ぶには、[ドキュメント](https://docs.all-hands.dev/usage/architecture/runtime)を参照してください。
+
+---
+
 # OpenHands CLI リファクタリングプロジェクト
 
 ## プロジェクト概要
@@ -57,7 +266,7 @@ OpenHands（旧OpenDevin）は、AI駆動のソフトウェア開発エージェ
 
 | ディレクトリ名 | 役割 | CLI関連性 | 配布必要性 |
 |--------------|------|----------|-----------|
-| `openhands/server/` | Webサーバー機能。HTTP API、セッション管理等 | **低** - CLI単体では不要 | **削除候補** |
+| `openhands/server/` | 型定義のみ（AppMode等）。Web機能は削除済み | **高** - 型定義として必要 | **最小化済み** |
 | `openhands/integrations/` | 外部サービス連携。GitHub、GitLab、Bitbucket等 | **中** - 特定機能で使用 | **保持** |
 | `openhands/resolver/` | 課題解決機能。PR作成、パッチ適用等 | **中** - 特定タスクで使用 | **保持** |
 | `openhands/experiments/` | 実験的機能。experiment_manager.py | **低** - 開発・研究用 | **削除候補** |
