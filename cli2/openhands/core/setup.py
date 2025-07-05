@@ -1,6 +1,7 @@
 import hashlib
 import os
 import uuid
+from types import MappingProxyType
 from typing import Callable
 
 from pydantic import SecretStr
@@ -14,11 +15,11 @@ from openhands.core.config import (
 )
 from openhands.core.logger import openhands_logger as logger
 from openhands.events import EventStream
-from openhands.events.event import Event
 from openhands.integrations.provider import ProviderToken, ProviderType
 from openhands.llm.llm import LLM
 from openhands.memory.memory import Memory
-from openhands.microagent.microagent import BaseMicroagent
+
+# Microagent functionality has been removed
 from openhands.runtime import get_runtime_cls
 from openhands.runtime.base import Runtime
 from openhands.security import SecurityAnalyzer, options
@@ -112,7 +113,7 @@ def initialize_repository_for_runtime(
         provider_tokens[ProviderType.BITBUCKET] = ProviderToken(token=bitbucket_token)
 
     secret_store = (
-        UserSecrets(provider_tokens=provider_tokens) if provider_tokens else None
+        UserSecrets(provider_tokens=MappingProxyType(provider_tokens)) if provider_tokens else None
     )
     immutable_provider_tokens = secret_store.provider_tokens if secret_store else None
 
@@ -164,11 +165,7 @@ def create_memory(
         # sets available hosts
         memory.set_runtime_info(runtime, {})
 
-        # loads microagents from repo/.openhands/microagents
-        microagents: list[BaseMicroagent] = runtime.get_microagents_from_selected_repo(
-            selected_repository,
-        )
-        memory.load_user_workspace_microagents(microagents)
+        # Microagent functionality has been removed
 
         if selected_repository and repo_directory:
             memory.set_repository_info(selected_repository, repo_directory)

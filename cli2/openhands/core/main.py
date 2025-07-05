@@ -120,7 +120,7 @@ async def run_controller(
 
     event_stream = runtime.event_stream
 
-    # when memory is created, it will load the microagents from the selected repository
+    # Microagent functionality has been removed
     if memory is None:
         memory = create_memory(
             runtime=runtime,

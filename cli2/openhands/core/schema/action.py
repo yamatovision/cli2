@@ -87,7 +87,7 @@ class ActionType(str, Enum):
     """Send a PR to github."""
 
     RECALL = 'recall'
-    """Retrieves content from a user workspace, microagent, or other source."""
+    """Retrieves content from a user workspace or other source."""
 
     CONDENSATION = 'condensation'
     """Condenses a list of events into a summary."""

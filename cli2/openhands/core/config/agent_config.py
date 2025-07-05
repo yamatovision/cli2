@@ -35,8 +35,7 @@ class AgentConfig(BaseModel):
     """Whether to enable prompt extensions"""
     enable_mcp: bool = Field(default=True)
     """Whether to enable MCP tools"""
-    disabled_microagents: list[str] = Field(default_factory=list)
-    """A list of microagents to disable (by name, without .py extension, e.g. ["github", "lint"]). Default is None."""
+    # Microagent functionality has been removed
     enable_history_truncation: bool = Field(default=True)
     """Whether history should be truncated to continue the session when hitting LLM context length limit."""
     enable_som_visual_browsing: bool = Field(default=True)

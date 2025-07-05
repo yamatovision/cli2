@@ -11,7 +11,6 @@ from openhands.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentThinkAction,
-
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -33,7 +32,6 @@ from openhands.events.observation import (
     UserRejectObservation,
 )
 from openhands.events.observation.agent import (
-    MicroagentKnowledge,
     RecallObservation,
 )
 from openhands.events.observation.error import ErrorObservation
@@ -385,7 +383,7 @@ class ConversationMemory:
             text = truncate_content(text, max_message_chars)
 
             # Create message content with text
-            content = [TextContent(text=text)]
+            content: list[TextContent | ImageContent] = [TextContent(text=text)]
 
             # Add image URLs if available and vision is active
             if vision_is_active and obs.image_urls:
@@ -399,17 +397,15 @@ class ConversationMemory:
                     content.append(ImageContent(image_urls=valid_image_urls))
                     if invalid_count > 0:
                         # Add text indicating some images were filtered
-                        content[
-                            0
-                        ].text += f'\n\nNote: {invalid_count} invalid or empty image(s) were filtered from this output. The agent may need to use alternative methods to access visual information.'
+                        if isinstance(content[0], TextContent):
+                            content[0].text += f'\n\nNote: {invalid_count} invalid or empty image(s) were filtered from this output. The agent may need to use alternative methods to access visual information.'
                 else:
                     logger.debug(
                         'IPython observation has image URLs but none are valid'
                     )
                     # Add text indicating all images were filtered
-                    content[
-                        0
-                    ].text += f'\n\nNote: All {len(obs.image_urls)} image(s) in this output were invalid or empty and have been filtered. The agent should use alternative methods to access visual information.'
+                    if isinstance(content[0], TextContent):
+                        content[0].text += f'\n\nNote: All {len(obs.image_urls)} image(s) in this output were invalid or empty and have been filtered. The agent should use alternative methods to access visual information.'
 
             message = Message(role='user', content=content)
         elif isinstance(obs, FileEditObservation):
@@ -438,11 +434,11 @@ class ConversationMemory:
                     image_type = 'screenshot'
 
                 # Create message content with text
-                content = [TextContent(text=text)]
+                browser_content: list[TextContent | ImageContent] = [TextContent(text=text)]
 
                 # Only add ImageContent if we have a valid image URL
-                if self._is_valid_image_url(image_url):
-                    content.append(ImageContent(image_urls=[image_url]))
+                if image_url and self._is_valid_image_url(image_url):
+                    browser_content.append(ImageContent(image_urls=[image_url]))
                     logger.debug(f'Vision enabled for browsing, showing {image_type}')
                 else:
                     if image_url:
@@ -450,19 +446,17 @@ class ConversationMemory:
                             f'Invalid image URL format for {image_type}: {image_url[:50]}...'
                         )
                         # Add text indicating the image was filtered
-                        content[
-                            0
-                        ].text += f'\n\nNote: The {image_type} for this webpage was invalid or empty and has been filtered. The agent should use alternative methods to access visual information about the webpage.'
+                        if isinstance(browser_content[0], TextContent):
+                            browser_content[0].text += f'\n\nNote: The {image_type} for this webpage was invalid or empty and has been filtered. The agent should use alternative methods to access visual information about the webpage.'
                     else:
                         logger.debug(
                             'Vision enabled for browsing, but no valid image available'
                         )
                         # Add text indicating no image was available
-                        content[
-                            0
-                        ].text += '\n\nNote: No visual information (screenshot or set of marks) is available for this webpage. The agent should rely on the text content above.'
+                        if isinstance(browser_content[0], TextContent):
+                            browser_content[0].text += '\n\nNote: No visual information (screenshot or set of marks) is available for this webpage. The agent should rely on the text content above.'
 
-                message = Message(role='user', content=content)
+                message = Message(role='user', content=browser_content)
             else:
                 message = Message(
                     role='user',
@@ -539,20 +533,11 @@ class ConversationMemory:
                 has_repo_instructions = bool(repo_instructions.strip())
                 has_conversation_instructions = conversation_instructions is not None
 
-                # Filter and process microagent knowledge
-                filtered_agents = []
-                if obs.microagent_knowledge:
-                    # Exclude disabled microagents
-                    filtered_agents = [
-                        agent
-                        for agent in obs.microagent_knowledge
-                        if agent.name not in self.agent_config.disabled_microagents
-                    ]
-
-                has_microagent_knowledge = bool(filtered_agents)
+                # Microagent functionality has been removed
+                # has_microagent_knowledge removed
 
                 # Generate appropriate content based on what is present
-                message_content = []
+                message_content: list[TextContent | ImageContent] = []
 
                 # Build the workspace context information
                 if (
@@ -571,14 +556,7 @@ class ConversationMemory:
                     )
                     message_content.append(TextContent(text=formatted_workspace_text))
 
-                # Add microagent knowledge if present
-                if has_microagent_knowledge:
-                    formatted_microagent_text = (
-                        self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-                    )
-                    message_content.append(TextContent(text=formatted_microagent_text))
+                # Microagent functionality has been removed
 
                 # Return the combined message if we have any content
                 if message_content:
@@ -586,34 +564,7 @@ class ConversationMemory:
                 else:
                     return []
             elif obs.recall_type == RecallType.KNOWLEDGE:
-                # Use prompt manager to build the microagent info
-                # First, filter out agents that appear in earlier RecallObservations
-                filtered_agents = self._filter_agents_in_microagent_obs(
-                    obs, current_index, events or []
-                )
-
-                # Create and return a message if there is microagent knowledge to include
-                if filtered_agents:
-                    # Exclude disabled microagents
-                    filtered_agents = [
-                        agent
-                        for agent in filtered_agents
-                        if agent.name not in self.agent_config.disabled_microagents
-                    ]
-
-                    # Only proceed if we still have agents after filtering out disabled ones
-                    if filtered_agents:
-                        formatted_text = self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-
-                        return [
-                            Message(
-                                role='user', content=[TextContent(text=formatted_text)]
-                            )
-                        ]
-
-                # Return empty list if no microagents to include or all were disabled
+                # Microagent functionality has been removed
                 return []
         elif (
             isinstance(obs, RecallObservation)
@@ -657,53 +608,7 @@ class ConversationMemory:
                 ].cache_prompt = True  # Last item inside the message content
                 break
 
-    def _filter_agents_in_microagent_obs(
-        self, obs: RecallObservation, current_index: int, events: list[Event]
-    ) -> list[MicroagentKnowledge]:
-        """Filter out agents that appear in earlier RecallObservations.
 
-        Args:
-            obs: The current RecallObservation to filter
-            current_index: The index of the current event in the events list
-            events: The list of all events
-
-        Returns:
-            list[MicroagentKnowledge]: The filtered list of microagent knowledge
-        """
-        if obs.recall_type != RecallType.KNOWLEDGE:
-            return obs.microagent_knowledge
-
-        # For each agent in the current microagent observation, check if it appears in any earlier microagent observation
-        filtered_agents = []
-        for agent in obs.microagent_knowledge:
-            # Keep this agent if it doesn't appear in any earlier observation
-            # that is, if this is the first microagent observation with this microagent
-            if not self._has_agent_in_earlier_events(agent.name, current_index, events):
-                filtered_agents.append(agent)
-
-        return filtered_agents
-
-    def _has_agent_in_earlier_events(
-        self, agent_name: str, current_index: int, events: list[Event]
-    ) -> bool:
-        """Check if an agent appears in any earlier RecallObservation in the event list.
-
-        Args:
-            agent_name: The name of the agent to look for
-            current_index: The index of the current event in the events list
-            events: The list of all events
-
-        Returns:
-            bool: True if the agent appears in an earlier RecallObservation, False otherwise
-        """
-        for event in events[:current_index]:
-            # Note that this check includes the WORKSPACE_CONTEXT
-            if isinstance(event, RecallObservation):
-                if any(
-                    agent.name == agent_name for agent in event.microagent_knowledge
-                ):
-                    return True
-        return False
 
     @staticmethod
     def _filter_unmatched_tool_calls(
