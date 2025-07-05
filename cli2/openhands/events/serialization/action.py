@@ -11,7 +11,7 @@ from openhands.events.action.agent import (
     CondensationAction,
     RecallAction,
 )
-from openhands.events.action.browse import BrowseInteractiveAction, BrowseURLAction
+
 from openhands.events.action.commands import (
     CmdRunAction,
     IPythonRunCellAction,
@@ -29,8 +29,7 @@ actions = (
     NullAction,
     CmdRunAction,
     IPythonRunCellAction,
-    BrowseURLAction,
-    BrowseInteractiveAction,
+
     FileReadAction,
     FileWriteAction,
     FileEditAction,

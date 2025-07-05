@@ -24,8 +24,7 @@ from openhands.events.action import (
     Action,
     ActionConfirmationStatus,
     AgentThinkAction,
-    BrowseInteractiveAction,
-    BrowseURLAction,
+
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -865,14 +864,6 @@ fi
 
     @abstractmethod
     def edit(self, action: FileEditAction) -> Observation:
-        pass
-
-    @abstractmethod
-    def browse(self, action: BrowseURLAction) -> Observation:
-        pass
-
-    @abstractmethod
-    def browse_interactive(self, action: BrowseInteractiveAction) -> Observation:
         pass
 
     @abstractmethod

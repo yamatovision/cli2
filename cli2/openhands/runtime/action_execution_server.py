@@ -38,8 +38,7 @@ from openhands.core.exceptions import BrowserUnavailableException
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action import (
     Action,
-    BrowseInteractiveAction,
-    BrowseURLAction,
+
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -587,22 +586,6 @@ class ActionExecutor:
                 filepath=action.path,
             ),
         )
-
-    async def browse(self, action: BrowseURLAction) -> Observation:
-        if self.browser is None:
-            return ErrorObservation(
-                'Browser functionality is not supported on Windows.'
-            )
-        await self._ensure_browser_ready()
-        return await browse(action, self.browser, self.initial_cwd)
-
-    async def browse_interactive(self, action: BrowseInteractiveAction) -> Observation:
-        if self.browser is None:
-            return ErrorObservation(
-                'Browser functionality is not supported on Windows.'
-            )
-        await self._ensure_browser_ready()
-        return await browse(action, self.browser, self.initial_cwd)
 
     def close(self):
         self.memory_monitor.stop_monitoring()

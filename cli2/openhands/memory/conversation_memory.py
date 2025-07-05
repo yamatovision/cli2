@@ -11,8 +11,7 @@ from openhands.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentThinkAction,
-    BrowseInteractiveAction,
-    BrowseURLAction,
+
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -197,7 +196,7 @@ class ConversationMemory:
                 - IPythonRunCellAction: For running IPython code
                 - FileEditAction: For editing files
                 - FileReadAction: For reading files using openhands-aci commands
-                - BrowseInteractiveAction: For browsing the web
+
                 - AgentFinishAction: For ending the interaction
                 - MessageAction: For sending messages
                 - MCPAction: For interacting with the MCP server
@@ -224,8 +223,7 @@ class ConversationMemory:
                 IPythonRunCellAction,
                 FileEditAction,
                 FileReadAction,
-                BrowseInteractiveAction,
-                BrowseURLAction,
+
                 MCPAction,
             ),
         ) or (isinstance(action, CmdRunAction) and action.source == 'agent'):

@@ -28,8 +28,6 @@ from openhands.core.exceptions import LLMMalformedActionError
 from openhands.core.logger import openhands_logger as logger
 from openhands.events import EventStream
 from openhands.events.action import (
-    BrowseInteractiveAction,
-    BrowseURLAction,
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -584,18 +582,6 @@ class CLIRuntime(Runtime):
         except Exception as e:
             logger.error(f'Error writing to file: {str(e)}')
             return ErrorObservation(f'Error writing to file {action.path}: {str(e)}')
-
-    def browse(self, action: BrowseURLAction) -> Observation:
-        """Not implemented for CLI runtime."""
-        return ErrorObservation(
-            'Browser functionality is not implemented in CLIRuntime'
-        )
-
-    def browse_interactive(self, action: BrowseInteractiveAction) -> Observation:
-        """Not implemented for CLI runtime."""
-        return ErrorObservation(
-            'Browser functionality is not implemented in CLIRuntime'
-        )
 
     def _execute_file_editor(
         self,

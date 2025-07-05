@@ -10,7 +10,6 @@ from litellm import (
 )
 
 from openhands.agenthub.codeact_agent.tools import (
-    BrowserTool,
     FinishTool,
     IPythonTool,
     LLMBasedFileEditTool,
@@ -28,7 +27,7 @@ from openhands.events.action import (
     AgentDelegateAction,
     AgentFinishAction,
     AgentThinkAction,
-    BrowseInteractiveAction,
+
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -204,14 +203,12 @@ def response_to_actions(
                 action = AgentThinkAction(thought=arguments.get('thought', ''))
 
             # ================================================
-            # BrowserTool
+            # BrowserTool (removed - not available in CLI runtime)
             # ================================================
-            elif tool_call.function.name == BrowserTool['function']['name']:
-                if 'code' not in arguments:
-                    raise FunctionCallValidationError(
-                        f'Missing required argument "code" in tool call {tool_call.function.name}'
-                    )
-                action = BrowseInteractiveAction(browser_actions=arguments['code'])
+            elif tool_call.function.name == 'browser':
+                raise FunctionCallNotExistsError(
+                    f'Browser functionality is not available in CLI runtime'
+                )
 
             # ================================================
             # MCPAction (MCP)

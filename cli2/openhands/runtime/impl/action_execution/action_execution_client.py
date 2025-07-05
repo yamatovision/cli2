@@ -22,8 +22,7 @@ from openhands.events import EventStream
 from openhands.events.action import (
     ActionConfirmationStatus,
     AgentThinkAction,
-    BrowseInteractiveAction,
-    BrowseURLAction,
+
     CmdRunAction,
     FileEditAction,
     FileReadAction,
@@ -342,12 +341,6 @@ class ActionExecutionClient(Runtime):
         return self.send_action_for_execution(action)
 
     def edit(self, action: FileEditAction) -> Observation:
-        return self.send_action_for_execution(action)
-
-    def browse(self, action: BrowseURLAction) -> Observation:
-        return self.send_action_for_execution(action)
-
-    def browse_interactive(self, action: BrowseInteractiveAction) -> Observation:
         return self.send_action_for_execution(action)
 
     def get_mcp_config(
