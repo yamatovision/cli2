@@ -54,7 +54,7 @@ def send_request(
         raise RequestHTTPError(
             e,
             request=e.request,
-            response=e.response,
+            response=e.response,  # type: ignore
             detail=_json.get('detail') if _json is not None else None,
         ) from e
     return response

@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 import aiohttp
 
-from .prompt_mapping import get_prompt_id, get_prompt_title
+from .prompt_mapping import get_prompt_id, get_prompt_title, get_local_filename
 from openhands.security.obscure_storage import get_obscure_storage
 
 logger = logging.getLogger('bluelamp.portal.prompt_client')
@@ -73,7 +73,7 @@ class PortalPromptClient:
             
             # API呼び出し
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=10) as response:
+                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:  # type: ignore
                     if response.status == 200:
                         data = await response.json()
                         
@@ -179,7 +179,7 @@ class PortalPromptClient:
             
             # API呼び出し
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, headers=headers, timeout=10) as response:
+                async with session.get(url, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:  # type: ignore
                     if response.status == 200:
                         data = await response.json()
                         

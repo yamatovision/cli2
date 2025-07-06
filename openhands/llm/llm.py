@@ -319,7 +319,11 @@ class LLM(RetryMixin, DebugMixin):
                         + str(resp)
                     )
 
-                non_fncall_response_message = resp.choices[0].message
+                # StreamingChoices doesn't have message attribute, only Choices does
+                if hasattr(resp.choices[0], 'message'):
+                    non_fncall_response_message = resp.choices[0].message
+                else:
+                    raise LLMNoResponseError('Response choice does not have message attribute')
                 # messages is already a list with proper typing from line 223
                 fn_call_messages_with_response = (
                     convert_non_fncall_messages_to_fncall_messages(
@@ -332,7 +336,9 @@ class LLM(RetryMixin, DebugMixin):
                     fn_call_response_message = LiteLLMMessage(
                         **fn_call_response_message  # type: ignore
                     )
-                resp.choices[0].message = fn_call_response_message
+                # Only set message if the choice has message attribute
+                if hasattr(resp.choices[0], 'message'):
+                    resp.choices[0].message = fn_call_response_message
 
             # Check if resp has 'choices' key with at least one item
             if not resp.get('choices') or len(resp['choices']) < 1:

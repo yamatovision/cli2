@@ -25,11 +25,11 @@ class RetryMixin:
         Returns:
             A retry decorator with the parameters customizable in configuration.
         """
-        num_retries = kwargs.get('num_retries')
+        num_retries = kwargs.get('num_retries', 3)  # Default to 3 retries
         retry_exceptions: tuple = kwargs.get('retry_exceptions', ())
-        retry_min_wait = kwargs.get('retry_min_wait')
-        retry_max_wait = kwargs.get('retry_max_wait')
-        retry_multiplier = kwargs.get('retry_multiplier')
+        retry_min_wait = kwargs.get('retry_min_wait', 1)  # Default to 1 second
+        retry_max_wait = kwargs.get('retry_max_wait', 60)  # Default to 60 seconds
+        retry_multiplier = kwargs.get('retry_multiplier', 2)  # Default to 2x multiplier
         retry_listener = kwargs.get('retry_listener')
 
         def before_sleep(retry_state: Any) -> None:

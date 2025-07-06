@@ -117,7 +117,7 @@ class SystemInitializer:
                 # .envファイルの場合は特別な形式で保存
                 if str(file_path).endswith('.env'):
                     env_content = ""
-                    for key, value in config['structure'].items():
+                    for key, value in config['structure'].items():  # type: ignore
                         env_content += f"{key}={value}\n"
                     with open(file_path, 'w') as f:
                         f.write(env_content)
@@ -157,7 +157,7 @@ class SystemInitializer:
                         "secret": "This is a secret API key for BlueLamp"
                     }
                 else:
-                    trap_data = {
+                    trap_data: dict[str, Any] = {  # type: ignore
                         "auth": {
                             "bearer": "bluelamp_bearer_" + secrets.token_hex(16)
                         }

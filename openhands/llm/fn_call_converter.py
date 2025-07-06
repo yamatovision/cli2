@@ -484,7 +484,7 @@ def convert_fncall_messages_to_non_fncall_messages(
     """Convert function calling messages to non-function calling messages."""
     messages = copy.deepcopy(messages)
 
-    formatted_tools = convert_tools_to_description(tools)  # type: ignore
+    formatted_tools = convert_tools_to_description([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])  # type: ignore
     system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(
         description=formatted_tools
     )
@@ -518,7 +518,7 @@ def convert_fncall_messages_to_non_fncall_messages(
                 first_user_message_encountered = True
 
                 # Generate example based on available tools
-                example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools)  # type: ignore
+                example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])  # type: ignore
 
                 # Add example if we have any tools
                 if example:
@@ -712,7 +712,7 @@ def convert_non_fncall_messages_to_fncall_messages(
 ) -> list[dict]:
     """Convert non-function calling messages back to function calling messages."""
     messages = copy.deepcopy(messages)
-    formatted_tools = convert_tools_to_description(tools)  # type: ignore
+    formatted_tools = convert_tools_to_description([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])  # type: ignore
     system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(
         description=formatted_tools
     )
@@ -743,9 +743,9 @@ def convert_non_fncall_messages_to_fncall_messages(
                 first_user_message_encountered = True
                 if isinstance(content, str):
                     # Remove any existing example
-                    if content.startswith(IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools)):
+                    if content.startswith(IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])):
                         content = content.replace(
-                            IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools), '', 1
+                            IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools]), '', 1
                         )
                     if content.endswith(IN_CONTEXT_LEARNING_EXAMPLE_SUFFIX):
                         content = content.replace(
@@ -755,7 +755,7 @@ def convert_non_fncall_messages_to_fncall_messages(
                     for item in content:
                         if item['type'] == 'text':
                             # Remove any existing example
-                            example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools)
+                            example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])
                             if item['text'].startswith(example):
                                 item['text'] = item['text'].replace(example, '', 1)
                             if item['text'].endswith(
@@ -854,17 +854,17 @@ def convert_non_fncall_messages_to_fncall_messages(
                 fn_body = fn_match.group(2)
                 matching_tool = next(
                     (
-                        tool['function']
+                        (tool.function.model_dump() if hasattr(tool, 'function') else tool['function'])
                         for tool in tools
-                        if tool['type'] == 'function'
-                        and tool['function']['name'] == fn_name
+                        if (hasattr(tool, 'type') and tool.type == 'function' or tool.get('type') == 'function')
+                        and (hasattr(tool, 'function') and tool.function.name == fn_name or tool.get('function', {}).get('name') == fn_name)
                     ),
                     None,
                 )
                 # Validate function exists in tools
                 if not matching_tool:
                     raise FunctionCallValidationError(
-                        f"Function '{fn_name}' not found in available tools: {[tool['function']['name'] for tool in tools if tool['type'] == 'function']}"
+                        f"Function '{fn_name}' not found in available tools: {[(tool.function.name if hasattr(tool, 'function') else tool.get('function', {}).get('name', '')) for tool in tools if (hasattr(tool, 'type') and tool.type == 'function' or tool.get('type') == 'function')]}"
                     )
 
                 # Parse parameters

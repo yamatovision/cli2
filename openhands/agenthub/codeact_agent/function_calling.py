@@ -55,6 +55,9 @@ def response_to_actions(
     actions: list[Action] = []
     assert len(response.choices) == 1, 'Only one choice is supported for now'
     choice = response.choices[0]
+    # StreamingChoices doesn't have message attribute, only Choices does
+    if not hasattr(choice, 'message'):
+        return actions
     assistant_msg = choice.message
     if hasattr(assistant_msg, 'tool_calls') and assistant_msg.tool_calls:
         # Check if there's assistant_msg.content. If so, add it to the thought
