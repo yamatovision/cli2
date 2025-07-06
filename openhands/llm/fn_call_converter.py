@@ -743,9 +743,9 @@ def convert_non_fncall_messages_to_fncall_messages(
                 first_user_message_encountered = True
                 if isinstance(content, str):
                     # Remove any existing example
-                    if content.startswith(IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])):
+                    if content.startswith(IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])):  # type: ignore
                         content = content.replace(
-                            IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools]), '', 1
+                            IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools]), '', 1  # type: ignore
                         )
                     if content.endswith(IN_CONTEXT_LEARNING_EXAMPLE_SUFFIX):
                         content = content.replace(
@@ -755,7 +755,7 @@ def convert_non_fncall_messages_to_fncall_messages(
                     for item in content:
                         if item['type'] == 'text':
                             # Remove any existing example
-                            example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])
+                            example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX([tool if isinstance(tool, dict) else tool.model_dump() for tool in tools])  # type: ignore
                             if item['text'].startswith(example):
                                 item['text'] = item['text'].replace(example, '', 1)
                             if item['text'].endswith(
@@ -854,23 +854,23 @@ def convert_non_fncall_messages_to_fncall_messages(
                 fn_body = fn_match.group(2)
                 matching_tool = next(
                     (
-                        (tool.function.model_dump() if hasattr(tool, 'function') else tool['function'])
+                        (tool['function'] if isinstance(tool, dict) else tool.function.model_dump())
                         for tool in tools
-                        if (hasattr(tool, 'type') and tool.type == 'function' or tool.get('type') == 'function')
-                        and (hasattr(tool, 'function') and tool.function.name == fn_name or tool.get('function', {}).get('name') == fn_name)
+                        if (isinstance(tool, dict) and tool.get('type') == 'function' or hasattr(tool, 'type') and tool.type == 'function')  # type: ignore
+                        and (isinstance(tool, dict) and tool.get('function', {}).get('name') == fn_name or hasattr(tool, 'function') and tool.function.name == fn_name)  # type: ignore
                     ),
                     None,
                 )
                 # Validate function exists in tools
                 if not matching_tool:
                     raise FunctionCallValidationError(
-                        f"Function '{fn_name}' not found in available tools: {[(tool.function.name if hasattr(tool, 'function') else tool.get('function', {}).get('name', '')) for tool in tools if (hasattr(tool, 'type') and tool.type == 'function' or tool.get('type') == 'function')]}"
+                        f"Function '{fn_name}' not found in available tools: {[(tool.get('function', {}).get('name', '') if isinstance(tool, dict) else tool.function.name) for tool in tools if (isinstance(tool, dict) and tool.get('type') == 'function' or hasattr(tool, 'type') and tool.type == 'function')]}"  # type: ignore
                     )
 
                 # Parse parameters
                 param_matches = re.finditer(FN_PARAM_REGEX_PATTERN, fn_body, re.DOTALL)
                 params = _extract_and_validate_params(
-                    matching_tool, param_matches, fn_name
+                    matching_tool, param_matches, fn_name  # type: ignore
                 )
 
                 # Create tool call with unique ID

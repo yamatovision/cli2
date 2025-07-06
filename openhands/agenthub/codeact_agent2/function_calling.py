@@ -58,7 +58,7 @@ def response_to_actions(
     # StreamingChoices doesn't have message attribute, only Choices does
     if not hasattr(choice, 'message'):
         return actions
-    assistant_msg = choice.message
+    assistant_msg = choice.message  # type: ignore
     if hasattr(assistant_msg, 'tool_calls') and assistant_msg.tool_calls:
         # Check if there's assistant_msg.content. If so, add it to the thought
         thought = ''

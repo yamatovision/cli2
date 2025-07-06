@@ -39,7 +39,7 @@ class CondenserPipeline(Condenser):
         return result
 
     @classmethod
-    def from_config(cls, config: CondenserPipelineConfig) -> CondenserPipeline:
+    def from_config(cls, config: CondenserPipelineConfig) -> CondenserPipeline:  # type: ignore
         condensers = [Condenser.from_config(c) for c in config.condensers]
         return CondenserPipeline(*condensers)
 

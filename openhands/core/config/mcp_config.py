@@ -138,17 +138,17 @@ class MCPConfig(BaseModel):
 
             # Convert all entries in stdio_servers to MCPStdioServerConfig objects
             if 'stdio_servers' in data:
-                servers = []
+                stdio_servers = []
                 for server in data['stdio_servers']:
-                    servers.append(MCPStdioServerConfig(**server))
-                data['stdio_servers'] = servers
+                    stdio_servers.append(MCPStdioServerConfig(**server))
+                data['stdio_servers'] = stdio_servers
 
             if 'shttp_servers' in data:
                 data['shttp_servers'] = cls._normalize_servers(data['shttp_servers'])
-                servers = []
+                shttp_servers = []
                 for server in data['shttp_servers']:
-                    servers.append(MCPSHTTPServerConfig(**server))
-                data['shttp_servers'] = servers
+                    shttp_servers.append(MCPSHTTPServerConfig(**server))
+                data['shttp_servers'] = shttp_servers
 
             # Create SSE config if present
             mcp_config = MCPConfig.model_validate(data)

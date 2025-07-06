@@ -1162,7 +1162,7 @@ class AgentController:
         # Set accumulated cost (sum of agent and condenser costs)
         metrics.accumulated_cost = agent_metrics.accumulated_cost
         if condenser_metrics:
-            metrics.accumulated_cost += condenser_metrics.accumulated_cost
+            metrics.accumulated_cost += condenser_metrics.accumulated_cost  # type: ignore
 
         # Add max_budget_per_task to metrics
         if self.state.budget_flag:
@@ -1176,7 +1176,7 @@ class AgentController:
         if condenser_metrics:
             metrics._accumulated_token_usage = (
                 metrics._accumulated_token_usage
-                + condenser_metrics.accumulated_token_usage
+                + condenser_metrics.accumulated_token_usage  # type: ignore
             )
 
         action.llm_metrics = metrics

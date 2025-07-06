@@ -75,7 +75,7 @@ class CustomSecret(BaseModel):
         elif isinstance(secret_value, dict):
             secret = secret_value.get('secret')
             description = secret_value.get('description')
-            return cls(secret=SecretStr(secret), description=description)
+            return cls(secret=SecretStr(secret), description=description)  # type: ignore
 
         else:
             raise ValueError('Unsupport Provider token type')

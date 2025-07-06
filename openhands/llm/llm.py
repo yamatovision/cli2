@@ -325,9 +325,16 @@ class LLM(RetryMixin, DebugMixin):
                 else:
                     raise LLMNoResponseError('Response choice does not have message attribute')
                 # messages is already a list with proper typing from line 223
+                # Convert response message to dict
+                response_msg_dict = (
+                    non_fncall_response_message.model_dump()
+                    if hasattr(non_fncall_response_message, 'model_dump')
+                    else dict(non_fncall_response_message)
+                )
                 fn_call_messages_with_response = (
                     convert_non_fncall_messages_to_fncall_messages(
-                        messages + [non_fncall_response_message], mock_fncall_tools
+                        messages + [response_msg_dict],
+                        mock_fncall_tools
                     )
                 )
                 fn_call_response_message = fn_call_messages_with_response[-1]
@@ -765,7 +772,8 @@ class LLM(RetryMixin, DebugMixin):
             if cost is None:
                 try:
                     cost = litellm_completion_cost(
-                        completion_response=response, **extra_kwargs
+                        completion_response=response,
+                        custom_cost_per_token=extra_kwargs.get('custom_cost_per_token')
                     )
                 except Exception as e:
                     logger.debug(f'Error getting cost from litellm: {e}')
@@ -773,7 +781,9 @@ class LLM(RetryMixin, DebugMixin):
             if cost is None:
                 _model_name = '/'.join(self.config.model.split('/')[1:])
                 cost = litellm_completion_cost(
-                    completion_response=response, model=_model_name, **extra_kwargs
+                    completion_response=response,
+                    model=_model_name,
+                    custom_cost_per_token=extra_kwargs.get('custom_cost_per_token')
                 )
                 logger.debug(
                     f'Using fallback model name {_model_name} to get cost: {cost}'

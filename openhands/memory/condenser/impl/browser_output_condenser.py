@@ -41,8 +41,8 @@ class BrowserOutputCondenser(Condenser):
     @classmethod
     def from_config(
         cls, config: BrowserOutputCondenserConfig
-    ) -> BrowserOutputCondenser:
-        return BrowserOutputCondenser(**config.model_dump(exclude=['type']))
+    ) -> BrowserOutputCondenser:  # type: ignore
+        return BrowserOutputCondenser(**config.model_dump(exclude={'type'}))
 
 
 BrowserOutputCondenser.register_config(BrowserOutputCondenserConfig)

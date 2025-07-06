@@ -836,9 +836,9 @@ if __name__ == '__main__':
             if not os.path.exists(full_dest_path):
                 os.makedirs(full_dest_path, exist_ok=True)
 
-            if recursive or file.filename.endswith('.zip'):
+            if recursive or (file.filename and file.filename.endswith('.zip')):
                 # For recursive uploads, we expect a zip file
-                if not file.filename.endswith('.zip'):
+                if not (file.filename and file.filename.endswith('.zip')):
                     raise HTTPException(
                         status_code=400, detail='Recursive uploads must be zip files'
                     )
