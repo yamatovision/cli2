@@ -33,10 +33,11 @@ def split_bash_commands(commands: str) -> list[str]:
         AttributeError,
     ):
         # Added AttributeError to catch 'str' object has no attribute 'kind' error (issue #8369)
+        newline = '\n'
         logger.debug(
-            f'Failed to parse bash commands\n'
-            f'[input]: {commands}\n'
-            f'[warning]: {traceback.format_exc()}\n'
+            f'Failed to parse bash commands{newline}'
+            f'[input]: {commands}{newline}'
+            f'[warning]: {traceback.format_exc()}{newline}'
             f'The original command will be returned as is.'
         )
         # If parsing fails, return the original commands
@@ -152,10 +153,11 @@ def escape_bash_special_chars(command: str) -> str:
         parts.append(remaining)
         return ''.join(parts)
     except (bashlex.errors.ParsingError, NotImplementedError, TypeError):
+        newline = '\n'
         logger.debug(
-            f'Failed to parse bash commands for special characters escape\n'
-            f'[input]: {command}\n'
-            f'[warning]: {traceback.format_exc()}\n'
+            f'Failed to parse bash commands for special characters escape{newline}'
+            f'[input]: {command}{newline}'
+            f'[warning]: {traceback.format_exc()}{newline}'
             f'The original command will be returned as is.'
         )
         return command
@@ -315,9 +317,10 @@ class BashSession:
         self, command: str, pane_content: str, ps1_matches: list[re.Match]
     ) -> CmdOutputObservation:
         is_special_key = self._is_special_key(command)
+        newline = '\n'
         assert len(ps1_matches) >= 1, (
-            f'Expected at least one PS1 metadata block, but got {len(ps1_matches)}.\n'
-            f'---FULL OUTPUT---\n{pane_content!r}\n---END OF OUTPUT---'
+            f'Expected at least one PS1 metadata block, but got {len(ps1_matches)}.{newline}'
+            f'---FULL OUTPUT---{newline}{pane_content!r}{newline}---END OF OUTPUT---'
         )
         metadata = CmdOutputMetadata.from_ps1_match(ps1_matches[-1])
 
@@ -340,12 +343,14 @@ class BashSession:
         if get_content_before_last_match:
             # Count the number of lines in the truncated output
             num_lines = len(raw_command_output.splitlines())
-            metadata.prefix = f'[Previous command outputs are truncated. Showing the last {num_lines} lines of the output below.]\n'
+            newline = '\n'
+            metadata.prefix = f'[Previous command outputs are truncated. Showing the last {num_lines} lines of the output below.]{newline}'
 
+        newline = '\n'
         metadata.suffix = (
-            f'\n[The command completed with exit code {metadata.exit_code}.]'
+            f'{newline}[The command completed with exit code {metadata.exit_code}.]'
             if not is_special_key
-            else f'\n[The command completed with exit code {metadata.exit_code}. CTRL+{command[-1].upper()} was sent.]'
+            else f'{newline}[The command completed with exit code {metadata.exit_code}. CTRL+{command[-1].upper()} was sent.]'
         )
         command_output = self._get_command_output(
             command,
@@ -369,16 +374,18 @@ class BashSession:
     ) -> CmdOutputObservation:
         self.prev_status = BashCommandStatus.NO_CHANGE_TIMEOUT
         if len(ps1_matches) != 1:
+            newline = '\n'
             logger.warning(
                 'Expected exactly one PS1 metadata block BEFORE the execution of a command, '
-                f'but got {len(ps1_matches)} PS1 metadata blocks:\n---\n{pane_content!r}\n---'
+                f'but got {len(ps1_matches)} PS1 metadata blocks:{newline}---{newline}{pane_content!r}{newline}---'
             )
         raw_command_output = self._combine_outputs_between_matches(
             pane_content, ps1_matches
         )
         metadata = CmdOutputMetadata()  # No metadata available
+        newline = '\n'
         metadata.suffix = (
-            f'\n[The command has no new output after {self.NO_CHANGE_TIMEOUT_SECONDS} seconds. '
+            f'{newline}[The command has no new output after {self.NO_CHANGE_TIMEOUT_SECONDS} seconds. '
             f'{TIMEOUT_MESSAGE_TEMPLATE}]'
         )
         command_output = self._get_command_output(
@@ -402,16 +409,18 @@ class BashSession:
     ) -> CmdOutputObservation:
         self.prev_status = BashCommandStatus.HARD_TIMEOUT
         if len(ps1_matches) != 1:
+            newline = '\n'
             logger.warning(
                 'Expected exactly one PS1 metadata block BEFORE the execution of a command, '
-                f'but got {len(ps1_matches)} PS1 metadata blocks:\n---\n{pane_content!r}\n---'
+                f'but got {len(ps1_matches)} PS1 metadata blocks:{newline}---{newline}{pane_content!r}{newline}---'
             )
         raw_command_output = self._combine_outputs_between_matches(
             pane_content, ps1_matches
         )
         metadata = CmdOutputMetadata()  # No metadata available
+        newline = '\n'
         metadata.suffix = (
-            f'\n[The command timed out after {timeout} seconds. '
+            f'{newline}[The command timed out after {timeout} seconds. '
             f'{TIMEOUT_MESSAGE_TEMPLATE}]'
         )
         command_output = self._get_command_output(
@@ -502,11 +511,12 @@ class BashSession:
         # Check if the command is a single command or multiple commands
         splited_commands = split_bash_commands(command)
         if len(splited_commands) > 1:
+            newline = '\n'
             return ErrorObservation(
                 content=(
                     f'ERROR: Cannot execute multiple commands at once.\n'
                     f'Please run each command separately OR chain them into a single command via && or ;\n'
-                    f'Provided commands:\n{"\n".join(f"({i + 1}) {cmd}" for i, cmd in enumerate(splited_commands))}'
+                    f'Provided commands:\n{newline.join(f"({i + 1}) {cmd}" for i, cmd in enumerate(splited_commands))}'
                 )
             )
 
@@ -547,8 +557,9 @@ class BashSession:
                 last_pane_output, current_matches_for_output
             )
             metadata = CmdOutputMetadata()  # No metadata available
+            newline = '\n'
             metadata.suffix = (
-                f'\n[Your command "{command}" is NOT executed. '
+                f'{newline}[Your command "{command}" is NOT executed. '
                 f'The previous command is still running - You CANNOT send new commands until the previous command is completed. '
                 'By setting `is_input` to `true`, you can interact with the current process: '
                 "You may wait longer to see additional output of the previous command by sending empty command '', "
@@ -594,8 +605,9 @@ class BashSession:
             logger.debug(
                 f'PANE CONTENT GOT after {time.time() - _start_time:.2f} seconds'
             )
-            logger.debug(f'BEGIN OF PANE CONTENT: {cur_pane_output.split("\n")[:10]}')
-            logger.debug(f'END OF PANE CONTENT: {cur_pane_output.split("\n")[-10:]}')
+            newline = '\n'
+            logger.debug(f'BEGIN OF PANE CONTENT: {cur_pane_output.split(newline)[:10]}')
+            logger.debug(f'END OF PANE CONTENT: {cur_pane_output.split(newline)[-10:]}')
             ps1_matches = CmdOutputMetadata.matches_ps1_metadata(cur_pane_output)
             current_ps1_count = len(ps1_matches)
 

@@ -1,9 +1,10 @@
 from abc import abstractmethod
+from typing import Union
 
 
 class FileStore:
     @abstractmethod
-    def write(self, path: str, contents: str | bytes) -> None:
+    def write(self, path: str, contents: Union[str, bytes]) -> None:
         pass
 
     @abstractmethod
