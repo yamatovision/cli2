@@ -154,7 +154,7 @@ def parse_image(
         base64_image = _base64_img(file_path)
         response = _get_openai_client().chat.completions.create(
             model=_get_openai_model(),
-            messages=_prepare_image_messages(task, base64_image),
+            messages=_prepare_image_messages(task, base64_image),  # type: ignore
             max_tokens=_get_max_token(),
         )
         content = response.choices[0].message.content
@@ -199,7 +199,7 @@ def parse_video(
         try:
             response = _get_openai_client().chat.completions.create(
                 model=_get_openai_model(),
-                messages=_prepare_image_messages(task, base64_frame),
+                messages=_prepare_image_messages(task, base64_frame),  # type: ignore
                 max_tokens=_get_max_token(),
             )
 

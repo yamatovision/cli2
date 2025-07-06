@@ -315,7 +315,7 @@ class AgentController:
                 or isinstance(e, ContentPolicyViolationError)
                 or isinstance(e, LLMContextWindowExceedError)
             ):
-                reported = e
+                reported = e  # type: ignore
             else:
                 self.log(
                     'warning',

@@ -484,7 +484,7 @@ def convert_fncall_messages_to_non_fncall_messages(
     """Convert function calling messages to non-function calling messages."""
     messages = copy.deepcopy(messages)
 
-    formatted_tools = convert_tools_to_description(tools)
+    formatted_tools = convert_tools_to_description(tools)  # type: ignore
     system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(
         description=formatted_tools
     )
@@ -518,7 +518,7 @@ def convert_fncall_messages_to_non_fncall_messages(
                 first_user_message_encountered = True
 
                 # Generate example based on available tools
-                example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools)
+                example = IN_CONTEXT_LEARNING_EXAMPLE_PREFIX(tools)  # type: ignore
 
                 # Add example if we have any tools
                 if example:
@@ -712,7 +712,7 @@ def convert_non_fncall_messages_to_fncall_messages(
 ) -> list[dict]:
     """Convert non-function calling messages back to function calling messages."""
     messages = copy.deepcopy(messages)
-    formatted_tools = convert_tools_to_description(tools)
+    formatted_tools = convert_tools_to_description(tools)  # type: ignore
     system_prompt_suffix = SYSTEM_PROMPT_SUFFIX_TEMPLATE.format(
         description=formatted_tools
     )
