@@ -57,9 +57,9 @@ class AmortizedForgettingCondenser(RollingCondenser):
         return len(view) > self.max_size
 
     @classmethod
-    def from_config(
+    def from_config(  # type: ignore
         cls, config: AmortizedForgettingCondenserConfig
-    ) -> AmortizedForgettingCondenser:  # type: ignore
+    ) -> AmortizedForgettingCondenser:
         return AmortizedForgettingCondenser(**config.model_dump(exclude={'type'}))
 
 
