@@ -296,7 +296,7 @@ def get_file_handler(
     """Returns a file handler for logging."""
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime('%Y-%m-%d')
-    file_name = f'openhands_{timestamp}.log'
+    file_name = f'bluelamp_{timestamp}.log'
     file_handler = logging.FileHandler(os.path.join(log_dir, file_name))
     file_handler.setLevel(log_level)
     if LOG_JSON:
@@ -349,7 +349,7 @@ def log_uncaught_exceptions(
 
 
 sys.excepthook = log_uncaught_exceptions
-openhands_logger = logging.getLogger('openhands')
+openhands_logger = logging.getLogger('bluelamp')
 current_log_level = logging.INFO
 
 # Python 3.9 compatible way to get log level
