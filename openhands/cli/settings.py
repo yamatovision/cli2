@@ -109,7 +109,7 @@ async def get_validated_input(
     prompt_text: str,
     completer=None,
     validator=None,
-    error_message: str = 'Input cannot be empty',
+    error_message: str = '入力が必要です',
 ) -> str:
     session.completer = completer
     value = None
@@ -173,7 +173,7 @@ async def modify_llm_settings_basic(
         # Show verified providers plus "Select another provider" option
         provider_choices = verified_providers + ['Select another provider']
         provider_choice = cli_confirm(
-            '(Step 1/3) Select LLM Provider:',
+            '(ステップ 1/3) LLMプロバイダーを選択:',
             provider_choices,
         )
 
@@ -194,16 +194,16 @@ async def modify_llm_settings_basic(
                 is_valid = x in organized_models
                 if not is_valid:
                     print_formatted_text(
-                        HTML(f'<grey>Invalid provider selected: {x}</grey>'),
+                        HTML(f'<grey>無効なプロバイダーが選択されました: {x}</grey>'),
                     )
                 return is_valid
 
             provider = await get_validated_input(
                 session,
-                '(Step 1/3) Select LLM Provider (TAB for options, CTRL-c to cancel): ',
+                '(ステップ 1/3) LLMプロバイダーを選択 (TABでオプション表示, CTRL-cでキャンセル): ',
                 completer=provider_completer,
                 validator=provider_validator,
-                error_message='Invalid provider selected',
+                error_message='無効なプロバイダーが選択されました',
             )
 
         # Make sure the provider exists in organized_models
@@ -282,10 +282,10 @@ async def modify_llm_settings_basic(
 
             model = await get_validated_input(
                 session,
-                '(Step 2/3) Select LLM Model (TAB for options, CTRL-c to cancel): ',
+                '(ステップ 2/3) LLMモデルを選択 (TABでオプション表示, CTRL-cでキャンセル): ',
                 completer=model_completer,
                 validator=model_validator,
-                error_message='Model name cannot be empty',
+                error_message='モデル名を入力してください',
             )
         else:
             # Use the default model
@@ -293,8 +293,8 @@ async def modify_llm_settings_basic(
 
         api_key = await get_validated_input(
             session,
-            '(Step 3/3) Enter API Key (CTRL-c to cancel): ',
-            error_message='API Key cannot be empty',
+            '(ステップ 3/3) APIキーを入力 (CTRL-cでキャンセル): ',
+            error_message='APIキーを入力してください',
         )
 
     except (
@@ -354,44 +354,44 @@ async def modify_llm_settings_advanced(
     try:
         custom_model = await get_validated_input(
             session,
-            '(Step 1/6) Custom Model (CTRL-c to cancel): ',
-            error_message='Custom Model cannot be empty',
+            '(ステップ 1/6) カスタムモデル (CTRL-cでキャンセル): ',
+            error_message='カスタムモデル名を入力してください',
         )
 
         base_url = await get_validated_input(
             session,
-            '(Step 2/6) Base URL (CTRL-c to cancel): ',
-            error_message='Base URL cannot be empty',
+            '(ステップ 2/6) ベースURL (CTRL-cでキャンセル): ',
+            error_message='ベースURLを入力してください',
         )
 
         api_key = await get_validated_input(
             session,
-            '(Step 3/6) API Key (CTRL-c to cancel): ',
-            error_message='API Key cannot be empty',
+            '(ステップ 3/6) APIキー (CTRL-cでキャンセル): ',
+            error_message='APIキーを入力してください',
         )
 
         agent_list = Agent.list_agents()
         agent_completer = FuzzyWordCompleter(agent_list)
         agent = await get_validated_input(
             session,
-            '(Step 4/6) Agent (TAB for options, CTRL-c to cancel): ',
+            '(ステップ 4/6) エージェント (TABでオプション表示, CTRL-cでキャンセル): ',
             completer=agent_completer,
             validator=lambda x: x in agent_list,
-            error_message='Invalid agent selected',
+            error_message='無効なエージェントが選択されました',
         )
 
         enable_confirmation_mode = (
             cli_confirm(
-                question='(Step 5/6) Confirmation Mode (CTRL-c to cancel):',
-                choices=['Enable', 'Disable'],
+                question='(ステップ 5/6) 確認モード (CTRL-cでキャンセル):',
+                choices=['有効', '無効'],
             )
             == 0
         )
 
         enable_memory_condensation = (
             cli_confirm(
-                question='(Step 6/6) Memory Condensation (CTRL-c to cancel):',
-                choices=['Enable', 'Disable'],
+                question='(ステップ 6/6) メモリ圧縮 (CTRL-cでキャンセル):',
+                choices=['有効', '無効'],
             )
             == 0
         )
