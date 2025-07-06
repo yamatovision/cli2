@@ -1,0 +1,24 @@
+# BlueLamp Standalone Docker Image
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy project files
+COPY . /app/
+
+# Install Python dependencies
+RUN pip install poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
+
+# Create entrypoint
+RUN echo '#!/bin/bash\npython -m openhands.cli.main_session "$@"' > /usr/local/bin/bluelamp && \
+    chmod +x /usr/local/bin/bluelamp
+
+ENTRYPOINT ["bluelamp"]

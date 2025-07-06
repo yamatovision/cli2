@@ -31,7 +31,8 @@ export OPENHANDS_DEFAULT_AGENT="CodeActAgent2"
 export OPENHANDS_SYSTEM_PROMPT_FILENAME="feature_extension.j2"
 
 # Poetry仮想環境のPythonパスを直接指定
-VENV_PATH="$SCRIPT_DIR/venv312_new"
+# Poetryが管理する仮想環境を使用
+VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/openhands-ai-dQS6D9JC-py3.12"
 PYTHON_BIN="$VENV_PATH/bin/python"
 
 # Pythonパスを設定
