@@ -3,17 +3,8 @@
 # BlueLamp CLI2 - Powered by OpenHands
 # AI開発支援ツール (CLI2版) - CodeActAgent2デフォルト版
 
-# シンボリックリンクを解決して実際のディレクトリを取得
-if [ -L "$0" ]; then
-    # macOSでのreadlinkの制限に対応
-    SCRIPT_PATH="$0"
-    while [ -L "$SCRIPT_PATH" ]; do
-        SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
-    done
-else
-    SCRIPT_PATH="$0"
-fi
-SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+# CLI2のディレクトリを固定で設定
+CLI2_DIR="/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/cli2"
 
 # 現在のディレクトリを保存
 CURRENT_DIR="$(pwd)"
@@ -30,19 +21,27 @@ export OPENHANDS_DEFAULT_AGENT="CodeActAgent2"
 # 機能拡張プランナー（#15）のプロンプトを使用
 export OPENHANDS_SYSTEM_PROMPT_FILENAME="feature_extension.j2"
 
+# FastMCP設定（大文字で設定）
+export FASTMCP_LOG_LEVEL="INFO"
+
 # Poetry仮想環境のPythonパスを直接指定
 # Poetryが管理する仮想環境を使用
 VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/openhands-ai-dQS6D9JC-py3.12"
 PYTHON_BIN="$VENV_PATH/bin/python"
 
-# Pythonパスを設定
-export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+# Pythonパスを設定（CLI2_DIRを使用）
+export PYTHONPATH="$CLI2_DIR:$PYTHONPATH"
+
+# CLI2ディレクトリに移動してから実行
+cd "$CLI2_DIR" || {
+    echo "エラー: CLI2ディレクトリが見つかりません: $CLI2_DIR"
+    exit 1
+}
 
 # OpenHandsを起動（main_session.pyを使用）
 if [ -f "$PYTHON_BIN" ]; then
     exec "$PYTHON_BIN" -m openhands.cli.main_session "$@"
 else
     # フォールバック: Poetry経由で実行
-    cd "$SCRIPT_DIR" || exit 1
     exec poetry run python -m openhands.cli.main_session "$@"
 fi
