@@ -132,10 +132,9 @@ class CLIRuntime(Runtime):
         # Set up workspace using new sandbox.volumes configuration
         workspace_mount_path = get_workspace_mount_path(self.config)
         if workspace_mount_path is not None:
-            logger.warning(
+            logger.debug(
                 f'Workspace base path is set to {workspace_mount_path}. '
-                'It will be used as the path for the agent to run in. '
-                'Be careful, the agent can EDIT files in this directory!'
+                'It will be used as the path for the agent to run in.'
             )
             self._workspace_path = workspace_mount_path
         else:
@@ -156,10 +155,8 @@ class CLIRuntime(Runtime):
         self._is_windows = sys.platform == 'win32'
         self._powershell_session: WindowsPowershellSession | None = None
 
-        logger.warning(
-            'Initializing CLIRuntime. WARNING: NO SANDBOX IS USED. '
-            'This runtime executes commands directly on the local system. '
-            'Use with caution in untrusted environments.'
+        logger.debug(
+            'Initializing CLIRuntime. Local system execution mode enabled.'
         )
 
     async def connect(self) -> None:

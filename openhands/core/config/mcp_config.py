@@ -179,7 +179,7 @@ class OpenHandsMCPConfig:
                 args=['-y', 'tavily-mcp@0.2.1'],
                 env={'TAVILY_API_KEY': app_config.search_api_key.get_secret_value()},
             )
-        logger.warning('No search engine API key found, skipping search engine')
+        logger.debug('No search engine API key found, skipping search engine')
         # Do not add search engine to MCP config in SaaS mode since it will be added by the OpenHands server
         return None
 
