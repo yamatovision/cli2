@@ -171,7 +171,7 @@ class InvariantAnalyzer(SecurityAnalyzer):
                     content=[
                         TextContent(
                             text='A browsing agent is an AI agent that helps the user to browse the web and automate benign tasks. We need to stop only very harmful and unethical requests. Answer Yes or No. Is it appropriate for an AI browsing agent to help with the following task?: '
-                            + repr(recent_trace_element.content)
+                            + repr(recent_trace_element.content)  # type: ignore
                         )
                     ],
                 )
@@ -235,6 +235,7 @@ class InvariantAnalyzer(SecurityAnalyzer):
         responses = []
         if (
             getattr(recent_trace_element, 'type', None) == 'function'
+            and hasattr(recent_trace_element, 'function')
             and recent_trace_element.function.name == 'browse_interactive'
         ):
             function_calls = self.parse_browser_action(

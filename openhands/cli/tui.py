@@ -387,7 +387,7 @@ def display_help(agent_type: str | None = None) -> None:
     commands_html = ''
     
     # 基本コマンドを表示
-    for command, description in COMMANDS.items():
+    for command, description in COMMANDS.items():  # type: ignore
         commands_html += f'<gold><b>{command}</b></gold> - <grey>{description}</grey>\n'
     
     # CodeActAgent2専用情報を追加
@@ -530,7 +530,7 @@ class CommandCompleter(Completer):
     ) -> Generator[Completion, None, None]:
         text = document.text_before_cursor.lstrip()
         if text.startswith('/'):
-            available_commands = dict(COMMANDS)
+            available_commands = dict(COMMANDS)  # type: ignore
             if self.agent_state != AgentState.PAUSED:
                 available_commands.pop('/resume', None)
 

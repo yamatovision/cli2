@@ -61,7 +61,7 @@ class SpecialistAgentBase(CodeActAgent, ABC):
         pass
     
     @property
-    def prompt_manager(self) -> PortalPromptManager:
+    def prompt_manager(self) -> PromptManager:
         """★番号に対応するPromptManagerを返す"""
         if self._prompt_manager is None:
             # フォールバック用のローカルプロンプトディレクトリ

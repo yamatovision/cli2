@@ -108,8 +108,10 @@ def check_dependencies(code_repo_path: str, poetry_venvs_path: str) -> None:
         except Exception:
             raise ValueError('tmux is not properly installed or available on the path.')
         pane = session.attached_pane
-        pane.send_keys('echo "test"')
-        pane_output = '\n'.join(pane.cmd('capture-pane', '-p').stdout)
+        if pane is None:
+            raise ValueError('Failed to get attached pane from tmux session.')
+        pane.send_keys('echo "test"')  # type: ignore
+        pane_output = '\n'.join(pane.cmd('capture-pane', '-p').stdout)  # type: ignore
         session.kill_session()
         if 'test' not in pane_output:
             raise ValueError('libtmux is not properly installed. ' + ERROR_MESSAGE)

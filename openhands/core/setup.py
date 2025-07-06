@@ -113,7 +113,7 @@ def initialize_repository_for_runtime(
         provider_tokens[ProviderType.BITBUCKET] = ProviderToken(token=bitbucket_token)
 
     secret_store = (
-        UserSecrets(provider_tokens=provider_tokens) if provider_tokens else None
+        UserSecrets(provider_tokens=provider_tokens) if provider_tokens else None  # type: ignore
     )
     immutable_provider_tokens = secret_store.provider_tokens if secret_store else None
 

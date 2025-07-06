@@ -585,7 +585,7 @@ class ConversationMemory:
 
                 # Return the combined message if we have any content
                 if message_content:
-                    message = Message(role='user', content=message_content)
+                    message = Message(role='user', content=message_content)  # type: ignore
                 else:
                     return []
             elif obs.recall_type == RecallType.KNOWLEDGE:

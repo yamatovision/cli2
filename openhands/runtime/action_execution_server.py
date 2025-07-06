@@ -726,7 +726,7 @@ if __name__ == '__main__':
     async def authenticate_requests(request: Request, call_next):
         if request.url.path != '/alive' and request.url.path != '/server_info':
             try:
-                verify_api_key(request.headers.get('X-Session-API-Key'))
+                verify_api_key(request.headers.get('X-Session-API-Key'))  # type: ignore
             except HTTPException as e:
                 return JSONResponse(
                     status_code=e.status_code, content={'detail': e.detail}
@@ -856,7 +856,7 @@ if __name__ == '__main__':
                 )
             else:
                 # For single file uploads
-                file_path = os.path.join(full_dest_path, file.filename)
+                file_path = os.path.join(full_dest_path, file.filename)  # type: ignore
                 with open(file_path, 'wb') as buffer:
                     shutil.copyfileobj(file.file, buffer)
                 logger.debug(f'Uploaded file {file.filename} to {destination}')

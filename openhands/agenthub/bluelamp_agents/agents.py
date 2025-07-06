@@ -16,7 +16,7 @@ class BlueLampBaseAgent(CodeActAgent):
     VERSION = '1.0'
 
     @property
-    def prompt_manager(self) -> PortalPromptManager:
+    def prompt_manager(self) -> PromptManager:
         """BlueLampエージェント用のPortalプロンプトマネージャーを返す"""
         if self._prompt_manager is None:
             # BlueLampエージェントのプロンプトディレクトリを使用（フォールバック用）

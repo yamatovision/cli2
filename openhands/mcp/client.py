@@ -34,7 +34,7 @@ class MCPClient(BaseModel):
 
         # Create proper tool objects for each server tool
         for tool in tools:
-            server_tool = MCPClientTool(
+            server_tool = MCPClientTool(  # type: ignore
                 name=tool.name,
                 description=tool.description,
                 inputSchema=tool.inputSchema,
