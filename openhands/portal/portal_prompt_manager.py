@@ -1,16 +1,14 @@
 """
 Portal連携PromptManager
-Portal APIからプロンプトを取得する機能を持つPromptManager
+Portal APIからプロンプトを取得する専用クラス
 """
 import os
 import asyncio
 import logging
 from typing import Optional, TYPE_CHECKING
-from jinja2 import Template
 
 from .prompt_client import PortalPromptClient
 from .prompt_mapping import is_portal_prompt, get_prompt_id
-from openhands.utils.prompt import PromptManager
 
 if TYPE_CHECKING:
     from openhands.controller.state.state import State
@@ -19,8 +17,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger('bluelamp.portal.prompt_manager')
 
 
-class PortalPromptManager(PromptManager):
-    """Portal APIからプロンプトを取得するPromptManager"""
+class PortalPromptManager:
+    """Portal APIからプロンプトを取得する専用クラス"""
     
     def __init__(
         self,
@@ -31,55 +29,18 @@ class PortalPromptManager(PromptManager):
     ):
         """
         Args:
-            prompt_dir: ローカルプロンプトディレクトリ
+            prompt_dir: プロンプトディレクトリ（互換性のため保持）
             system_prompt_filename: システムプロンプトファイル名
             portal_base_url: PortalのベースURL
             enable_portal: Portal連携を有効にするか
         """
-        # 親クラスの初期化
-        super().__init__(prompt_dir, system_prompt_filename)
-        
-        # 基本設定
         self.prompt_dir = prompt_dir
         self.system_prompt_filename = system_prompt_filename
-        
-        # Portal固有の設定
         self.portal_client = PortalPromptClient(base_url=portal_base_url) if enable_portal else None
         self.enable_portal = enable_portal
         self._portal_content_cache: Optional[str] = None
-        self._local_manager = None  # 型アノテーション削除（循環参照を避ける）
-        
-        # テンプレートファイルを読み込み
-        template_dir = os.path.dirname(__file__)
-        
-        # additional_info.j2テンプレートを読み込み
-        self._additional_info_template = None
-        additional_info_path = os.path.join(template_dir, 'additional_info.j2')
-        if os.path.exists(additional_info_path):
-            with open(additional_info_path, 'r') as f:
-                self._additional_info_template = Template(f.read())
-        
-        # user_prompt.j2テンプレートを読み込み
-        self._user_template = None
-        user_prompt_path = os.path.join(template_dir, 'user_prompt.j2')
-        if os.path.exists(user_prompt_path):
-            with open(user_prompt_path, 'r') as f:
-                self._user_template = Template(f.read())
-        
-        # microagent_info.j2テンプレートは使用しないので読み込まない
-        # （build_microagent_infoは空文字を返す）
         
         logger.info(f"PortalPromptManager初期化: portal={enable_portal}, file={system_prompt_filename}")
-    
-    def _get_local_manager(self):
-        """ローカルPromptManagerを遅延初期化"""
-        if self._local_manager is None:
-            from openhands.utils.prompt import PromptManager
-            self._local_manager = PromptManager(
-                prompt_dir=self.prompt_dir,
-                system_prompt_filename=self.system_prompt_filename
-            )
-        return self._local_manager
     
     async def _fetch_portal_content(self, retry_on_auth_error: bool = True) -> Optional[str]:
         """Portal APIからプロンプト内容を取得"""
@@ -156,15 +117,11 @@ class PortalPromptManager(PromptManager):
             return None
     
     def get_system_message(self) -> str:
-        """
-        システムメッセージを取得
-        Portal優先、ローカルフォールバック
-        """
+        """Portal APIからシステムメッセージを取得"""
         try:
             # キャッシュがある場合はそれを使用
             if self._portal_content_cache is not None:
                 logger.debug("キャッシュからプロンプトを返却")
-                # キャッシュされたプロンプトをそのまま返す（コンテキストは別途追加される）
                 return self._clean_portal_prompt(self._portal_content_cache)
             
             # Portal連携が有効で対象ファイルの場合
@@ -185,26 +142,21 @@ class PortalPromptManager(PromptManager):
                     if portal_content:
                         self._portal_content_cache = portal_content
                         logger.info(f"Portal プロンプト使用: {self.system_prompt_filename}")
-                        # Portal APIから取得したプロンプトをクリーンアップして返す
                         return self._clean_portal_prompt(portal_content)
                         
                 except Exception as e:
-                    logger.warning(f"Portal プロンプト取得失敗、ローカルにフォールバック: {e}")
+                    logger.warning(f"Portal プロンプト取得失敗: {e}")
             
-            # ローカルファイルにフォールバック
-            logger.info(f"ローカル プロンプト使用: {self.system_prompt_filename}")
-            local_manager = self._get_local_manager()
-            return local_manager.get_system_message()
+            # デフォルトプロンプトを返す
+            logger.info("デフォルトプロンプトを使用")
+            return "# System Prompt\nYou are a helpful AI assistant."
             
         except Exception as e:
             logger.error(f"プロンプト取得エラー: {e}")
-            # 最後の手段として空のプロンプトを返す
             return "# System Prompt\nYou are a helpful AI assistant."
     
     async def get_system_message_async(self) -> str:
-        """
-        非同期でシステムメッセージを取得
-        """
+        """非同期でシステムメッセージを取得"""
         try:
             # キャッシュがある場合はそれを使用
             if self._portal_content_cache is not None:
@@ -219,14 +171,12 @@ class PortalPromptManager(PromptManager):
                     logger.info(f"Portal プロンプト使用: {self.system_prompt_filename}")
                     return self._clean_portal_prompt(portal_content)
             
-            # ローカルファイルにフォールバック
-            logger.info(f"ローカル プロンプト使用: {self.system_prompt_filename}")
-            local_manager = self._get_local_manager()
-            return local_manager.get_system_message()
+            # デフォルトプロンプトを返す
+            logger.info("デフォルトプロンプトを使用")
+            return "# System Prompt\nYou are a helpful AI assistant."
             
         except Exception as e:
             logger.error(f"プロンプト取得エラー: {e}")
-            # 最後の手段として空のプロンプトを返す
             return "# System Prompt\nYou are a helpful AI assistant."
     
     def _clean_portal_prompt(self, content: str) -> str:
@@ -260,22 +210,12 @@ class PortalPromptManager(PromptManager):
         return await self.portal_client.test_connection()
     
     def get_example_user_message(self) -> str:
-        """ユーザーメッセージ例を取得"""
-        if self._user_template:
-            try:
-                return self._user_template.render().strip()
-            except Exception as e:
-                logger.error(f"user_prompt テンプレートレンダリングエラー: {e}")
-                return ""
-        else:
-            # テンプレートがない場合はローカルマネージャーにフォールバック
-            local_manager = self._get_local_manager()
-            return local_manager.get_example_user_message()
+        """ユーザーメッセージ例を取得（スタブ）"""
+        return ""
     
     def get_user_message(self, task: str, **kwargs) -> str:
-        """ユーザーメッセージを取得（ローカルから）"""
-        local_manager = self._get_local_manager()
-        return local_manager.get_user_message(task, **kwargs)
+        """ユーザーメッセージを取得（スタブ）"""
+        return task
     
     def build_workspace_context(
         self,
@@ -284,40 +224,16 @@ class PortalPromptManager(PromptManager):
         conversation_instructions=None,
         repo_instructions: str = '',
     ) -> str:
-        """ワークスペースコンテキストを構築"""
-        # additional_info.j2テンプレートを使ってコンテキスト情報を生成
-        if self._additional_info_template:
-            try:
-                context = self._additional_info_template.render(
-                    repository_info=repository_info,
-                    repository_instructions=repo_instructions,
-                    runtime_info=runtime_info,
-                    conversation_instructions=conversation_instructions,
-                )
-                return context.strip()
-            except Exception as e:
-                logger.error(f"additional_info テンプレートレンダリングエラー: {e}")
-                return ""
-        else:
-            # テンプレートがない場合はローカルマネージャーにフォールバック
-            local_manager = self._get_local_manager()
-            return local_manager.build_workspace_context(
-                repository_info=repository_info,
-                runtime_info=runtime_info,
-                conversation_instructions=conversation_instructions,
-                repo_instructions=repo_instructions,
-            )
+        """ワークスペースコンテキストを構築（スタブ）"""
+        return ""
     
     def build_microagent_info(self, triggered_agents=None) -> str:
-        """マイクロエージェント情報を構築"""
-        # Portal APIから取得したプロンプトには含まれているため、空文字を返す
+        """マイクロエージェント情報を構築（スタブ）"""
         return ""
     
     def add_turns_left_reminder(self, messages: list['Message'], state: 'State') -> None:
-        """残りターン数のリマインダーをメッセージに追加"""
-        # ローカルマネージャーに委譲（State, Message, TextContentのインポートを避けるため）
-        local_manager = self._get_local_manager()
-        local_manager.add_turns_left_reminder(messages, state)
+        """残りターン数のリマインダーをメッセージに追加（スタブ）"""
+        pass
 
 
 # 便利関数
