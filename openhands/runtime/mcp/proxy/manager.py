@@ -90,7 +90,7 @@ class MCPProxyManager:
 
         # Remove any existing mounts at root path
         if '/mcp' in app.routes:
-            app.routes.remove('/mcp')
+            app.routes.remove('/mcp')  # type: ignore
 
         app.mount('/', mcp_app)
         logger.info('Mounted FastMCP Proxy app at /mcp')

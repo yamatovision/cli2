@@ -397,7 +397,7 @@ class ConversationMemory:
                 invalid_count = len(obs.image_urls) - len(valid_image_urls)
 
                 if valid_image_urls:
-                    content.append(ImageContent(image_urls=valid_image_urls))
+                    content.append(ImageContent(image_urls=valid_image_urls))  # type: ignore
                     if invalid_count > 0:
                         # Add text indicating some images were filtered
                         content[
@@ -412,7 +412,7 @@ class ConversationMemory:
                         0
                     ].text += f'\n\nNote: All {len(obs.image_urls)} image(s) in this output were invalid or empty and have been filtered. The agent should use alternative methods to access visual information.'
 
-            message = Message(role='user', content=content)
+            message = Message(role='user', content=content)  # type: ignore
         elif isinstance(obs, FileEditObservation):
             text = truncate_content(str(obs), max_message_chars)
             message = Message(role='user', content=[TextContent(text=text)])
@@ -443,7 +443,7 @@ class ConversationMemory:
 
                 # Only add ImageContent if we have a valid image URL
                 if self._is_valid_image_url(image_url):
-                    content.append(ImageContent(image_urls=[image_url]))
+                    content.append(ImageContent(image_urls=[image_url]))  # type: ignore
                     logger.debug(f'Vision enabled for browsing, showing {image_type}')
                 else:
                     if image_url:
@@ -463,7 +463,7 @@ class ConversationMemory:
                             0
                         ].text += '\n\nNote: No visual information (screenshot or set of marks) is available for this webpage. The agent should rely on the text content above.'
 
-                message = Message(role='user', content=content)
+                message = Message(role='user', content=content)  # type: ignore
             else:
                 message = Message(
                     role='user',

@@ -351,7 +351,7 @@ class Runtime(FileEditRuntimeMixin):
                     self.log('info', f'Action that caused warning: {str(event)}')
                     # Create a warning observation instead of terminating
                     from openhands.events.observation import ErrorObservation
-                    observation = ErrorObservation(content=handled_msg, error=False)
+                    observation = ErrorObservation(content=handled_msg, error_id='')
                     observation._cause = event.id  # type: ignore[attr-defined]
                     observation.tool_call_metadata = event.tool_call_metadata
                     source = event.source if event.source else EventSource.AGENT
@@ -390,7 +390,7 @@ class Runtime(FileEditRuntimeMixin):
         if not selected_repository:
             # In SaaS mode (indicated by user_id being set), always run git init
             # In OSS mode, only run git init if workspace_base is not set
-            if self.user_id or not self.config.workspace_base:
+            if self.user_id:
                 logger.debug(
                     'No repository selected. Initializing a new git repository in the workspace.'
                 )
