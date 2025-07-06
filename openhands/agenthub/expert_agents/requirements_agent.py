@@ -30,10 +30,10 @@ class RequirementsAgent(SpecialistAgentBase):
         )
         
         # 要件定義固有の状態管理
-        self.requirements_catalog = {}
-        self.stakeholder_needs = []
-        self.functional_requirements = []
-        self.non_functional_requirements = []
+        self.requirements_catalog: dict[str, Any] = {}
+        self.stakeholder_needs: list[dict[str, Any]] = []
+        self.functional_requirements: list[dict[str, Any]] = []
+        self.non_functional_requirements: list[dict[str, Any]] = []
         
         logger.info("RequirementsAgent (★1) initialized")
     
@@ -157,7 +157,7 @@ class RequirementsAgent(SpecialistAgentBase):
     def _get_specialist_tools(self) -> List[Any]:
         """要件定義固有のツールを取得"""
         # 要件定義に特化したツールを定義
-        tools = []
+        tools: list[Any] = []
         
         # 例: 要件トレーサビリティマトリックス生成ツール
         # 例: ユーザーストーリー生成ツール

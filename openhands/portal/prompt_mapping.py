@@ -49,11 +49,11 @@ PROMPT_TITLES = {
     '6862397f1428c1efc592f6ce': '#1 要件定義エンジニア',
 }
 
-def get_prompt_id(local_filename: str) -> str:
+def get_prompt_id(local_filename: str) -> str | None:
     """ローカルファイル名からPortal プロンプトIDを取得"""
     return PROMPT_MAPPING.get(local_filename)
 
-def get_local_filename(prompt_id: str) -> str:
+def get_local_filename(prompt_id: str) -> str | None:
     """Portal プロンプトIDからローカルファイル名を取得"""
     return ID_TO_LOCAL.get(prompt_id)
 

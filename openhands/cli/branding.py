@@ -239,7 +239,7 @@ def get_current_settings_labels():
 # 現在の設定ラベル（BlueLamp固定）
 SETTINGS_LABELS = get_current_settings_labels
 
-def get_message(key: str, target_agent_name: str = None, current_agent_name: str = None, **kwargs) -> str:
+def get_message(key: str, target_agent_name: str | None = None, current_agent_name: str | None = None, **kwargs) -> str:
     """
     メッセージキーから日本語メッセージを取得
     

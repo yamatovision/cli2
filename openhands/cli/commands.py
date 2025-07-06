@@ -101,7 +101,7 @@ def handle_exit_command(
     return close_repl
 
 
-def handle_help_command(agent_type: str = None) -> None:
+def handle_help_command(agent_type: str | None = None) -> None:
     display_help(agent_type)
 
 

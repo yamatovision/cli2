@@ -35,7 +35,7 @@ class GitLabService(BaseGitService, GitService):
 
     BASE_URL = 'https://gitlab.com/api/v4'
     GRAPHQL_URL = 'https://gitlab.com/api/graphql'
-    token: SecretStr = SecretStr('')
+    token: SecretStr | None = SecretStr('')
     refresh = False
 
     def __init__(
@@ -65,7 +65,8 @@ class GitLabService(BaseGitService, GitService):
         """Retrieve the GitLab Token to construct the headers."""
         if not self.token:
             self.token = await self.get_latest_token()
-
+        
+        assert self.token is not None, "Token should not be None after get_latest_token()"
         return {
             'Authorization': f'Bearer {self.token.get_secret_value()}',
         }
@@ -256,7 +257,7 @@ class GitLabService(BaseGitService, GitService):
         return [
             Repository(
                 id=str(repo.get('id')),
-                full_name=repo.get('path_with_namespace'),
+                full_name=repo.get('path_with_namespace', ''),
                 stargazers_count=repo.get('star_count'),
                 git_provider=ProviderType.GITLAB,
                 is_public=repo.get('visibility') == 'public',

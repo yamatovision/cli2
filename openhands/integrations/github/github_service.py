@@ -41,7 +41,7 @@ class GitHubService(BaseGitService, GitService):
     """
 
     BASE_URL = 'https://api.github.com'
-    token: SecretStr = SecretStr('')
+    token: SecretStr | None = SecretStr('')
     refresh = False
 
     def __init__(
@@ -229,7 +229,7 @@ class GitHubService(BaseGitService, GitService):
         return [
             Repository(
                 id=str(repo.get('id')),
-                full_name=repo.get('full_name'),
+                full_name=repo.get('full_name', ''),
                 stargazers_count=repo.get('stargazers_count'),
                 git_provider=ProviderType.GITHUB,
                 is_public=not repo.get('private', True),

@@ -232,9 +232,10 @@ class BashSession:
         _initial_window.kill_window()
 
         # Configure bash to use simple PS1 and disable PS2
-        self.pane.send_keys(
-            f'export PROMPT_COMMAND=\'export PS1="{self.PS1}"\'; export PS2=""'
-        )
+        if self.pane is not None:
+            self.pane.send_keys(
+                f'export PROMPT_COMMAND=\'export PS1="{self.PS1}"\'; export PS2=""'
+            )
         time.sleep(0.1)  # Wait for command to take effect
         self._clear_screen()
 
@@ -254,6 +255,8 @@ class BashSession:
 
     def _get_pane_content(self) -> str:
         """Capture the current pane content and update the buffer."""
+        if self.pane is None:
+            return ''
         content = '\n'.join(
             map(
                 # avoid double newlines
@@ -282,9 +285,10 @@ class BashSession:
 
     def _clear_screen(self) -> None:
         """Clear the tmux pane screen and history."""
-        self.pane.send_keys('C-l', enter=False)
-        time.sleep(0.1)
-        self.pane.cmd('clear-history')
+        if self.pane is not None:
+            self.pane.send_keys('C-l', enter=False)
+            time.sleep(0.1)
+            self.pane.cmd('clear-history')
 
     def _get_command_output(
         self,

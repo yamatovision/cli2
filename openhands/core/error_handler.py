@@ -13,7 +13,7 @@ from openhands.core.logger import openhands_logger as logger
 class ErrorHandler:
     """Enhanced error handler to prevent system crashes."""
     
-    def __init__(self, continue_on_error: bool = None, max_retries: int = None):
+    def __init__(self, continue_on_error: bool | None = None, max_retries: int | None = None):
         # Check environment variables for configuration
         self.continue_on_error = (
             continue_on_error 

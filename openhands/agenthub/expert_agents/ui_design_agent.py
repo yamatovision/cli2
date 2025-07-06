@@ -31,11 +31,11 @@ class UIDesignAgent(SpecialistAgentBase):
         )
         
         # UI/UX設計固有の状態管理
-        self.design_system = {}
-        self.user_personas = []
-        self.wireframes = []
-        self.design_patterns = []
-        self.accessibility_requirements = []
+        self.design_system: dict[str, Any] = {}
+        self.user_personas: list[dict[str, Any]] = []
+        self.wireframes: list[dict[str, Any]] = []
+        self.design_patterns: list[dict[str, Any]] = []
+        self.accessibility_requirements: list[dict[str, Any]] = []
         
         logger.info("UIDesignAgent (★2) initialized")
     
@@ -204,7 +204,7 @@ class UIDesignAgent(SpecialistAgentBase):
     def _get_specialist_tools(self) -> List[Any]:
         """UI/UX設計固有のツールを取得"""
         # UI/UX設計に特化したツールを定義
-        tools = []
+        tools: list[Any] = []
         
         # 例: ワイヤーフレーム生成ツール
         # 例: カラーパレット生成ツール

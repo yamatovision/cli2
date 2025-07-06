@@ -353,7 +353,7 @@ def update_streaming_output(text: str):
 
 
 # Interactive command output display functions
-def display_help(agent_type: str = None) -> None:
+def display_help(agent_type: str | None = None) -> None:
     # Version header and introduction
     print_formatted_text(
         HTML(
@@ -520,7 +520,7 @@ def display_agent_state_change_message(agent_state: str) -> None:
 class CommandCompleter(Completer):
     """Custom completer for commands."""
 
-    def __init__(self, agent_state: str, agent_type: str = None) -> None:
+    def __init__(self, agent_state: str, agent_type: str | None = None) -> None:
         super().__init__()
         self.agent_state = agent_state
         self.agent_type = agent_type
@@ -550,7 +550,7 @@ def create_prompt_session() -> PromptSession[str]:
     return PromptSession(style=get_default_style())
 
 
-async def read_prompt_input(agent_state: str, multiline: bool = False, agent_type: str = None) -> str:
+async def read_prompt_input(agent_state: str, multiline: bool = False, agent_type: str | None = None) -> str:
     try:
         prompt_session = create_prompt_session()
         prompt_session.completer = (

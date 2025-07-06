@@ -118,6 +118,9 @@ class JupyterKernel:
             if n_tries == 0:
                 raise ConnectionRefusedError('Failed to connect to kernel')
 
+        if self.kernel_id is None:
+            raise RuntimeError("Kernel ID is not set")
+        
         ws_req = HTTPRequest(
             url='{}/api/kernels/{}/channels'.format(
                 self.base_ws_url, url_escape(self.kernel_id)
@@ -147,7 +150,7 @@ class JupyterKernel:
 
         msg_id = uuid4().hex
         assert self.ws is not None
-        res = await self.ws.write_message(
+        await self.ws.write_message(
             json_encode(
                 {
                     'header': {
@@ -171,7 +174,7 @@ class JupyterKernel:
                 }
             )
         )
-        logging.info(f'Executed code in jupyter kernel:\n{res}')
+        logging.info(f'Executed code in jupyter kernel with message ID: {msg_id}')
 
         outputs: list[dict] = []
 
@@ -305,5 +308,6 @@ def make_app() -> tornado.web.Application:
 
 if __name__ == '__main__':
     app = make_app()
-    app.listen(os.environ.get('JUPYTER_EXEC_SERVER_PORT'))
+    port = os.environ.get('JUPYTER_EXEC_SERVER_PORT', '8888')
+    app.listen(int(port))
     tornado.ioloop.IOLoop.current().start()
