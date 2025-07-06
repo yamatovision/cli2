@@ -1,8 +1,109 @@
-# DeprecationWarning解消: workspace設定統一 [2025-01-06]
+# 検索エンジンAPI警告調査完了 [2025-01-06]
+
+## 1. 調査概要
+
+OpenHandsプロジェクトでローカル開発時に表示される検索エンジンAPI警告の発生源と用途を徹底調査し、その仕組みと必要性を明確化した。
+
+## 2. 検索エンジンAPI警告の詳細分析
+
+### 2.1 警告の発生源と流れ
+
+**設定定義**:
+- `openhands/core/config/openhands_config.py` (line 70-73): `search_api_key` フィールド定義
+- Tavily検索エンジン用のAPIキー（https://tavily.com/）
+- SecretStr型で定義され、オプショナル
+
+**MCP統合フロー**:
+1. `openhands/core/config/agent_config.py` (line 36): `enable_mcp: bool = Field(default=True)` - MCPがデフォルト有効
+2. `openhands/cli/main_session/main.py` (line 139-141): `create_default_mcp_server_config(config)` 呼び出し
+3. `openhands/core/config/mcp_config.py` (line 199-201): `add_search_engine(config)` 実行
+4. `openhands/core/config/mcp_config.py` (line 169-184): 検索エンジン設定追加処理
+5. APIキーが未設定の場合、警告メッセージ出力（現在はDEBUGレベルに変更済み）
+
+**Tavily MCP統合**:
+- MCP (Model Context Protocol) を通じてTavily検索エンジンを統合
+- `npx -y tavily-mcp@0.2.1` コマンドで実行
+- 環境変数 `TAVILY_API_KEY` を使用
+- 検索機能はオプショナルで、APIキーがあれば自動的に有効化
+
+### 2.2 検索エンジンの用途と価値
+
+**機能概要**:
+- AI エージェントがリアルタイムでWeb検索を実行可能
+- 最新情報の取得、技術文書の検索、問題解決のための情報収集
+- GAIA ベンチマークなどの評価では検索機能が重要な役割
+
+**使用例**:
+- `original/evaluation/benchmarks/gaia/run_infer.py` (line 287): GAIA評価でTavily検索を使用
+- 検索APIキーがある場合のみ `mcp-servers: ['tavily']` を設定
+
+**オプショナル設計**:
+- 基本機能には影響なし
+- 検索機能なしでもOpenHandsは正常動作
+- 高度なタスクや評価では検索機能が価値を発揮
+
+### 2.3 警告抑制の実装
+
+**変更内容**:
+- `mcp_config.py` line 182: `logger.warning` → `logger.debug` に変更
+- ローカル開発時の不要な警告を抑制
+- 検索機能の存在は認識できるが、煩わしい警告は表示されない
+
+## 3. 技術的詳細
+
+### 3.1 MCP (Model Context Protocol) アーキテクチャ
+
+**統合フロー**:
+```
+OpenHandsConfig → MCPConfig → MCP Tools → Agent Integration
+```
+
+**関連ファイル**:
+- `openhands/mcp/utils.py`: MCP ツール統合ユーティリティ
+- `openhands/mcp/client.py`: MCP クライアント実装
+- `openhands/mcp/tool.py`: MCP ツール定義
+
+### 3.2 検索エンジン無効化方法
+
+**方法1: MCP全体を無効化**
+```python
+agent_config = AgentConfig(enable_mcp=False)
+```
+
+**方法2: 検索APIキーを設定しない**
+- デフォルト状態（APIキー未設定）では検索エンジンは追加されない
+- 警告はDEBUGレベルなので通常は表示されない
+
+## 4. 調査結果まとめ
+
+### 4.1 検索エンジンAPI警告の正体
+
+✅ **発生理由**: MCP（Model Context Protocol）がデフォルト有効で、Tavily検索エンジンの統合を試行するため
+✅ **警告内容**: 検索APIキーが未設定のため、検索機能をスキップする旨の通知
+✅ **影響範囲**: 基本機能には影響なし、オプショナル機能の通知のみ
+✅ **対処状況**: 警告レベルをDEBUGに変更し、ローカル開発時の煩わしさを解消
+
+### 4.2 検索機能の価値と位置づけ
+
+✅ **価値**: AIエージェントのWeb検索能力向上、最新情報アクセス
+✅ **用途**: 高度なタスク実行、ベンチマーク評価、技術調査
+✅ **設計**: オプショナル機能として適切に実装
+✅ **統合**: MCP を通じたクリーンな統合アーキテクチャ
+
+### 4.3 開発者への推奨事項
+
+✅ **基本開発**: 検索APIキー不要、警告も表示されない
+✅ **高度な用途**: Tavily APIキー取得で検索機能を有効化
+✅ **評価・テスト**: 検索機能が必要な場合のみAPIキー設定
+✅ **カスタマイズ**: `enable_mcp=False` で MCP 全体を無効化可能
+
+---
+
+# 過去の作業履歴: DeprecationWarning解消 [2025-01-06]
 
 ## 1. 修正概要
 
-OpenHandsプロジェクトでDeprecationWarningが発生している問題を解決するため、deprecated な workspace 関連フィールドを完全削除し、新しい `sandbox.volumes` 設定に統一する。これによりコードベースがクリーンアップされ、警告が完全に解消される。
+OpenHandsプロジェクトでDeprecationWarningが発生していた問題を解決するため、deprecated な workspace 関連フィールドを完全削除し、新しい `sandbox.volumes` 設定に統一した。これによりコードベースがクリーンアップされ、警告が完全に解消された。
 
 ## 2. 現状と課題
 
