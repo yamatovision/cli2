@@ -113,7 +113,7 @@ class LLMAttentionCondenser(RollingCondenser):
         return len(view) > self.max_size
 
     @classmethod
-    def from_config(cls, config: LLMAttentionCondenserConfig) -> LLMAttentionCondenser:
+    def from_config(cls, config: LLMAttentionCondenserConfig) -> LLMAttentionCondenser:  # type: ignore
         # This condenser cannot take advantage of prompt caching. If it happens
         # to be set, we'll pay for the cache writes but never get a chance to
         # save on a read.

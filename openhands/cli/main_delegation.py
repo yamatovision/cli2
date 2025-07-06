@@ -136,7 +136,7 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
                     HTML('<ansired>❌ Invalid authentication token. Please login again.</ansired>')
                 )
                 return
-            logger.info(f"Authenticated as: {auth.user_info.get('name')}")
+            logger.info(f"Authenticated as: {auth.user_info.get('name') if auth.user_info else 'Unknown'}")  # type: ignore
         except Exception as e:
             logger.error(f"Token verification error: {e}")
             print_formatted_text(

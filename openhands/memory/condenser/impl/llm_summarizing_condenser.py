@@ -153,7 +153,7 @@ CURRENT_STATE: Last flip: Heads, Haiku count: 15/20"""
         return len(view) > self.max_size
 
     @classmethod
-    def from_config(
+    def from_config(  # type: ignore
         cls, config: LLMSummarizingCondenserConfig
     ) -> LLMSummarizingCondenser:
         # This condenser cannot take advantage of prompt caching. If it happens

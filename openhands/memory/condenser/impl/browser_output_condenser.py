@@ -39,9 +39,9 @@ class BrowserOutputCondenser(Condenser):
         return View(events=list(reversed(results)))
 
     @classmethod
-    def from_config(
+    def from_config(  # type: ignore
         cls, config: BrowserOutputCondenserConfig
-    ) -> BrowserOutputCondenser:  # type: ignore
+    ) -> BrowserOutputCondenser:
         return BrowserOutputCondenser(**config.model_dump(exclude={'type'}))
 
 

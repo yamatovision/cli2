@@ -308,7 +308,7 @@ Capture all relevant information, especially:
         return len(view) > self.max_size
 
     @classmethod
-    def from_config(
+    def from_config(  # type: ignore
         cls, config: StructuredSummaryCondenserConfig
     ) -> StructuredSummaryCondenser:
         # This condenser cannot take advantage of prompt caching. If it happens

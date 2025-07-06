@@ -12,11 +12,12 @@ from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
 from openhands.controller.state.state import State
 from openhands.core.config import AgentConfig
 from openhands.core.logger import openhands_logger as logger
-from openhands.events.action import AgentFinishAction, MessageAction
+from openhands.events.action import Action, AgentFinishAction, MessageAction
 from openhands.events.event import Event
 from openhands.llm.llm import LLM
 
 from openhands.portal.portal_prompt_manager import PortalPromptManager
+from openhands.utils.prompt import PromptManager
 
 
 class SpecialistAgentBase(CodeActAgent, ABC):
@@ -85,19 +86,19 @@ class SpecialistAgentBase(CodeActAgent, ABC):
         
         return self._prompt_manager
     
-    def step(self, state: State) -> Event:
+    def step(self, state: State) -> Action:
         """エージェントのステップ実行"""
         try:
             # 専門分野固有の前処理
             self._pre_step_processing(state)
             
             # 基底クラスのstep実行
-            event = super().step(state)
+            action = super().step(state)
             
             # 専門分野固有の後処理
-            self._post_step_processing(state, event)
+            self._post_step_processing(state, action)
             
-            return event
+            return action
             
         except Exception as e:
             logger.error(f"{self.agent_name} step error: {e}")
@@ -110,7 +111,7 @@ class SpecialistAgentBase(CodeActAgent, ABC):
         """ステップ実行前の処理（サブクラスでオーバーライド可能）"""
         pass
     
-    def _post_step_processing(self, state: State, event: Event):
+    def _post_step_processing(self, state: State, event: Action):
         """ステップ実行後の処理（サブクラスでオーバーライド可能）"""
         pass
     
@@ -121,7 +122,7 @@ class SpecialistAgentBase(CodeActAgent, ABC):
             'star_number': self.star_number,
             'specialization': self.specialization,
             'version': self.VERSION,
-            'prompt_source': self.prompt_manager.get_prompt_source_info(),
+            'prompt_source': self.prompt_manager.get_prompt_source_info() if hasattr(self.prompt_manager, 'get_prompt_source_info') else 'unknown',  # type: ignore
         }
     
     def switch_to_star_number(self, new_star_number: int):
@@ -133,8 +134,8 @@ class SpecialistAgentBase(CodeActAgent, ABC):
         self.star_number = new_star_number
         
         # PromptManagerの★番号を更新
-        if self._prompt_manager:
-            self._prompt_manager.set_star_number(new_star_number)
+        if self._prompt_manager and hasattr(self._prompt_manager, 'set_star_number'):
+            self._prompt_manager.set_star_number(new_star_number)  # type: ignore
         
         logger.info(f"{self.agent_name} switched from ★{old_star_number} to ★{new_star_number}")
     
@@ -152,8 +153,8 @@ class SpecialistAgentBase(CodeActAgent, ABC):
         filtered_tools = []
         for tool in tools:
             # ChatCompletionToolParamオブジェクトの場合
-            if hasattr(tool, 'function') and hasattr(tool.function, 'name'):
-                if not tool.function.name.startswith('delegate_'):
+            if hasattr(tool, 'function') and hasattr(tool.function, 'name'):  # type: ignore
+                if not tool.function.name.startswith('delegate_'):  # type: ignore
                     filtered_tools.append(tool)
             # dict形式の場合
             elif isinstance(tool, dict) and 'function' in tool:

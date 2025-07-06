@@ -39,8 +39,8 @@ class BlueLampBaseAgent(CodeActAgent):
         filtered_tools = []
         for tool in tools:
             # ChatCompletionToolParamオブジェクトの場合
-            if hasattr(tool, 'function') and hasattr(tool.function, 'name'):
-                if not tool.function.name.startswith('delegate_'):
+            if hasattr(tool, 'function') and hasattr(tool.function, 'name'):  # type: ignore
+                if not tool.function.name.startswith('delegate_'):  # type: ignore
                     filtered_tools.append(tool)
             # dict形式の場合
             elif isinstance(tool, dict) and 'function' in tool:
