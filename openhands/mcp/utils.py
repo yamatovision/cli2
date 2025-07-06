@@ -61,7 +61,7 @@ async def create_mcp_clients(
         )
         return []
 
-    servers: list[MCPSSEServerConfig | MCPSHTTPServerConfig] = sse_servers.copy()
+    servers: list[MCPSSEServerConfig | MCPSHTTPServerConfig] = sse_servers.copy()  # type: ignore
     servers.extend(shttp_servers.copy())
 
     if not servers:

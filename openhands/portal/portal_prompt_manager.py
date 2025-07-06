@@ -10,6 +10,7 @@ from jinja2 import Template
 
 from .prompt_client import PortalPromptClient
 from .prompt_mapping import is_portal_prompt, get_prompt_id
+from openhands.utils.prompt import PromptManager
 
 if TYPE_CHECKING:
     from openhands.controller.state.state import State
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger('bluelamp.portal.prompt_manager')
 
 
-class PortalPromptManager:
+class PortalPromptManager(PromptManager):
     """Portal APIからプロンプトを取得するPromptManager"""
     
     def __init__(
@@ -35,6 +36,9 @@ class PortalPromptManager:
             portal_base_url: PortalのベースURL
             enable_portal: Portal連携を有効にするか
         """
+        # 親クラスの初期化
+        super().__init__(prompt_dir, system_prompt_filename)
+        
         # 基本設定
         self.prompt_dir = prompt_dir
         self.system_prompt_filename = system_prompt_filename

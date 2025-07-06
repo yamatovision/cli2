@@ -262,8 +262,8 @@ class Memory:
         )
         for name, agent in knowledge_agents.items():
             if isinstance(agent, KnowledgeMicroagent):
-                self.knowledge_microagents[name] = agent
-        for name, agent in repo_agents.items():
+                self.knowledge_microagents[name] = agent  # type: ignore
+        for name, agent in repo_agents.items():  # type: ignore
             if isinstance(agent, RepoMicroagent):
                 self.repo_microagents[name] = agent
 

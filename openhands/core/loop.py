@@ -51,7 +51,7 @@ async def run_agent_until_done(
                 asyncio.create_task(controller.set_agent_state_to(AgentState.ERROR))
             elif controller and is_recoverable:
                 # For recoverable errors, just log and continue
-                controller.state.last_error = None
+                controller.state.last_error = ''
         else:
             logger.info(msg)
 

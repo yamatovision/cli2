@@ -79,7 +79,7 @@ class MCPClient(BaseModel):
                     headers=headers if headers else None,
                 )
             else:
-                transport = SSETransport(
+                transport = SSETransport(  # type: ignore
                     url=server_url,
                     headers=headers if headers else None,
                 )

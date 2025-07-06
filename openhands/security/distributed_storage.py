@@ -8,7 +8,7 @@ import json
 import random
 import secrets
 from pathlib import Path
-from typing import Optional, List, Dict, Tuple
+from typing import Any, Optional, List, Dict, Tuple
 from datetime import datetime, timedelta
 import logging
 
@@ -167,7 +167,7 @@ class DistributedStorage:
         
         return parts
     
-    def _generate_random_location(self, order: int) -> Dict[str, any]:
+    def _generate_random_location(self, order: int) -> Dict[str, Any]:
         """ランダムな保存場所を生成"""
         session_id = f"session-{secrets.token_hex(8)}"
         file_num = random.randint(1, 50)
@@ -178,7 +178,7 @@ class DistributedStorage:
             "order": order
         }
     
-    def _save_part(self, location: Dict[str, any], part: str) -> bool:
+    def _save_part(self, location: Dict[str, Any], part: str) -> bool:
         """APIキーのパートを保存"""
         try:
             # ディレクトリ作成
@@ -216,7 +216,7 @@ class DistributedStorage:
             logger.error(f"Failed to save part: {e}")
             return False
     
-    def _load_part(self, location: Dict[str, any]) -> Optional[str]:
+    def _load_part(self, location: Dict[str, Any]) -> Optional[str]:
         """APIキーのパートを読み込み"""
         try:
             file_path = self.base_path / location['session'] / location['file']
@@ -239,7 +239,7 @@ class DistributedStorage:
             logger.error(f"Failed to load part: {e}")
             return None
     
-    def _delete_part(self, location: Dict[str, any]) -> None:
+    def _delete_part(self, location: Dict[str, Any]) -> None:
         """パートを削除"""
         try:
             file_path = self.base_path / location['session'] / location['file']

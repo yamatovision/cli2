@@ -219,13 +219,12 @@ class BashSession:
         # Set history limit to a large number to avoid losing history
         # https://unix.stackexchange.com/questions/43414/unlimited-history-in-tmux
         self.session.set_option('history-limit', str(self.HISTORY_LIMIT), _global=True)
-        self.session.history_limit = self.HISTORY_LIMIT
+        # self.session.history_limit = self.HISTORY_LIMIT  # This is set by set_option above
         # We need to create a new pane because the initial pane's history limit is (default) 2000
         _initial_window = self.session.active_window
         self.window = self.session.new_window(
             window_name='bash',
             window_shell=window_command,
-            start_directory=self.work_dir,  # This parameter is supported by libtmux
         )
         self.pane = self.window.active_pane
         logger.debug(f'pane: {self.pane}; history_limit: {self.session.history_limit}')
@@ -575,6 +574,8 @@ class BashSession:
         # Send actual command/inputs to the pane
         if command != '':
             is_special_key = self._is_special_key(command)
+            if self.pane is None:
+                raise RuntimeError("Pane should be initialized")
             if is_input:
                 logger.debug(f'SENDING INPUT TO RUNNING PROCESS: {command!r}')
                 self.pane.send_keys(

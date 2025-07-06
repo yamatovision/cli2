@@ -164,8 +164,10 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
         config.security.confirmation_mode = True
 
     # Get current working directory from workspace mount
-    current_dir = get_workspace_mount_path(config)
-    if not current_dir:
+    workspace_dir = get_workspace_mount_path(config)
+    if workspace_dir:
+        current_dir = workspace_dir
+    else:
         current_dir = os.getcwd()
 
     if not current_dir:

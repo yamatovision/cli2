@@ -328,8 +328,9 @@ class LLM(RetryMixin, DebugMixin):
                 )
                 fn_call_response_message = fn_call_messages_with_response[-1]
                 if not isinstance(fn_call_response_message, LiteLLMMessage):
+                    # Convert dict to LiteLLMMessage
                     fn_call_response_message = LiteLLMMessage(
-                        **fn_call_response_message
+                        **fn_call_response_message  # type: ignore
                     )
                 resp.choices[0].message = fn_call_response_message
 
@@ -408,7 +409,7 @@ class LLM(RetryMixin, DebugMixin):
         self._tried_model_info = True
         try:
             if self.config.model.startswith('openrouter'):
-                self.model_info = litellm.get_model_info(self.config.model)
+                self.model_info = litellm.get_model_info(self.config.model)  # type: ignore
         except Exception as e:
             logger.debug(f'Error getting model info: {e}')
 
@@ -448,7 +449,7 @@ class LLM(RetryMixin, DebugMixin):
         # Last two attempts to get model info from NAME
         if not self.model_info:
             try:
-                self.model_info = litellm.get_model_info(
+                self.model_info = litellm.get_model_info(  # type: ignore
                     self.config.model.split(':')[0]
                 )
             # noinspection PyBroadException
@@ -456,7 +457,7 @@ class LLM(RetryMixin, DebugMixin):
                 pass
         if not self.model_info:
             try:
-                self.model_info = litellm.get_model_info(
+                self.model_info = litellm.get_model_info(  # type: ignore
                     self.config.model.split('/')[-1]
                 )
             # noinspection PyBroadException
