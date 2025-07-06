@@ -149,6 +149,9 @@ class CodeActAgent(Agent):
             # Add all 16 BlueLamp delegate tools
             tools.extend(create_bluelamp_delegate_tools())
 
+        # Store available tool names for validation
+        self._available_tool_names = [tool['function']['name'] for tool in tools]
+
         return tools
 
     def reset(self) -> None:
@@ -284,4 +287,5 @@ class CodeActAgent(Agent):
         return codeact_function_calling.response_to_actions(
             response,
             mcp_tool_names=list(self.mcp_tools.keys()),
+            available_tools=getattr(self, '_available_tool_names', None),
         )

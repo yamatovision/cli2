@@ -50,7 +50,7 @@ def combine_thought(action: Action, thought: str) -> Action:
 
 
 def response_to_actions(
-    response: ModelResponse, mcp_tool_names: list[str] | None = None
+    response: ModelResponse, mcp_tool_names: list[str] | None = None, available_tools: list[str] | None = None
 ) -> list[Action]:
     actions: list[Action] = []
     assert len(response.choices) == 1, 'Only one choice is supported for now'
@@ -106,6 +106,13 @@ def response_to_actions(
             # IPythonTool (Jupyter)
             # ================================================
             elif tool_call.function.name == IPythonTool['function']['name']:
+                # Check if IPython tool is available
+                if available_tools is not None and IPythonTool['function']['name'] not in available_tools:
+                    logger.warning(f"IPython tool called but not available. Available tools: {available_tools}")
+                    raise FunctionCallValidationError(
+                        f'IPython tool is not available. This may be because CLIRuntime is being used, '
+                        f'which does not support IPython execution. Please use bash commands instead.'
+                    )
                 if 'code' not in arguments:
                     raise FunctionCallValidationError(
                         f'Missing required argument "code" in tool call {tool_call.function.name}'
