@@ -9,6 +9,7 @@ from typing import Optional, TYPE_CHECKING
 
 from .prompt_client import PortalPromptClient
 from .prompt_mapping import is_portal_prompt, get_prompt_id
+from openhands.utils.prompt import PromptManager
 
 if TYPE_CHECKING:
     from openhands.controller.state.state import State
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger('bluelamp.portal.prompt_manager')
 
 
-class PortalPromptManager:
+class PortalPromptManager(PromptManager):
     """Portal APIからプロンプトを取得する専用クラス"""
     
     def __init__(
@@ -29,12 +30,24 @@ class PortalPromptManager:
     ):
         """
         Args:
-            prompt_dir: プロンプトディレクトリ（互換性のため保持）
+            prompt_dir: プロンプトディレクトリ
             system_prompt_filename: システムプロンプトファイル名
             portal_base_url: PortalのベースURL
             enable_portal: Portal連携を有効にするか
         """
-        self.prompt_dir = prompt_dir
+        # Portal専用ファイルの場合は親クラスの初期化をスキップ
+        if enable_portal and is_portal_prompt(system_prompt_filename):
+            # 親クラスの属性を直接設定（ローカルファイル読み込みをスキップ）
+            self.prompt_dir = prompt_dir
+            self.system_template = None  # type: ignore
+            self.user_template = None  # type: ignore
+            self.additional_info_template = None  # type: ignore
+            self.microagent_info_template = None  # type: ignore
+        else:
+            # 通常のローカルファイル処理
+            super().__init__(prompt_dir, system_prompt_filename)
+        
+        # Portal固有の設定
         self.system_prompt_filename = system_prompt_filename
         self.portal_client = PortalPromptClient(base_url=portal_base_url) if enable_portal else None
         self.enable_portal = enable_portal
@@ -210,12 +223,16 @@ class PortalPromptManager:
         return await self.portal_client.test_connection()
     
     def get_example_user_message(self) -> str:
-        """ユーザーメッセージ例を取得（スタブ）"""
-        return ""
+        """ユーザーメッセージ例を取得"""
+        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
+            return ""  # Portal専用ファイルの場合は空文字
+        return super().get_example_user_message()
     
     def get_user_message(self, task: str, **kwargs) -> str:
-        """ユーザーメッセージを取得（スタブ）"""
-        return task
+        """ユーザーメッセージを取得"""
+        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
+            return task  # Portal専用ファイルの場合はタスクをそのまま返す
+        return super().get_user_message(task, **kwargs)
     
     def build_workspace_context(
         self,
@@ -224,16 +241,28 @@ class PortalPromptManager:
         conversation_instructions=None,
         repo_instructions: str = '',
     ) -> str:
-        """ワークスペースコンテキストを構築（スタブ）"""
-        return ""
+        """ワークスペースコンテキストを構築"""
+        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
+            return ""  # Portal専用ファイルの場合は空文字
+        return super().build_workspace_context(
+            repository_info=repository_info,
+            runtime_info=runtime_info,
+            conversation_instructions=conversation_instructions,
+            repo_instructions=repo_instructions,
+        )
     
     def build_microagent_info(self, triggered_agents=None) -> str:
-        """マイクロエージェント情報を構築（スタブ）"""
-        return ""
+        """マイクロエージェント情報を構築"""
+        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
+            return ""  # Portal専用ファイルの場合は空文字
+        return super().build_microagent_info(triggered_agents)
     
     def add_turns_left_reminder(self, messages: list['Message'], state: 'State') -> None:
-        """残りターン数のリマインダーをメッセージに追加（スタブ）"""
-        pass
+        """残りターン数のリマインダーをメッセージに追加"""
+        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
+            pass  # Portal専用ファイルの場合は何もしない
+        else:
+            super().add_turns_left_reminder(messages, state)
 
 
 # 便利関数
