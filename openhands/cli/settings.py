@@ -62,14 +62,14 @@ def display_settings(config: OpenHandsConfig) -> None:
     # Common settings
     labels_and_values.extend(
         [
-            ('   Agent', str(config.default_agent)),
+            ('   エージェント', str(config.default_agent)),
             (
-                '   Confirmation Mode',
-                'Enabled' if config.security.confirmation_mode else 'Disabled',
+                '   確認モード',
+                '有効' if config.security.confirmation_mode else '無効',
             ),
             (
-                '   Memory Condensation',
-                'Enabled' if config.enable_default_condenser else 'Disabled',
+                '   メモリ圧縮',
+                '有効' if config.enable_default_condenser else '無効',
             ),
         ],
     )

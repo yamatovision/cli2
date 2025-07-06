@@ -1,0 +1,11 @@
+#!/bin/bash
+# OpenHands2 launcher script
+
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Change to the script directory
+cd "$SCRIPT_DIR"
+
+# Run openhands2 using poetry with Python 3.12
+exec poetry env use python3.12 && poetry run openhands2 "$@"

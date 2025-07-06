@@ -549,8 +549,8 @@ def main():
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python -m openhands.cli.auth <command>")
-        print("Commands: login, logout, status")
+        print("使用方法: python -m openhands.cli.auth <コマンド>")
+        print("コマンド: login, logout, status")
         return
     
     command = sys.argv[1]

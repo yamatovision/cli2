@@ -284,7 +284,7 @@ def display_command_output(output: str) -> None:
             style=COLOR_GREY(),
             wrap_lines=True,
         ),
-        title='Command Output',
+        title='コマンド出力',
         style=f'fg:{COLOR_GREY()}',
     )
     print_formatted_text('')
@@ -299,7 +299,7 @@ def display_file_edit(event: FileEditObservation) -> None:
             wrap_lines=True,
             lexer=CustomDiffLexer(),
         ),
-        title='File Edit',
+        title='ファイル編集',
         style=f'fg:{COLOR_GREY()}',
     )
     print_formatted_text('')
@@ -315,7 +315,7 @@ def display_file_read(event: FileReadObservation) -> None:
             style=COLOR_GREY(),
             wrap_lines=True,
         ),
-        title='File Read',
+        title='ファイル読み込み',
         style=f'fg:{COLOR_GREY()}',
     )
     print_formatted_text('')
@@ -335,7 +335,7 @@ def initialize_streaming_output():
     )
     container = Frame(
         streaming_output_text_area,
-        title='Streaming Output',
+        title='ストリーミング出力',
         style=f'fg:{COLOR_GREY()}',
     )
     print_formatted_text('')
@@ -402,7 +402,7 @@ def display_help(agent_type: str = None) -> None:
     # Footer
     print_formatted_text(
         HTML(
-            '<grey>Learn more at: https://docs.all-hands.dev/usage/getting-started</grey>',
+            '<grey>詳細はこちら: https://docs.all-hands.dev/usage/getting-started</grey>',
         ),
     )
 
@@ -424,14 +424,14 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
     total_tokens_str = f'{usage_metrics.metrics.accumulated_token_usage.prompt_tokens + usage_metrics.metrics.accumulated_token_usage.completion_tokens:,}'
 
     labels_and_values = [
-        ('   Total Cost (USD):', cost_str),
+        ('   総コスト (USD):', cost_str),
         ('', ''),
-        ('   Total Input Tokens:', input_tokens_str),
-        ('      Cache Hits:', cache_read_str),
-        ('      Cache Writes:', cache_write_str),
-        ('   Total Output Tokens:', output_tokens_str),
+        ('   入力トークン数:', input_tokens_str),
+        ('      キャッシュヒット:', cache_read_str),
+        ('      キャッシュ書き込み:', cache_write_str),
+        ('   出力トークン数:', output_tokens_str),
         ('', ''),
-        ('   Total Tokens:', total_tokens_str),
+        ('   総トークン数:', total_tokens_str),
     ]
 
     # Calculate max widths for alignment
@@ -452,7 +452,7 @@ def display_usage_metrics(usage_metrics: UsageMetrics) -> None:
             style=COLOR_GREY(),
             wrap_lines=True,
         ),
-        title='Usage Metrics',
+        title='使用量統計',
         style=f'fg:{COLOR_GREY()}',
     )
 

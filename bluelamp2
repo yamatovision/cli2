@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# BlueLamp CLI2 - Powered by OpenHands
+# AI開発支援ツール (CLI2版)
+
+# シンボリックリンクを解決して実際のディレクトリを取得
+if [ -L "$0" ]; then
+    # macOSでのreadlinkの制限に対応
+    SCRIPT_PATH="$0"
+    while [ -L "$SCRIPT_PATH" ]; do
+        SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    done
+else
+    SCRIPT_PATH="$0"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+# 現在のディレクトリを保存
+CURRENT_DIR="$(pwd)"
+
+# 環境変数を新しい形式に設定
+export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
+
+# BlueLampブランディングを明示的に設定
+export OPENHANDS_BRAND="bluelamp"
+
+# Poetry仮想環境のPythonパスを直接指定
+VENV_PATH="$SCRIPT_DIR/venv312_new"
+PYTHON_BIN="$VENV_PATH/bin/python"
+
+# Pythonパスを設定
+export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+
+# OpenHandsを起動（main_session.pyを使用）
+if [ -f "$PYTHON_BIN" ]; then
+    exec "$PYTHON_BIN" -m openhands.cli.main_session "$@"
+else
+    # フォールバック: Poetry経由で実行
+    cd "$SCRIPT_DIR" || exit 1
+    exec poetry run python -m openhands.cli.main_session "$@"
+fi

@@ -1,0 +1,45 @@
+# OpenHands Configuration
+[llm]
+model = "claude-3-5-sonnet-20241022"
+api_key = "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"
+temperature = 0.0
+
+# 評価用のLLM設定
+[llm.eval_claude]
+model = "claude-3-5-sonnet-20241022"
+api_key = "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"
+temperature = 0.0
+
+[llm.eval_claude_fast]
+model = "claude-3-5-haiku-20241022"
+api_key = "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"
+temperature = 0.0
+
+# エージェント設定
+[agent]
+enable_browsing = true
+enable_llm_editor = false
+enable_editor = true
+enable_jupyter = true
+enable_cmd = true
+enable_think = true
+enable_finish = true
+enable_history_truncation = true
+
+# Portal連携設定
+[portal]
+enable_portal = true
+# portal_base_url = "https://bluelamp-235426778039.asia-northeast1.run.app/api"  # 必要に応じて設定
+
+# セキュリティ設定
+[security]
+confirmation_mode = false
+
+# サンドボックス設定
+[sandbox]
+timeout = 120
+# volumes = "/path/to/your/workspace:/workspace:rw"  # 特定のワークスペースを使用する場合
+
+# コア設定
+[core]
+runtime = "local"
