@@ -378,9 +378,6 @@ class AgentController:
                     AgentState.ERROR,
                     AgentState.REJECTED,
                 )
-                # 反復回数制限エラーチェックを無効化（制限自体を削除したため）
-                # or 'RuntimeError: Agent reached maximum iteration.'
-                # in self.delegate.state.last_error
                 or 'RuntimeError:Agent reached maximum budget for conversation'
                 in self.delegate.state.last_error
             ):

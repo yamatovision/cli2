@@ -55,16 +55,11 @@ class IterationControlFlag(ControlFlag[int]):
             self._hit_limit = False
 
     def step(self):
-        # 無限ループ防止はStuckDetectorに委ねるため、反復回数制限チェックを無効化
-        # より高度なループ検出機能（StuckDetector）が既に実装されているため、
-        # 単純な回数制限は不要かつ正常な長時間作業を阻害する
-        # if self.reached_limit():
-        #     raise RuntimeError(
-        #         f'Agent reached maximum iteration. '
-        #         f'Current iteration: {self.current_value}, max iteration: {self.max_value}'
-        #     )
-
-        # 反復回数のカウントは統計・デバッグ目的で継続
+        """Increment iteration count without enforcing limits.
+        
+        Loop detection is handled by StuckDetector which provides more
+        sophisticated pattern-based detection instead of simple count limits.
+        """
         self.current_value += 1
 
 
