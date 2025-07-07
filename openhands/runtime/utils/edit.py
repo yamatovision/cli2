@@ -12,7 +12,7 @@ from openhands.events.action import (
     FileEditAction,
     FileReadAction,
     FileWriteAction,
-    IPythonRunCellAction,
+
 )
 from openhands.events.observation import (
     ErrorObservation,
@@ -84,9 +84,7 @@ class FileEditRuntimeInterface(ABC):
     def write(self, action: FileWriteAction) -> Observation:
         pass
 
-    @abstractmethod
-    def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        pass
+
 
 
 class FileEditRuntimeMixin(FileEditRuntimeInterface):

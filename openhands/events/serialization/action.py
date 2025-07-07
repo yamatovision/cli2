@@ -14,7 +14,6 @@ from openhands.events.action.agent import (
 
 from openhands.events.action.commands import (
     CmdRunAction,
-    IPythonRunCellAction,
 )
 from openhands.events.action.empty import NullAction
 from openhands.events.action.files import (
@@ -28,7 +27,6 @@ from openhands.events.action.message import MessageAction, SystemMessageAction
 actions = (
     NullAction,
     CmdRunAction,
-    IPythonRunCellAction,
 
     FileReadAction,
     FileWriteAction,

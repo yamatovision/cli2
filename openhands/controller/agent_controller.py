@@ -53,7 +53,7 @@ from openhands.events.action import (
     AgentRejectAction,
     ChangeAgentStateAction,
     CmdRunAction,
-    IPythonRunCellAction,
+
     MessageAction,
     NullAction,
     SystemMessageAction,
@@ -836,7 +836,7 @@ class AgentController:
 
         if action.runnable:
             if self.state.confirmation_mode and (
-                type(action) is CmdRunAction or type(action) is IPythonRunCellAction
+                type(action) is CmdRunAction
             ):
                 action.confirmation_state = (
                     ActionConfirmationStatus.AWAITING_CONFIRMATION

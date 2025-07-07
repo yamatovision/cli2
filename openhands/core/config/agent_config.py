@@ -22,9 +22,7 @@ class AgentConfig(BaseModel):
     """Whether to enable LLM editor tool"""
     enable_editor: bool = Field(default=True)
     """Whether to enable the standard editor tool (str_replace_editor), only has an effect if enable_llm_editor is False."""
-    enable_jupyter: bool = Field(default=True)
-    """Whether to enable Jupyter tool.
-    Note: If using CLIRuntime, Jupyter use is not implemented and should be disabled."""
+
     enable_cmd: bool = Field(default=True)
     """Whether to enable bash tool"""
     enable_think: bool = Field(default=True)

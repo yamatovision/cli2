@@ -164,28 +164,3 @@ class CmdOutputObservation(Observation):
         return ret
 
 
-@dataclass
-class IPythonRunCellObservation(Observation):
-    """This data class represents the output of a IPythonRunCellAction."""
-
-    code: str
-    observation: str = ObservationType.RUN_IPYTHON
-    image_urls: list[str] | None = None
-
-    @property
-    def error(self) -> bool:
-        return False  # IPython cells do not return exit codes
-
-    @property
-    def message(self) -> str:
-        return 'Code executed in IPython cell.'
-
-    @property
-    def success(self) -> bool:
-        return True  # IPython cells are always considered successful
-
-    def __str__(self) -> str:
-        result = f'**IPythonRunCellObservation**\n{self.content}'
-        if self.image_urls:
-            result += f'\nImages: {len(self.image_urls)}'
-        return result

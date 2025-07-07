@@ -16,7 +16,6 @@ from openhands.events.action import (
     CmdRunAction,
     FileEditAction,
     FileReadAction,
-    IPythonRunCellAction,
     MessageAction,
 )
 from openhands.events.action.mcp import MCPAction
@@ -30,7 +29,6 @@ from openhands.events.observation import (
     CmdOutputObservation,
     FileEditObservation,
     FileReadObservation,
-    IPythonRunCellObservation,
     UserRejectObservation,
 )
 from openhands.events.observation.agent import (
@@ -186,7 +184,7 @@ class ConversationMemory:
         """Converts an action into a message format that can be sent to the LLM.
 
         This method handles different types of actions and formats them appropriately:
-        1. For tool-based actions (AgentDelegate, CmdRun, IPythonRunCell, FileEdit) and agent-sourced AgentFinish:
+        1. For tool-based actions (AgentDelegate, CmdRun, FileEdit) and agent-sourced AgentFinish:
             - In function calling mode: Stores the LLM's response in pending_tool_call_action_messages
             - In non-function calling mode: Creates a message with the action string
         2. For MessageActions: Creates a message with the text content and optional image content
@@ -194,7 +192,6 @@ class ConversationMemory:
         Args:
             action: The action to convert. Can be one of:
                 - CmdRunAction: For executing bash commands
-                - IPythonRunCellAction: For running IPython code
                 - FileEditAction: For editing files
                 - FileReadAction: For reading files using openhands-aci commands
 
@@ -221,7 +218,6 @@ class ConversationMemory:
             (
                 AgentDelegateAction,
                 AgentThinkAction,
-                IPythonRunCellAction,
                 FileEditAction,
                 FileReadAction,
 
@@ -331,7 +327,6 @@ class ConversationMemory:
 
         This method handles different types of observations and formats them appropriately:
         - CmdOutputObservation: Formats command execution results with exit codes
-        - IPythonRunCellObservation: Formats IPython cell execution results, replacing base64 images
         - FileEditObservation: Formats file editing results
         - FileReadObservation: Formats file reading results from openhands-aci
         - AgentDelegateObservation: Formats results from delegated agent tasks
@@ -373,46 +368,7 @@ class ConversationMemory:
             # logger.warning(f'MCPObservation: {obs}')
             text = truncate_content(obs.content, max_message_chars)
             message = Message(role='user', content=[TextContent(text=text)])
-        elif isinstance(obs, IPythonRunCellObservation):
-            text = obs.content
-            # Clean up any remaining base64 images in text content
-            splitted = text.split('\n')
-            for i, line in enumerate(splitted):
-                if '![image](data:image/png;base64,' in line:
-                    splitted[i] = (
-                        '![image](data:image/png;base64, ...) already displayed to user'
-                    )
-            text = '\n'.join(splitted)
-            text = truncate_content(text, max_message_chars)
 
-            # Create message content with text
-            content = [TextContent(text=text)]
-
-            # Add image URLs if available and vision is active
-            if vision_is_active and obs.image_urls:
-                # Filter out empty or invalid image URLs
-                valid_image_urls = [
-                    url for url in obs.image_urls if self._is_valid_image_url(url)
-                ]
-                invalid_count = len(obs.image_urls) - len(valid_image_urls)
-
-                if valid_image_urls:
-                    content.append(ImageContent(image_urls=valid_image_urls))  # type: ignore
-                    if invalid_count > 0:
-                        # Add text indicating some images were filtered
-                        content[
-                            0
-                        ].text += f'\n\nNote: {invalid_count} invalid or empty image(s) were filtered from this output. The agent may need to use alternative methods to access visual information.'
-                else:
-                    logger.debug(
-                        'IPython observation has image URLs but none are valid'
-                    )
-                    # Add text indicating all images were filtered
-                    content[
-                        0
-                    ].text += f'\n\nNote: All {len(obs.image_urls)} image(s) in this output were invalid or empty and have been filtered. The agent should use alternative methods to access visual information.'
-
-            message = Message(role='user', content=content)  # type: ignore
         elif isinstance(obs, FileEditObservation):
             text = truncate_content(str(obs), max_message_chars)
             message = Message(role='user', content=[TextContent(text=text)])

@@ -27,7 +27,7 @@ from openhands.events.action import (
     FileEditAction,
     FileReadAction,
     FileWriteAction,
-    IPythonRunCellAction,
+
 )
 from openhands.events.action.action import Action
 from openhands.events.action.files import FileEditSource
@@ -331,8 +331,7 @@ class ActionExecutionClient(Runtime):
     def run(self, action: CmdRunAction) -> Observation:
         return self.send_action_for_execution(action)
 
-    def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        return self.send_action_for_execution(action)
+
 
     def read(self, action: FileReadAction) -> Observation:
         return self.send_action_for_execution(action)

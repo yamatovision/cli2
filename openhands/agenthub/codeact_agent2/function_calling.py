@@ -12,7 +12,7 @@ from litellm import (
 from openhands.agenthub.codeact_agent.tools import (
     # BrowserTool,  # browsergym削除済みのため除外
     FinishTool,
-    IPythonTool,
+
     LLMBasedFileEditTool,
     ThinkTool,
     create_cmd_run_tool,
@@ -31,7 +31,7 @@ from openhands.events.action import (
     CmdRunAction,
     FileEditAction,
     FileReadAction,
-    IPythonRunCellAction,
+
     MessageAction,
 )
 from openhands.events.action.mcp import MCPAction
@@ -102,15 +102,7 @@ def response_to_actions(
                             f"Invalid float passed to 'timeout' argument: {arguments['timeout']}"
                         ) from e
 
-            # ================================================
-            # IPythonTool (Jupyter)
-            # ================================================
-            elif tool_call.function.name == IPythonTool['function']['name']:
-                if 'code' not in arguments:
-                    raise FunctionCallValidationError(
-                        f'Missing required argument "code" in tool call {tool_call.function.name}'
-                    )
-                action = IPythonRunCellAction(code=arguments['code'])
+
             elif tool_call.function.name == 'delegate_to_browsing_agent':
                 action = AgentDelegateAction(
                     agent='BrowsingAgent',
@@ -333,7 +325,7 @@ def response_to_actions(
 
     # Add response id to actions
     # This will ensure we can match both actions without tool calls (e.g. MessageAction)
-    # and actions with tool calls (e.g. CmdRunAction, IPythonRunCellAction, etc.)
+    # and actions with tool calls (e.g. CmdRunAction, etc.)
     # with the token usage data
     for action in actions:
         action.response_id = response.id

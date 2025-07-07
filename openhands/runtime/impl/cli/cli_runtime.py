@@ -33,7 +33,7 @@ from openhands.events.action import (
     FileEditAction,
     FileReadAction,
     FileWriteAction,
-    IPythonRunCellAction,
+
 )
 from openhands.events.action.mcp import MCPAction
 from openhands.events.event import FileEditSource, FileReadSource
@@ -471,22 +471,7 @@ class CLIRuntime(Runtime):
                 f'Error running command "{action.command}": {str(e)}'
             )
 
-    def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        """Run a Python code cell.
-        This functionality is not implemented in CLIRuntime.
-        Users should also disable the Jupyter plugin in AgentConfig.
-        """
-        # This functionality is not implemented in CLIRuntime.
-        # If you need to run IPython/Jupyter cells, please consider using a different runtime
-        # or ensure the Jupyter plugin is disabled in your AgentConfig to avoid
-        # attempting to use this disabled feature.
-        logger.warning(
-            "run_ipython is called on CLIRuntime, but it's not implemented. "
-            'Please disable the Jupyter plugin in AgentConfig.'
-        )
-        return ErrorObservation(
-            'Executing IPython cells is not implemented in CLIRuntime. '
-        )
+
 
     def _sanitize_filename(self, filename: str) -> str:
         # if path is absolute, ensure it starts with _workspace_path

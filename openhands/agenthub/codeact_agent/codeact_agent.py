@@ -16,7 +16,7 @@ from openhands.agenthub.codeact_agent.tools.bluelamp_delegate import (
 )
 # from openhands.agenthub.codeact_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
 from openhands.agenthub.codeact_agent.tools.finish import FinishTool
-from openhands.agenthub.codeact_agent.tools.ipython import IPythonTool
+
 from openhands.agenthub.codeact_agent.tools.llm_based_edit import LLMBasedFileEditTool
 from openhands.agenthub.codeact_agent.tools.str_replace_editor import (
     create_str_replace_editor_tool,
@@ -131,8 +131,7 @@ class CodeActAgent(Agent):
         #         logger.warning('Windows runtime does not support browsing yet')
         #     else:
         #         tools.append(BrowserTool)
-        if self.config.enable_jupyter:
-            tools.append(IPythonTool)
+
         if self.config.enable_llm_editor:
             tools.append(LLMBasedFileEditTool)
         elif self.config.enable_editor:
@@ -170,7 +169,7 @@ class CodeActAgent(Agent):
 
         Returns:
         - CmdRunAction(command) - bash command to run
-        - IPythonRunCellAction(code) - IPython code to run
+
         - AgentDelegateAction(agent, inputs) - delegate action for (sub)task
         - MessageAction(content) - Message action to run (e.g. ask for clarification)
         - AgentFinishAction() - end the interaction

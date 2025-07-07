@@ -6,7 +6,7 @@ from openai import OpenAI
 # ==================================================================================================
 # OPENAI
 # TODO: Move this to EventStream Actions when DockerRuntime is fully implemented
-# NOTE: we need to get env vars inside functions because they will be set in IPython
+# NOTE: we need to get env vars inside functions because they will be set
 # AFTER the agentskills is imported (the case for DockerRuntime)
 # ==================================================================================================
 def _get_openai_api_key() -> str:

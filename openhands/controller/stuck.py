@@ -1,13 +1,13 @@
 from openhands.controller.state.state import State
 from openhands.core.logger import openhands_logger as logger
 from openhands.events.action.action import Action
-from openhands.events.action.commands import IPythonRunCellAction
+
 from openhands.events.action.empty import NullAction
 from openhands.events.action.message import MessageAction
 from openhands.events.event import Event, EventSource
 from openhands.events.observation import (
     CmdOutputObservation,
-    IPythonRunCellObservation,
+
 )
 from openhands.events.observation.agent import AgentCondensationObservation
 from openhands.events.observation.empty import NullObservation
@@ -148,112 +148,12 @@ class StuckDetector:
             if all(isinstance(obs, ErrorObservation) for obs in last_observations[:3]):
                 logger.warning('Action, ErrorObservation loop detected')
                 return True
-            # or, are the last three observations all IPythonRunCellObservation with SyntaxError?
-            elif all(
-                isinstance(obs, IPythonRunCellObservation)
-                for obs in last_observations[:3]
-            ):
-                warning = 'Action, IPythonRunCellObservation loop detected'
-                for error_message in self.SYNTAX_ERROR_MESSAGES:
-                    if error_message.startswith(
-                        'SyntaxError: unterminated string literal (detected at line'
-                    ):
-                        if self._check_for_consistent_line_error(
-                            [
-                                obs
-                                for obs in last_observations[:3]
-                                if isinstance(obs, IPythonRunCellObservation)
-                            ],
-                            error_message,
-                        ):
-                            logger.warning(warning)
-                            return True
-                    elif error_message in (
-                        'SyntaxError: invalid syntax. Perhaps you forgot a comma?',
-                        'SyntaxError: incomplete input',
-                    ) and self._check_for_consistent_invalid_syntax(
-                        [
-                            obs
-                            for obs in last_observations[:3]
-                            if isinstance(obs, IPythonRunCellObservation)
-                        ],
-                        error_message,
-                    ):
-                        logger.warning(warning)
-                        return True
+            # IPython loop detection removed - IPython functionality no longer available
         return False
 
-    def _check_for_consistent_invalid_syntax(
-        self, observations: list[IPythonRunCellObservation], error_message: str
-    ) -> bool:
-        first_lines = []
-        valid_observations = []
+    # IPython syntax error checking methods removed - IPython functionality no longer available
 
-        for obs in observations:
-            content = obs.content
-            lines = content.strip().split('\n')
 
-            if len(lines) < 6:  # 6 because a real syntax error has at least 6 lines
-                return False
-
-            line1 = lines[0].strip()
-            if not line1.startswith('Cell In[1], line'):
-                return False
-
-            first_lines.append(line1)  # Store the first line of each observation
-
-            # Check last three lines
-            if (
-                lines[-1].startswith('[Jupyter Python interpreter:')
-                and lines[-2].startswith('[Jupyter current working directory:')
-                and error_message in lines[-3]
-            ):
-                valid_observations.append(obs)
-
-        # Check if:
-        # 1. All first lines are identical
-        # 2. We have exactly 3 valid observations
-        # 3. The error message line is identical in all valid observations
-        return (
-            len(set(first_lines)) == 1
-            and len(valid_observations) == 3
-            and len(
-                set(
-                    obs.content.strip().split('\n')[:-2][-1]
-                    for obs in valid_observations
-                )
-            )
-            == 1
-        )
-
-    def _check_for_consistent_line_error(
-        self, observations: list[IPythonRunCellObservation], error_message: str
-    ) -> bool:
-        error_lines = []
-
-        for obs in observations:
-            content = obs.content
-            lines = content.strip().split('\n')
-
-            if len(lines) < 3:
-                return False
-
-            last_lines = lines[-3:]
-
-            # Check if the last two lines are our own
-            if not (
-                last_lines[-2].startswith('[Jupyter current working directory:')
-                and last_lines[-1].startswith('[Jupyter Python interpreter:')
-            ):
-                return False
-
-            # Check for the error message in the 3rd-to-last line
-            if error_message in last_lines[-3]:
-                error_lines.append(last_lines[-3])
-
-        # Check if we found the error message in all 3 observations
-        # and the 3rd-to-last line is identical across all occurrences
-        return len(error_lines) == 3 and len(set(error_lines)) == 1
 
     def _is_stuck_monologue(self, filtered_history: list[Event]) -> bool:
         # scenario 3: monologue
@@ -382,23 +282,8 @@ class StuckDetector:
         return False
 
     def _eq_no_pid(self, obj1: Event, obj2: Event) -> bool:
-        if isinstance(obj1, IPythonRunCellAction) and isinstance(
-            obj2, IPythonRunCellAction
-        ):
-            # for loop detection on edit actions, ignore the thought, compare some code
-            # the code should have at least 3 lines, to avoid simple one-liners
-            if (
-                'edit_file_by_replace(' in obj1.code
-                and 'edit_file_by_replace(' in obj2.code
-            ):
-                return (
-                    len(obj1.code.split('\n')) > 2
-                    and obj1.code.split('\n')[:3] == obj2.code.split('\n')[:3]
-                )
-            else:
-                # default comparison
-                return obj1 == obj2
-        elif isinstance(obj1, CmdOutputObservation) and isinstance(
+        # IPython action comparison removed - IPython functionality no longer available
+        if isinstance(obj1, CmdOutputObservation) and isinstance(
             obj2, CmdOutputObservation
         ):
             # for loop detection, ignore command_id, which is the pid

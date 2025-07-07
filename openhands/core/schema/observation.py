@@ -18,9 +18,7 @@ class ObservationType(str, Enum):
     """The output of a command
     """
 
-    RUN_IPYTHON = 'run_ipython'
-    """Runs a IPython cell.
-    """
+
 
     CHAT = 'chat'
     """A message from the user

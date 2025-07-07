@@ -13,7 +13,6 @@ from openhands.events.observation.browse import BrowserOutputObservation
 from openhands.events.observation.commands import (
     CmdOutputMetadata,
     CmdOutputObservation,
-    IPythonRunCellObservation,
 )
 from openhands.events.observation.delegate import AgentDelegateObservation
 from openhands.events.observation.empty import (
@@ -33,7 +32,6 @@ from openhands.events.observation.success import SuccessObservation
 observations = (
     NullObservation,
     CmdOutputObservation,
-    IPythonRunCellObservation,
     BrowserOutputObservation,
     FileReadObservation,
     FileWriteObservation,

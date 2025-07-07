@@ -30,9 +30,7 @@ class ActionType(str, Enum):
     """Runs a command.
     """
 
-    RUN_IPYTHON = 'run_ipython'
-    """Runs a IPython cell.
-    """
+
 
     BROWSE = 'browse'
     """Opens a web page.

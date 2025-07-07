@@ -30,7 +30,7 @@ from openhands.events.action import (
     FileEditAction,
     FileReadAction,
     FileWriteAction,
-    IPythonRunCellAction,
+
 )
 from openhands.events.action.mcp import MCPAction
 from openhands.events.event import Event
@@ -223,16 +223,7 @@ class Runtime(FileEditRuntimeMixin):
     def add_env_vars(self, env_vars: dict[str, str]) -> None:
         env_vars = {key.upper(): value for key, value in env_vars.items()}
 
-        # Add env vars to the IPython shell (if Jupyter is used)
-        if any(isinstance(plugin, JupyterRequirement) for plugin in self.plugins):
-            code = 'import os\n'
-            for key, value in env_vars.items():
-                # Note: json.dumps gives us nice escaping for free
-                code += f'os.environ["{key}"] = {json.dumps(value)}\n'
-            code += '\n'
-            self.run_ipython(IPythonRunCellAction(code))
-            # Note: we don't log the vars values, they're leaking info
-            logger.debug('Added env vars to IPython')
+        # Jupyter plugin removed - env vars handled by bash session only
 
         # Check if we're on Windows
         import os
@@ -869,9 +860,7 @@ fi
     def run(self, action: CmdRunAction) -> Observation:
         pass
 
-    @abstractmethod
-    def run_ipython(self, action: IPythonRunCellAction) -> Observation:
-        pass
+
 
     @abstractmethod
     def read(self, action: FileReadAction) -> Observation:
