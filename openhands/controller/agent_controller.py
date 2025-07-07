@@ -458,7 +458,7 @@ class AgentController:
                 observation_to_print.content, self.agent.llm.config.max_message_chars
             )
         # Use info level if LOG_ALL_EVENTS is set
-        log_level = 'INFO' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'DEBUG'
+        log_level = 'info' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'debug'
         self.log(
             log_level, str(observation_to_print), extra={'msg_type': 'OBSERVATION'}
         )
@@ -490,7 +490,7 @@ class AgentController:
         if action.source == EventSource.USER:
             # Use info level if LOG_ALL_EVENTS is set
             log_level = (
-                'INFO' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'DEBUG'
+                'info' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'debug'
             )
             self.log(
                 log_level,
@@ -851,7 +851,7 @@ class AgentController:
 
             self.event_stream.add_event(action, action._source)  # type: ignore [attr-defined]
 
-        log_level = 'INFO' if LOG_ALL_EVENTS else 'DEBUG'
+        log_level = 'info' if LOG_ALL_EVENTS else 'debug'
         self.log(log_level, str(action), extra={'msg_type': 'ACTION'})
 
     @property
