@@ -55,7 +55,6 @@ from openhands.microagent import (
     load_microagents_from_dir,
 )
 from openhands.runtime.plugins import (
-    JupyterRequirement,
     PluginRequirement,
     VSCodeRequirement,
 )

@@ -566,7 +566,7 @@ if __name__ == '__main__':
         default=None,
     )
 
-    # example: python client.py 8000 --working-dir /workspace --plugins JupyterRequirement
+    # example: python client.py 8000 --working-dir /workspace --plugins AgentSkillsRequirement
     args = parser.parse_args()
 
     # Start the file viewer server in a separate thread

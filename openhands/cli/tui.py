@@ -387,7 +387,7 @@ def display_help(agent_type: str | None = None) -> None:
     commands_html = ''
     
     # 基本コマンドを表示
-    for command, description in COMMANDS.items():  # type: ignore
+    for command, description in COMMANDS().items():  # type: ignore
         commands_html += f'<gold><b>{command}</b></gold> - <grey>{description}</grey>\n'
     
     # CodeActAgent2専用情報を追加
@@ -528,22 +528,10 @@ class CommandCompleter(Completer):
     def get_completions(
         self, document: Document, complete_event: CompleteEvent,
     ) -> Generator[Completion, None, None]:
-        text = document.text_before_cursor.lstrip()
-        if text.startswith('/'):
-            available_commands = dict(COMMANDS)  # type: ignore
-            if self.agent_state != AgentState.PAUSED:
-                available_commands.pop('/resume', None)
-
-            # CodeActAgent2では特別なコマンドは不要（マイクロエージェントが自動発動）
-
-            for command, description in available_commands.items():
-                if command.startswith(text):
-                    yield Completion(
-                        command,
-                        start_position=-len(text),
-                        display_meta=description,
-                        style='bg:ansidarkgray fg:gold',
-                    )
+        # コマンド補完機能を無効化
+        # ファイルパス入力時のエラーを防ぐため、補完候補を返さない
+        return
+        yield  # unreachable code to satisfy generator type
 
 
 def create_prompt_session() -> PromptSession[str]:
