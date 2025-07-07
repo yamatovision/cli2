@@ -458,7 +458,7 @@ class AgentController:
                 observation_to_print.content, self.agent.llm.config.max_message_chars
             )
         # Use info level if LOG_ALL_EVENTS is set
-        log_level = 'info' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'debug'
+        log_level = 'INFO' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'DEBUG'
         self.log(
             log_level, str(observation_to_print), extra={'msg_type': 'OBSERVATION'}
         )
@@ -490,7 +490,7 @@ class AgentController:
         if action.source == EventSource.USER:
             # Use info level if LOG_ALL_EVENTS is set
             log_level = (
-                'info' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'debug'
+                'INFO' if os.getenv('LOG_ALL_EVENTS') in ('true', '1') else 'DEBUG'
             )
             self.log(
                 log_level,
@@ -572,12 +572,7 @@ class AgentController:
         if new_state in (AgentState.STOPPED, AgentState.ERROR):
             self._reset()
 
-        # User is allowing to check control limits and expand them if applicable
-        if (
-            self.state.agent_state == AgentState.ERROR
-            and new_state == AgentState.RUNNING
-        ):
-            self.state_tracker.maybe_increase_control_flags_limits(self.headless_mode)
+        # Note: Control limit expansion removed as limits are now disabled
 
         if self._pending_action is not None and (
             new_state in (AgentState.USER_CONFIRMED, AgentState.USER_REJECTED)
@@ -856,7 +851,7 @@ class AgentController:
 
             self.event_stream.add_event(action, action._source)  # type: ignore [attr-defined]
 
-        log_level = 'info' if LOG_ALL_EVENTS else 'debug'
+        log_level = 'INFO' if LOG_ALL_EVENTS else 'DEBUG'
         self.log(log_level, str(action), extra={'msg_type': 'ACTION'})
 
     @property

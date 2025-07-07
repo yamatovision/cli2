@@ -20,7 +20,6 @@ temperature = 0.0
 enable_browsing = true
 enable_llm_editor = false
 enable_editor = true
-enable_jupyter = true
 enable_cmd = true
 enable_think = true
 enable_finish = true
@@ -43,3 +42,4 @@ timeout = 120
 # コア設定
 [core]
 runtime = "local"
+# 反復制限と予算制限は削除済み - エージェントは無制限で動作

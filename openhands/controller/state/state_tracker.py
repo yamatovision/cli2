@@ -233,12 +233,7 @@ class StateTracker:
             for event in self.state.history
         ]
 
-    def maybe_increase_control_flags_limits(self, headless_mode: bool):
-        # Iteration and budget extensions are independent of each other
-        # An error will be thrown if any one of the control flags have reached or exceeded its limit
-        self.state.iteration_flag.increase_limit(headless_mode)
-        if self.state.budget_flag:
-            self.state.budget_flag.increase_limit(headless_mode)
+    # Note: maybe_increase_control_flags_limits method removed as limits are now disabled
 
     def get_metrics_snapshot(self):
         """Deep copy of metrics

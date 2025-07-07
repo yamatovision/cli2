@@ -93,7 +93,7 @@ def start_file_viewer_server(port: int) -> tuple[str, threading.Thread]:
     logger.info(f'Starting file viewer server on port {port}')
 
     app = create_app()
-    config = Config(app=app, host='127.0.0.1', port=port, log_level='error')
+    config = Config(app=app, host='127.0.0.1', port=port, log_level='ERROR')
     server = Server(config=config)
 
     # Run the server in a new thread

@@ -12,23 +12,12 @@ T = TypeVar(
 class ControlFlag(Generic[T]):
     """Base class for control flags that manage limits and state transitions."""
 
-    limit_increase_amount: T
-    current_value: T
-    max_value: T
-    headless_mode: bool = False
-    _hit_limit: bool = False
+    limit_increase_amount: T  # Kept for compatibility, not used for limits
+    current_value: T  # Used for monitoring and analytics
+    max_value: T  # Kept for compatibility, not used for limits
+    headless_mode: bool = False  # Kept for compatibility
 
-    def reached_limit(self) -> bool:
-        """Check if the limit has been reached.
-
-        Returns:
-            bool: True if the limit has been reached, False otherwise.
-        """
-        raise NotImplementedError
-
-    def increase_limit(self, headless_mode: bool) -> None:
-        """Expand the limit when needed."""
-        raise NotImplementedError
+    # Note: reached_limit() and increase_limit() methods removed as limits are now disabled
 
     def step(self):
         """Determine the next state based on the current state and mode.
@@ -43,20 +32,12 @@ class ControlFlag(Generic[T]):
 class IterationControlFlag(ControlFlag[int]):
     """Control flag for managing iteration limits."""
 
-    def reached_limit(self) -> bool:
-        """Check if the iteration limit has been reached."""
-        self._hit_limit = self.current_value >= self.max_value
-        return self._hit_limit
-
-    def increase_limit(self, headless_mode: bool) -> None:
-        """Expand the iteration limit by adding the initial value."""
-        if not headless_mode and self._hit_limit:
-            self.max_value += self.limit_increase_amount
-            self._hit_limit = False
+    # Note: reached_limit() and increase_limit() methods removed as limits are disabled
 
     def step(self):
-        """Increment iteration count without enforcing limits.
+        """Increment iteration count for monitoring purposes.
         
+        No limits are enforced - the agent can run indefinitely.
         Loop detection is handled by StuckDetector which provides more
         sophisticated pattern-based detection instead of simple count limits.
         """
@@ -67,27 +48,13 @@ class IterationControlFlag(ControlFlag[int]):
 class BudgetControlFlag(ControlFlag[float]):
     """Control flag for managing budget limits."""
 
-    def reached_limit(self) -> bool:
-        """Check if the budget limit has been reached."""
-        self._hit_limit = self.current_value >= self.max_value
-        return self._hit_limit
-
-    def increase_limit(self, headless_mode) -> None:
-        """Expand the budget limit by adding the initial value to the current value."""
-        if self._hit_limit:
-            self.max_value = self.current_value + self.limit_increase_amount
-            self._hit_limit = False
+    # Note: reached_limit() and increase_limit() methods removed as limits are disabled
 
     def step(self):
-        """Check if we've reached the limit and update state accordingly.
+        """Update budget state for monitoring purposes.
 
-        Note: Unlike IterationControlFlag, this doesn't increment the value
-        as the budget is updated externally.
+        No limits are enforced - the agent can run with unlimited budget.
+        Budget tracking is maintained for monitoring and analytics only.
         """
-        if self.reached_limit():
-            current_str = f'{self.current_value:.2f}'
-            max_str = f'{self.max_value:.2f}'
-            raise RuntimeError(
-                f'Agent reached maximum budget for conversation.'
-                f'Current budget: {current_str}, max budget: {max_str}'
-            )
+        # Budget is updated externally, no action needed here
+        pass

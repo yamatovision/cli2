@@ -225,9 +225,6 @@ enable_llm_editor = false
 # Only has an effect if enable_llm_editor is False
 enable_editor = true
 
-# Whether the IPython tool is enabled
-enable_jupyter = true
-
 # Whether the command tool is enabled
 enable_cmd = true
 
