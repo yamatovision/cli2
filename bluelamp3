@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# BlueLamp CLI2 - Powered by OpenHands
-# AI開発支援ツール (CLI2版) - CodeActAgent2デフォルト版
+# BlueLamp CLI - Expansion Agent
+# 拡張エージェントがあなたのアプリをアップデートします
 
 # CLI2のディレクトリを固定で設定
 CLI2_DIR="/Users/tatsuya/Desktop/システム開発/AppGenius2/AppGenius/cli2"
@@ -15,8 +15,8 @@ export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
 # BlueLampブランディングを明示的に設定
 export OPENHANDS_BRAND="bluelamp"
 
-# CodeActAgent2をデフォルトエージェントに設定
-export OPENHANDS_DEFAULT_AGENT="CodeActAgent2"
+# ExpansionAgentをデフォルトエージェントに設定
+export OPENHANDS_DEFAULT_AGENT="ExpansionAgent"
 
 # 機能拡張プランナー（#15）のプロンプトを使用
 export OPENHANDS_SYSTEM_PROMPT_FILENAME="feature_extension.j2"
@@ -25,12 +25,17 @@ export OPENHANDS_SYSTEM_PROMPT_FILENAME="feature_extension.j2"
 export FASTMCP_LOG_LEVEL="INFO"
 
 # Poetry仮想環境のPythonパスを直接指定
-# Poetryが管理する仮想環境を使用
-VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/openhands-ai-dQS6D9JC-py3.12"
+VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/bluelamp-ai-7sUMeoa0-py3.12"
 PYTHON_BIN="$VENV_PATH/bin/python"
 
 # Pythonパスを設定（CLI2_DIRを使用）
 export PYTHONPATH="$CLI2_DIR:$PYTHONPATH"
+
+# セッション情報を表示
+echo "🔵 BlueLamp Expansion Agent"
+echo "セッションID: expansion_agent"
+echo "拡張エージェントがあなたのアプリをアップデートします"
+echo ""
 
 # CLI2ディレクトリに移動してから実行
 cd "$CLI2_DIR" || {

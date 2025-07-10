@@ -9,19 +9,19 @@ if TYPE_CHECKING:
     from openhands.events.action import Action
     from openhands.llm.llm import ModelResponse
 
-import openhands.agenthub.codeact_agent2.function_calling as codeact_function_calling
-from openhands.agenthub.codeact_agent2.tools.bash import create_cmd_run_tool
-from openhands.agenthub.codeact_agent2.tools.bluelamp_delegate import (
+import openhands.agenthub.implementation_agent.function_calling as codeact_function_calling
+from openhands.agenthub.implementation_agent.tools.bash import create_cmd_run_tool
+from openhands.agenthub.implementation_agent.tools.bluelamp_delegate import (
     create_bluelamp_delegate_tools,
 )
-# from openhands.agenthub.codeact_agent2.tools.browser import BrowserTool  # browsergym削除済みのため除外
-from openhands.agenthub.codeact_agent2.tools.finish import FinishTool
+# from openhands.agenthub.implementation_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
+from openhands.agenthub.implementation_agent.tools.finish import FinishTool
 
-from openhands.agenthub.codeact_agent2.tools.llm_based_edit import LLMBasedFileEditTool
-from openhands.agenthub.codeact_agent2.tools.str_replace_editor import (
+from openhands.agenthub.implementation_agent.tools.llm_based_edit import LLMBasedFileEditTool
+from openhands.agenthub.implementation_agent.tools.str_replace_editor import (
     create_str_replace_editor_tool,
 )
-from openhands.agenthub.codeact_agent2.tools.think import ThinkTool
+from openhands.agenthub.implementation_agent.tools.think import ThinkTool
 from openhands.controller.agent import Agent
 from openhands.controller.state.state import State
 from openhands.core.config import AgentConfig
@@ -42,10 +42,10 @@ from openhands.utils.prompt import PromptManager
 from openhands.portal.portal_prompt_manager import PortalPromptManager
 
 
-class CodeActAgent2(Agent):
+class ImplementationAgent(Agent):
     VERSION = '2.2'
     """
-    The Code Act Agent is a minimalist agent.
+    The Implementation Agent is a specialized agent for implementing applications.
     The agent works by passing the model a list of action-observation pairs and prompting the model to take the next step.
 
     ### Overview
@@ -97,10 +97,10 @@ class CodeActAgent2(Agent):
     def prompt_manager(self) -> PromptManager:
         if self._prompt_manager is None:
             # Portal連携を有効にしてPromptManagerを作成
-            # BlueLampオーケストレーターの場合はPortal APIから取得
+            # 実装エージェント専用のプロンプトファイルを使用
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
-                system_prompt_filename=self.config.system_prompt_filename,
+                system_prompt_filename='implementation_agent_system_prompt.j2',
                 enable_portal=True
             )
 

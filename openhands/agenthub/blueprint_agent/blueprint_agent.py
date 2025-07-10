@@ -9,19 +9,19 @@ if TYPE_CHECKING:
     from openhands.events.action import Action
     from openhands.llm.llm import ModelResponse
 
-import openhands.agenthub.codeact_agent.function_calling as codeact_function_calling
-from openhands.agenthub.codeact_agent.tools.bash import create_cmd_run_tool
-from openhands.agenthub.codeact_agent.tools.bluelamp_delegate import (
+import openhands.agenthub.blueprint_agent.function_calling as codeact_function_calling
+from openhands.agenthub.blueprint_agent.tools.bash import create_cmd_run_tool
+from openhands.agenthub.blueprint_agent.tools.bluelamp_delegate import (
     create_bluelamp_delegate_tools,
 )
-# from openhands.agenthub.codeact_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
-from openhands.agenthub.codeact_agent.tools.finish import FinishTool
+# from openhands.agenthub.blueprint_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
+from openhands.agenthub.blueprint_agent.tools.finish import FinishTool
 
-from openhands.agenthub.codeact_agent.tools.llm_based_edit import LLMBasedFileEditTool
-from openhands.agenthub.codeact_agent.tools.str_replace_editor import (
+from openhands.agenthub.blueprint_agent.tools.llm_based_edit import LLMBasedFileEditTool
+from openhands.agenthub.blueprint_agent.tools.str_replace_editor import (
     create_str_replace_editor_tool,
 )
-from openhands.agenthub.codeact_agent.tools.think import ThinkTool
+from openhands.agenthub.blueprint_agent.tools.think import ThinkTool
 from openhands.controller.agent import Agent
 from openhands.controller.state.state import State
 from openhands.core.config import AgentConfig
@@ -42,10 +42,10 @@ from openhands.utils.prompt import PromptManager
 from openhands.portal.portal_prompt_manager import PortalPromptManager
 
 
-class CodeActAgent(Agent):
+class BlueprintAgent(Agent):
     VERSION = '2.2'
     """
-    The Code Act Agent is a minimalist agent.
+    The Blueprint Agent is a design-focused agent for creating application blueprints.
     The agent works by passing the model a list of action-observation pairs and prompting the model to take the next step.
 
     ### Overview

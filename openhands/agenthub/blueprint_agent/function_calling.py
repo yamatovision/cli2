@@ -9,7 +9,7 @@ from litellm import (
     ModelResponse,
 )
 
-from openhands.agenthub.codeact_agent.tools import (
+from openhands.agenthub.blueprint_agent.tools import (
     # BrowserTool,  # browsergym削除済みのため除外
     FinishTool,
     LLMBasedFileEditTool,

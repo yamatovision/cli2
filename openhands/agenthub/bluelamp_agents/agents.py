@@ -2,7 +2,7 @@
 
 import os
 from typing import List, Dict, Any, Optional
-from openhands.agenthub.codeact_agent.codeact_agent import CodeActAgent
+from openhands.agenthub.blueprint_agent.blueprint_agent import BlueprintAgent
 from openhands.controller.state.state import State
 from openhands.events.action import AgentFinishAction
 from openhands.utils.prompt import PromptManager
@@ -10,7 +10,7 @@ from openhands.portal.portal_prompt_manager import PortalPromptManager
 from openhands.core.logger import openhands_logger as logger
 
 
-class BlueLampBaseAgent(CodeActAgent):
+class BlueLampBaseAgent(BlueprintAgent):
     """BlueLamp専門エージェントの基底クラス"""
 
     VERSION = '1.0'

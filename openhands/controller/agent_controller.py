@@ -270,8 +270,19 @@ class AgentController:
                 err_id = 'STATUS$ERROR_LLM_SERVICE_UNAVAILABLE'
                 self.state.last_error = err_id
             elif isinstance(e, InternalServerError):
-                err_id = 'STATUS$ERROR_LLM_INTERNAL_SERVER_ERROR'
-                self.state.last_error = err_id
+                # Check if this is an overloaded error (temporary issue)
+                if 'overloaded' in str(e).lower() or 'overload' in str(e).lower():
+                    # Treat overload errors as rate limit errors (temporary)
+                    self.log(
+                        'info',
+                        f'Detected overload error in _react_to_exception, setting agent to RATE_LIMITED state: {str(e)}'
+                    )
+                    await self.set_agent_state_to(AgentState.RATE_LIMITED)
+                    return
+                else:
+                    # Other internal server errors are still treated as fatal
+                    err_id = 'STATUS$ERROR_LLM_INTERNAL_SERVER_ERROR'
+                    self.state.last_error = err_id
             elif isinstance(e, BadRequestError) and 'ExceededBudget' in str(e):
                 err_id = 'STATUS$ERROR_LLM_OUT_OF_CREDITS'
                 self.state.last_error = err_id
@@ -299,6 +310,8 @@ class AgentController:
             self.log(
                 'error',
                 f'Error while running the agent (session ID: {self.id}): {e}. '
+                f'Error type: {type(e).__name__}. '
+                f'Error string: "{str(e)}". '
                 f'Traceback: {traceback.format_exc()}',
             )
             reported = RuntimeError(
@@ -309,13 +322,21 @@ class AgentController:
                 or isinstance(e, APIError)
                 or isinstance(e, BadRequestError)
                 or isinstance(e, NotFoundError)
-                or isinstance(e, InternalServerError)
                 or isinstance(e, AuthenticationError)
                 or isinstance(e, RateLimitError)
                 or isinstance(e, ContentPolicyViolationError)
                 or isinstance(e, LLMContextWindowExceedError)
+                or (isinstance(e, InternalServerError) and not ('overloaded' in str(e).lower() or 'overload' in str(e).lower()))
             ):
                 reported = e  # type: ignore
+            elif isinstance(e, InternalServerError) and ('overloaded' in str(e).lower() or 'overload' in str(e).lower()):
+                # Handle overload errors as temporary rate limit issues
+                self.log(
+                    'info',
+                    f'Detected overload error, setting agent to RATE_LIMITED state: {str(e)}'
+                )
+                await self.set_agent_state_to(AgentState.RATE_LIMITED)
+                return
             else:
                 self.log(
                     'warning',

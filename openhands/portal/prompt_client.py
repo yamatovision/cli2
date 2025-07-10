@@ -25,7 +25,7 @@ class PortalPromptClient:
             base_url: PortalのベースURL
             auth_file: 認証情報ファイルのパス
         """
-        self.base_url = base_url or os.getenv("PORTAL_BASE_URL", "https://bluelamp-235426778039.asia-northeast1.run.app/api")
+        self.base_url = base_url or os.getenv("PORTAL_BASE_URL", "http://bluelamp-235426778039.asia-northeast1.run.app/api")
         self._obscure_storage = get_obscure_storage()
         self._api_key: Optional[str] = None
         

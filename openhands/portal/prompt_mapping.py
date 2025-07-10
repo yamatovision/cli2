@@ -23,6 +23,7 @@ PROMPT_MAPPING = {
     'prototype_implementation.j2': '6862397f1428c1efc592f6da',
     'requirements_engineer.j2': '6862397f1428c1efc592f6ce',
     'system_prompt.j2': '6862397f1428c1efc592f6cc',  # BlueLampオーケストレーター
+    'implementation_agent_system_prompt.j2': '686f54d9d50597506c8254f0',  # 実装エージェント
 }
 
 # 逆マッピング（プロンプトID → ローカルファイル名）
@@ -47,6 +48,7 @@ PROMPT_TITLES = {
     '6862397f1428c1efc592f6d6': '#5 実装コンサルタント',
     '6862397f1428c1efc592f6da': '#7 プロトタイプ実装',
     '6862397f1428c1efc592f6ce': '#1 要件定義エンジニア',
+    '686f54d9d50597506c8254f0': '#17 実装エージェント',
 }
 
 def get_prompt_id(local_filename: str) -> str | None:
