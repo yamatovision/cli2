@@ -132,6 +132,8 @@ class PortalPromptManager(PromptManager):
     def get_system_message(self) -> str:
         """Portal APIからシステムメッセージを取得"""
         try:
+            logger.info(f"[PortalPromptManager] get_system_message called with filename: {self.system_prompt_filename}")
+            
             # キャッシュがある場合はそれを使用
             if self._portal_content_cache is not None:
                 logger.debug("キャッシュからプロンプトを返却")
@@ -155,6 +157,9 @@ class PortalPromptManager(PromptManager):
                     if portal_content:
                         self._portal_content_cache = portal_content
                         logger.info(f"Portal プロンプト使用: {self.system_prompt_filename}")
+                        # プロンプトの内容を一部ログ出力
+                        preview = portal_content[:200] if len(portal_content) > 200 else portal_content
+                        logger.info(f"Portal プロンプト内容プレビュー: {preview}...")
                         return self._clean_portal_prompt(portal_content)
                         
                 except Exception as e:

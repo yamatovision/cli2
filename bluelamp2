@@ -21,6 +21,9 @@ CURRENT_DIR="$(pwd)"
 # 環境変数を新しい形式に設定
 export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
 
+# 実行コマンドを識別するための環境変数
+export BLUELAMP_COMMAND="bluelamp2"
+
 # Poetry仮想環境のPythonパスを直接指定
 VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/bluelamp-ai-7sUMeoa0-py3.12"
 PYTHON_BIN="$VENV_PATH/bin/python"

@@ -85,17 +85,22 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     config: OpenHandsConfig = setup_config_from_args(args)
     
     # コマンド名に基づいてエージェントを選択
-    command_name = os.path.basename(sys.argv[0])
-    if 'bluelamp3' in command_name:
-        config.default_agent = 'CodeActAgent2'
-        logger.info("bluelamp3コマンド検出: CodeActAgent2を使用")
-    elif 'bluelamp2' in command_name:
-        config.default_agent = 'CodeActAgent'
-        logger.info("bluelamp2コマンド検出: CodeActAgentを使用")
+    # 環境変数から実行コマンドを取得
+    command_name = os.environ.get('BLUELAMP_COMMAND', '')
+    
+    if command_name == 'bluelamp3':
+        config.default_agent = 'ExpansionAgent'
+        logger.info("bluelamp3コマンド検出: ExpansionAgentを使用")
+    elif command_name == 'bluelamp2':
+        config.default_agent = 'ImplementationAgent'
+        logger.info("bluelamp2コマンド検出: ImplementationAgentを使用")
+    elif command_name == 'bluelamp':
+        config.default_agent = 'BlueprintAgent'
+        logger.info("bluelampコマンド検出: BlueprintAgentを使用")
     else:
-        # デフォルトはCodeActAgent2
-        config.default_agent = 'CodeActAgent2'
-        logger.info("デフォルト: CodeActAgent2を使用")
+        # デフォルトはBlueprintAgent
+        config.default_agent = 'BlueprintAgent'
+        logger.info(f"デフォルト: BlueprintAgentを使用 (BLUELAMP_COMMAND='{command_name}')")
 
     # Load settings from Settings Store
     settings_store = await FileSettingsStore.get_instance(config=config, user_id=None)
@@ -116,8 +121,6 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
     # Use settings from settings store if available and override with command line arguments
     if settings:
-        # エージェント設定は上記のコマンド名判定を維持（設定で上書きしない）
-        
         if not args.llm_config and settings.llm_model and settings.llm_api_key:
             llm_config = config.get_llm_config()
             llm_config.model = settings.llm_model
@@ -183,12 +186,40 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     # Show welcome message based on agent
     if not banner_shown:
         clear()
-        if config.default_agent == 'CodeActAgent2':
+        # Use appropriate session ID based on agent type
+        if config.default_agent == 'ExpansionAgent':
+            display_banner(session_id='expansion_agent')
+        elif config.default_agent == 'ImplementationAgent':
+            display_banner(session_id='implementation_agent')
+        elif config.default_agent == 'BlueprintAgent':
+            display_banner(session_id='blueprint_agent')
+        elif config.default_agent == 'CodeActAgent2':
             display_banner(session_id='codeact-agent2')
         else:
-            display_banner(session_id='codeact-agent')
+            display_banner(session_id=sid)
         
-    if config.default_agent == 'CodeActAgent2':
+    if config.default_agent == 'ExpansionAgent':
+        print_formatted_text(
+            HTML('<ansigreen>🔵 ExpansionAgent - 拡張エージェント</ansigreen>\n')
+        )
+        print_formatted_text(
+            HTML('<grey>アプリケーションの機能拡張と改善を専門とするエージェントです。</grey>\n')
+        )
+    elif config.default_agent == 'ImplementationAgent':
+        print_formatted_text(
+            HTML('<ansigreen>🔨 ImplementationAgent - 実装エージェント</ansigreen>\n')
+        )
+        print_formatted_text(
+            HTML('<grey>コードの実装とビルドを専門とするエージェントです。</grey>\n')
+        )
+    elif config.default_agent == 'BlueprintAgent':
+        print_formatted_text(
+            HTML('<ansigreen>📐 BlueprintAgent - 設計エージェント</ansigreen>\n')
+        )
+        print_formatted_text(
+            HTML('<grey>システム設計とアーキテクチャを専門とするエージェントです。</grey>\n')
+        )
+    elif config.default_agent == 'CodeActAgent2':
         print_formatted_text(
             HTML('<ansigreen>🚀 CodeActAgent2 - Portal連携マイクロエージェント統合版</ansigreen>\n')
         )

@@ -15,9 +15,6 @@ export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
 # BlueLampブランディングを設定
 export OPENHANDS_BRAND="bluelamp"
 
-# CodeActAgentを直接指定
-export OPENHANDS_DEFAULT_AGENT="CodeActAgent"
-
 # Poetry仮想環境のPythonパスを直接指定
 VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/openhands-ai-dQS6D9JC-py3.12"
 PYTHON_BIN="$VENV_PATH/bin/python"
@@ -33,8 +30,8 @@ cd "$CLI2_DIR" || {
 
 echo ""
 echo "╭─────────────────────────────────────────────────────────────────╮"
-echo "│ 🚀 BlueLamp4 - Direct CodeActAgent Launcher                    │"
-echo "│ エージェント: CodeActAgent                                      │"
+echo "│ 🚀 BlueLamp4 - General Purpose Agent                           │"
+echo "│ エージェント: デフォルト設定                                    │"
 echo "│ ディレクトリ: $CURRENT_DIR"
 echo "╰─────────────────────────────────────────────────────────────────╯"
 echo ""

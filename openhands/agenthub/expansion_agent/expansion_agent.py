@@ -79,13 +79,17 @@ class ExpansionAgent(Agent):
         - llm (LLM): The llm to be used by this agent
         - config (AgentConfig): The configuration for this agent
         """
+        # ExpansionAgentは常に機能拡張プランナーのプロンプトを使用
+        config.system_prompt_filename = 'feature_extension.j2'
+        
         super().__init__(llm, config)
         self.pending_actions: deque['Action'] = deque()
         self.reset()
         self.tools = self._get_tools()
         
         # デバッグ: system_prompt_filename を確認
-        logger.info(f"CodeActAgent2 initialized with system_prompt_filename: {self.config.system_prompt_filename}")
+        logger.info(f"ExpansionAgent initialized with system_prompt_filename: {self.config.system_prompt_filename}")
+        logger.info(f"ExpansionAgent class name: {self.__class__.__name__}")
 
         # Create a ConversationMemory instance
         self.conversation_memory = ConversationMemory(self.config, self.prompt_manager)
@@ -97,7 +101,8 @@ class ExpansionAgent(Agent):
     def prompt_manager(self) -> PromptManager:
         if self._prompt_manager is None:
             # Portal連携を有効にしてPromptManagerを作成
-            # BlueLampオーケストレーターの場合はPortal APIから取得
+            # ExpansionAgent用のプロンプトをPortal APIから取得
+            logger.info(f"Creating PortalPromptManager with system_prompt_filename: {self.config.system_prompt_filename}")
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
                 system_prompt_filename=self.config.system_prompt_filename,

@@ -15,11 +15,8 @@ export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
 # BlueLampブランディングを明示的に設定
 export OPENHANDS_BRAND="bluelamp"
 
-# ExpansionAgentをデフォルトエージェントに設定
-export OPENHANDS_DEFAULT_AGENT="ExpansionAgent"
-
-# 機能拡張プランナー（#15）のプロンプトを使用
-export OPENHANDS_SYSTEM_PROMPT_FILENAME="feature_extension.j2"
+# 実行コマンドを識別するための環境変数
+export BLUELAMP_COMMAND="bluelamp3"
 
 # FastMCP設定（大文字で設定）
 export FASTMCP_LOG_LEVEL="INFO"

@@ -53,6 +53,7 @@ class ConversationMemory:
     def __init__(self, config: AgentConfig, prompt_manager: PromptManager):
         self.agent_config = config
         self.prompt_manager = prompt_manager
+        logger.info(f"[ConversationMemory] Initialized with prompt_manager: {type(prompt_manager).__name__}")
 
     @staticmethod
     def _is_valid_image_url(url: str | None) -> bool:
@@ -732,6 +733,11 @@ class ConversationMemory:
                 '[ConversationMemory] No SystemMessageAction found in events. '
                 'Adding one for backward compatibility. '
             )
+            # Debug logging
+            logger.info(f"[ConversationMemory] Prompt manager type: {type(self.prompt_manager).__name__}")
+            if hasattr(self.prompt_manager, 'system_prompt_filename'):
+                logger.info(f"[ConversationMemory] System prompt filename: {self.prompt_manager.system_prompt_filename}")
+            
             system_prompt = self.prompt_manager.get_system_message()
             if system_prompt:
                 system_message = SystemMessageAction(content=system_prompt)
@@ -740,6 +746,9 @@ class ConversationMemory:
                 logger.info(
                     '[ConversationMemory] Added SystemMessageAction for backward compatibility'
                 )
+                # Log a preview of the system prompt
+                preview = system_prompt[:200] if len(system_prompt) > 200 else system_prompt
+                logger.info(f"[ConversationMemory] System prompt preview: {preview}...")
 
     def _ensure_initial_user_message(
         self, events: list[Event], initial_user_action: MessageAction

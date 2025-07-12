@@ -79,13 +79,16 @@ class ImplementationAgent(Agent):
         - llm (LLM): The llm to be used by this agent
         - config (AgentConfig): The configuration for this agent
         """
+        # ImplementationAgentは常に実装エージェントのプロンプトを使用
+        config.system_prompt_filename = 'implementation_agent_system_prompt.j2'
+        
         super().__init__(llm, config)
         self.pending_actions: deque['Action'] = deque()
         self.reset()
         self.tools = self._get_tools()
         
         # デバッグ: system_prompt_filename を確認
-        logger.info(f"CodeActAgent2 initialized with system_prompt_filename: {self.config.system_prompt_filename}")
+        logger.info(f"ImplementationAgent initialized with system_prompt_filename: {self.config.system_prompt_filename}")
 
         # Create a ConversationMemory instance
         self.conversation_memory = ConversationMemory(self.config, self.prompt_manager)

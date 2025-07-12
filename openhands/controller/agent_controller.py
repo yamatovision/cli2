@@ -320,6 +320,7 @@ class AgentController:
             if (
                 isinstance(e, Timeout)
                 or isinstance(e, APIError)
+                or isinstance(e, APIConnectionError)
                 or isinstance(e, BadRequestError)
                 or isinstance(e, NotFoundError)
                 or isinstance(e, AuthenticationError)

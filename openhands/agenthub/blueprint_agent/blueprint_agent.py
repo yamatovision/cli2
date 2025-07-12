@@ -79,6 +79,9 @@ class BlueprintAgent(Agent):
         - llm (LLM): The llm to be used by this agent
         - config (AgentConfig): The configuration for this agent
         """
+        # BlueprintAgentは常にオーケストレーターのプロンプトを使用
+        config.system_prompt_filename = 'system_prompt.j2'
+        
         super().__init__(llm, config)
         self.pending_actions: deque['Action'] = deque()
         self.reset()

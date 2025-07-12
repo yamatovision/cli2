@@ -290,11 +290,10 @@ async def run_session(
     # Clear loading animation
     is_loaded.set()
 
-    # Clear the terminal
-    clear()
-
     # Show OpenHands banner and session ID if not skipped
     if not skip_banner:
+        # Clear the terminal
+        clear()
         display_banner(session_id=sid)
 
     welcome_message = 'What do you want to build?'  # from the application
