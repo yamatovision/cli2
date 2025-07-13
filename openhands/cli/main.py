@@ -126,10 +126,7 @@ async def run_session(
     # Show runtime initialization message
     display_runtime_initialization_message(config.runtime)
 
-    # Show Initialization loader
-    loop.run_in_executor(
-        None, display_initialization_animation, 'Initializing...', is_loaded,
-    )
+    # Initialization loader removed for cleaner login experience
 
     # Apply environment variable overrides for system_prompt_filename
     if config.default_agent == 'CodeActAgent2':
@@ -285,10 +282,10 @@ async def run_session(
 
         runtime.config.mcp.stdio_servers.extend(openhands_mcp_stdio_servers)
 
-        await add_mcp_tools_to_agent(agent, runtime, memory)
+        # MCP tools initialization moved to after login for cleaner login experience
+        # await add_mcp_tools_to_agent(agent, runtime, memory)
 
-    # Clear loading animation
-    is_loaded.set()
+    # Loading animation removed for cleaner login experience
 
     # Show OpenHands banner and session ID if not skipped
     if not skip_banner:
@@ -319,6 +316,11 @@ async def run_session(
 
     # Show OpenHands welcome
     display_welcome_message(welcome_message)
+
+    # Initialize MCP tools after login and welcome message
+    if config.mcp_host is not None and runtime.config.mcp.stdio_servers:
+        logger.info("Initializing MCP tools...")
+        await add_mcp_tools_to_agent(agent, runtime, memory)
 
     # The prompt_for_next_task will be triggered if the agent enters AWAITING_USER_INPUT.
     # If the restored state is already AWAITING_USER_INPUT, on_event_async will handle it.

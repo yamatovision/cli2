@@ -371,15 +371,23 @@ class PortalAuthenticator:
         Returns:
             ログイン成功時True
         """
-        print("\n🔐 BlueLamp CLI 認証が必要です")
+        # 画面をクリアして見やすくする
+        print("\n" + "="*60)
+        print("🔐 BlueLamp CLI 認証が必要です")
         print("Portalアカウントでログインしてください。")
+        print("="*60)
         print()
         
         try:
             # 非同期関数を適切にawait
-            return await self.login_with_email_password()
+            result = await self.login_with_email_password()
+            if result:
+                print("\n✅ ログインが完了しました。")
+                print("="*60 + "\n")
+            return result
         except Exception as e:
-            print(f"❌ ログインに失敗しました: {e}")
+            print(f"\n❌ ログインに失敗しました: {e}")
+            print("="*60 + "\n")
             return False
 
     def prompt_for_login_sync(self) -> bool:

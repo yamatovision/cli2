@@ -66,6 +66,38 @@ class PortalPromptManager(PromptManager):
                 logger.debug(f"Portal連携対象外: {self.system_prompt_filename}")
                 return None
             
+            # 既存の認証システムを活用（認証エラー時は自動ログイン画面へ）
+            if retry_on_auth_error:
+                from openhands.cli.auth import PortalAuthenticator
+                authenticator = PortalAuthenticator()
+                authenticator.load_api_key()  # APIキーを読み込み
+                
+                # APIキーが存在しない場合は直接ログインを促す
+                if not authenticator.api_key:
+                    logger.info("APIキーが見つかりません。ログインを開始します...")
+                    login_success = await authenticator.prompt_for_login()
+                    if not login_success:
+                        logger.warning("ログインがキャンセルされました")
+                        return None
+                else:
+                    # APIキー検証（自動再認証機能付き）
+                    try:
+                        verification_result = await authenticator.verify_api_key(auto_reauth=True)
+                        if not verification_result.get('success', False):
+                            logger.warning("Portal認証に失敗しました")
+                            return None
+                    except ValueError as e:
+                        if "No API key provided" in str(e):
+                            # APIキーがない場合はログインを促す
+                            logger.info("APIキーが無効です。ログインを開始します...")
+                            login_success = await authenticator.prompt_for_login()
+                            if not login_success:
+                                logger.warning("ログインがキャンセルされました")
+                                return None
+                        else:
+                            logger.error(f"認証エラー: {e}")
+                            return None
+            
             # Portal APIから取得
             content = await self.portal_client.fetch_prompt_by_filename(self.system_prompt_filename)
             if content:
@@ -73,60 +105,10 @@ class PortalPromptManager(PromptManager):
                 return content
             else:
                 logger.warning(f"Portal プロンプト取得失敗: {self.system_prompt_filename}")
-                
-                # 認証エラーの可能性がある場合は自動再認証を試行
-                if retry_on_auth_error:
-                    logger.info("認証エラーの可能性があります。自動再認証を試行します...")
-                    try:
-                        from openhands.cli.auth import PortalAuthenticator
-                        auth = PortalAuthenticator()
-                        
-                        # APIキーを読み込む
-                        auth.load_api_key()
-                        
-                        # 現在のトークンを検証し、必要に応じて再認証
-                        try:
-                            await auth.verify_api_key(auto_reauth=True)
-                            # 再認証後に再試行
-                            logger.info("再認証後にプロンプト取得を再試行します...")
-                            return await self._fetch_portal_content(retry_on_auth_error=False)
-                        except Exception as auth_error:
-                            logger.error(f"自動再認証に失敗: {auth_error}")
-                            return None
-                            
-                    except Exception as reauth_error:
-                        logger.error(f"再認証処理エラー: {reauth_error}")
-                        return None
-                
                 return None
                 
         except Exception as e:
             logger.error(f"Portal プロンプト取得エラー: {e}")
-            
-            # 認証関連エラーの場合は自動再認証を試行
-            if retry_on_auth_error and ("401" in str(e) or "unauthorized" in str(e).lower() or "authentication" in str(e).lower()):
-                logger.info("認証エラーを検出しました。自動再認証を試行します...")
-                try:
-                    from openhands.cli.auth import PortalAuthenticator
-                    auth = PortalAuthenticator()
-                    
-                    # APIキーを読み込む
-                    auth.load_api_key()
-                    
-                    # 自動再認証を実行
-                    try:
-                        await auth.verify_api_key(auto_reauth=True)
-                        # 再認証後に再試行
-                        logger.info("再認証後にプロンプト取得を再試行します...")
-                        return await self._fetch_portal_content(retry_on_auth_error=False)
-                    except Exception as auth_error:
-                        logger.error(f"自動再認証に失敗: {auth_error}")
-                        return None
-                        
-                except Exception as reauth_error:
-                    logger.error(f"再認証処理エラー: {reauth_error}")
-                    return None
-            
             return None
     
     def get_system_message(self) -> str:
