@@ -73,6 +73,8 @@ class Agent(ABC):
                 return None
 
             system_message = self.prompt_manager.get_system_message()
+            print(f"🎭 [SYSTEM MESSAGE] Agent: {self.name}, Message length: {len(system_message) if system_message else 0}")
+            print(f"🎭 [SYSTEM MESSAGE] First 200 chars: {system_message[:200] if system_message else 'None'}...")
 
             # Get tools if available
             tools = getattr(self, 'tools', None)

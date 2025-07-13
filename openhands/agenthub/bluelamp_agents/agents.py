@@ -22,6 +22,7 @@ class BlueLampBaseAgent(BlueprintAgent):
             # BlueLampエージェントのプロンプトディレクトリを使用（フォールバック用）
             prompt_dir = os.path.join(os.path.dirname(__file__), 'prompts')
             
+            
             # PortalPromptManagerを使用（Portal優先、ローカルフォールバック）
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=prompt_dir,
