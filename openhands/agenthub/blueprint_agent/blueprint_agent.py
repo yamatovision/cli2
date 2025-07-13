@@ -142,8 +142,8 @@ class BlueprintAgent(Agent):
 
         # Add BlueLamp delegate tools if this is BlueLampOrchestrator
         # Check if the agent is registered as BlueLampOrchestrator
-        if hasattr(self, '__class__') and getattr(self.__class__, '__name__', '') == 'CodeActAgent':
-            # This is the BlueLampOrchestrator (registered as CodeActAgent)
+        if hasattr(self, '__class__') and getattr(self.__class__, '__name__', '') == 'BlueprintAgent':
+            # This is the BlueLampOrchestrator (registered as BlueprintAgent)
             # Add all 16 BlueLamp delegate tools
             tools.extend(create_bluelamp_delegate_tools())
 

@@ -649,7 +649,14 @@ class AgentController:
         Args:
             action (AgentDelegateAction): The action containing information about the delegate agent to start.
         """
-        agent_cls: type[Agent] = Agent.get_cls(action.agent)
+        print(f"🎯 [AGENT CONTROLLER] Attempting to delegate to agent: {action.agent}")
+        print(f"🎯 [AGENT CONTROLLER] Available agents in registry: {Agent.list_agents()}")
+        try:
+            agent_cls: type[Agent] = Agent.get_cls(action.agent)
+            print(f"🎯 [AGENT CONTROLLER] Found agent class: {agent_cls}")
+        except Exception as e:
+            print(f"❌ [AGENT CONTROLLER] Failed to get agent class: {e}")
+            raise
         agent_config = self.agent_configs.get(action.agent, self.agent.config)
         llm_config = self.agent_to_llm_config.get(action.agent, self.agent.llm.config)
         # Make sure metrics are shared between parent and child for global accumulation

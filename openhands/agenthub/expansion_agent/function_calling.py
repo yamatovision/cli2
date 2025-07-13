@@ -220,6 +220,7 @@ def response_to_actions(
             # BlueLamp Delegate Actions (16 agents)
             # ================================================
             elif tool_call.function.name == 'delegate_to_requirements_engineer':
+                print(f"🔄 [DELEGATION LOG] ExpansionAgent delegating to RequirementsEngineer with inputs: {arguments}")
                 action = AgentDelegateAction(
                     agent='RequirementsEngineer',
                     inputs=arguments,
