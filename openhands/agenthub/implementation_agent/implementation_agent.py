@@ -203,6 +203,27 @@ class ImplementationAgent(Agent):
         }
         params['tools'] = check_tools(self.tools, self.llm.config)
         params['extra_body'] = {'metadata': state.to_llm_metadata(agent_name=self.name)}
+        
+        # Add Anthropic web_search_20250305 tool if using Claude model
+        # This must be added here, not in _get_tools(), because it's a special Anthropic-specific format
+        if self.llm.config.model and 'claude' in self.llm.config.model.lower():
+            if 'tools' not in params:
+                params['tools'] = []
+            
+            # Check if web_search tool already exists to avoid duplicate
+            web_search_exists = any(
+                (isinstance(tool, dict) and (tool.get('name') == 'web_search' or tool.get('type') == 'web_search_20250305'))
+                for tool in params['tools']
+            )
+            
+            if not web_search_exists:
+                params['tools'].append({
+                    'type': 'web_search_20250305',
+                    'name': 'web_search',
+                    'max_uses': 8
+                })
+                logger.debug('Added Anthropic web_search_20250305 tool to LLM request')
+        
         response = self.llm.completion(**params)
         logger.debug(f'Response from LLM: {response}')
         actions = self.response_to_actions(response)
