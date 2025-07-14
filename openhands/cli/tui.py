@@ -49,8 +49,6 @@ from openhands.events.observation import (
 )
 from openhands.llm.metrics import Metrics
 
-ENABLE_STREAMING = False  # FIXME: this doesn't work
-
 # Global TextArea for streaming output
 streaming_output_text_area: TextArea | None = None
 
@@ -197,7 +195,6 @@ def display_event(event: Event, config: OpenHandsConfig) -> None:
                 display_command(event)
 
             if event.confirmation_state == ActionConfirmationStatus.CONFIRMED:
-                initialize_streaming_output()
         elif isinstance(event, CmdOutputObservation):
             display_command_output(event.content)
         elif isinstance(event, FileEditObservation):
@@ -309,24 +306,6 @@ def display_file_read(event: FileReadObservation) -> None:
     print_container(container)
 
 
-def initialize_streaming_output():
-    """Initialize the streaming output TextArea."""
-    if not ENABLE_STREAMING:
-        return
-    global streaming_output_text_area
-    streaming_output_text_area = TextArea(
-        text='',
-        read_only=True,
-        style=COLOR_GREY(),
-        wrap_lines=True,
-    )
-    container = Frame(
-        streaming_output_text_area,
-        title='ストリーミング出力',
-        style=f'fg:{COLOR_GREY()}',
-    )
-    print_formatted_text('')
-    print_container(container)
 
 
 def update_streaming_output(text: str):

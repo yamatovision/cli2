@@ -43,7 +43,6 @@ from openhands.events import (
     EventSource,
     EventStream,
     EventStreamSubscriber,
-    RecallType,
 )
 from openhands.events.action import (
     Action,
@@ -58,7 +57,7 @@ from openhands.events.action import (
     NullAction,
     SystemMessageAction,
 )
-from openhands.events.action.agent import CondensationAction, RecallAction
+from openhands.events.action.agent import CondensationAction
 from openhands.events.event import Event
 from openhands.events.observation import (
     AgentDelegateObservation,
@@ -520,21 +519,6 @@ class AgentController:
                 extra={'msg_type': 'ACTION', 'event_source': EventSource.USER},
             )
 
-            # if this is the first user message for this agent, matters for the microagent info type
-            first_user_message = self._first_user_message()
-            is_first_user_message = (
-                action.id == first_user_message.id if first_user_message else False
-            )
-            recall_type = (
-                RecallType.WORKSPACE_CONTEXT
-                if is_first_user_message
-                else RecallType.KNOWLEDGE
-            )
-
-            recall_action = RecallAction(query=action.content, recall_type=recall_type)
-            self._pending_action = recall_action
-            # this is source=USER because the user message is the trigger for the microagent retrieval
-            self.event_stream.add_event(recall_action, EventSource.USER)
 
             if self.get_agent_state() != AgentState.RUNNING:
                 await self.set_agent_state_to(AgentState.RUNNING)
@@ -1040,8 +1024,6 @@ class AgentController:
         # 1. Identify essential initial events
         system_message: SystemMessageAction | None = None
         first_user_msg: MessageAction | None = None
-        recall_action: RecallAction | None = None
-        recall_observation: Observation | None = None
 
         # Find System Message (should be the first event, if it exists)
         system_message = next(
@@ -1072,26 +1054,6 @@ class AgentController:
                 first_user_msg_index = i
                 break
 
-        # Find Recall Action and Observation related to the First User Message
-        # Look for RecallAction after the first user message
-        for i in range(first_user_msg_index + 1, len(history)):
-            event = history[i]
-            if (
-                isinstance(event, RecallAction)
-                and event.query == first_user_msg.content
-            ):
-                # Found RecallAction, now look for its Observation
-                recall_action = event
-                for j in range(i + 1, len(history)):
-                    obs_event = history[j]
-                    # Check for Observation caused by this RecallAction
-                    if (
-                        isinstance(obs_event, Observation)
-                        and obs_event.cause == recall_action.id
-                    ):
-                        recall_observation = obs_event
-                        break  # Found the observation, stop inner loop
-                break  # Found the recall action (and maybe obs), stop outer loop
 
         essential_events: list[Event] = []
         if system_message:
@@ -1099,13 +1061,6 @@ class AgentController:
         # Only include first user message if history is not empty
         if history:
             essential_events.append(first_user_msg)
-            # Include recall action and observation if both exist
-            if recall_action and recall_observation:
-                essential_events.append(recall_action)
-                essential_events.append(recall_observation)
-            # Include recall action without observation for backward compatibility
-            elif recall_action:
-                essential_events.append(recall_action)
 
         # 2. Determine the slice of recent events to potentially keep
         num_non_essential_events = len(history) - len(essential_events)

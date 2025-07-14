@@ -45,8 +45,6 @@ class ObservationType(str, Enum):
     CONDENSE = 'condense'
     """Result of a condensation operation."""
 
-    RECALL = 'recall'
-    """Result of a recall operation. This can be the workspace context, a microagent, or other types of information."""
 
     MCP = 'mcp'
     """Result of a MCP Server operation"""

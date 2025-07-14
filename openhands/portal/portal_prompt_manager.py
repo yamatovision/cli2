@@ -64,7 +64,6 @@ class PortalPromptManager(PromptManager):
             return filename.replace('_system_prompt.j2', '')
         elif filename == 'system_prompt.j2':
             # デフォルトのsystem_prompt.j2の場合、ディレクトリ名からエージェント名を推測
-            import os
             agent_name = os.path.basename(self.prompt_dir)
             return agent_name if agent_name else None
         elif '.' not in filename:
@@ -256,11 +255,6 @@ class PortalPromptManager(PromptManager):
             repo_instructions=repo_instructions,
         )
     
-    def build_microagent_info(self, triggered_agents=None) -> str:
-        """マイクロエージェント情報を構築"""
-        if self.enable_portal and is_portal_prompt(self.system_prompt_filename):
-            return ""  # Portal専用ファイルの場合は空文字
-        return super().build_microagent_info(triggered_agents)
     
     def add_turns_left_reminder(self, messages: list['Message'], state: 'State') -> None:
         """残りターン数のリマインダーをメッセージに追加"""
@@ -290,7 +284,6 @@ def create_portal_prompt_manager(
 async def test_portal_prompt_manager():
     """PortalPromptManagerのテスト"""
     import tempfile
-    import os
     
     # テスト用の一時ディレクトリとファイルを作成
     with tempfile.TemporaryDirectory() as temp_dir:

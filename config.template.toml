@@ -240,8 +240,6 @@ enable_finish = true
 # Whether to use prompt extension (e.g., microagent, repo/runtime info) at all
 #enable_prompt_extensions = true
 
-# List of microagents to disable
-#disabled_microagents = []
 
 # Whether history should be truncated to continue the session when hitting LLM context
 # length limit

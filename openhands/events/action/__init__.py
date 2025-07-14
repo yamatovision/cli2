@@ -5,7 +5,6 @@ from openhands.events.action.agent import (
     AgentRejectAction,
     AgentThinkAction,
     ChangeAgentStateAction,
-    RecallAction,
 )
 from openhands.events.action.commands import CmdRunAction
 from openhands.events.action.empty import NullAction
@@ -33,6 +32,5 @@ __all__ = [
     'MCPAction',
     'MessageAction',
     'NullAction',
-    'RecallAction',
     'SystemMessageAction',
 ]

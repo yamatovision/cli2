@@ -32,18 +32,6 @@ RESUMABLE_STATES = [
 ]
 
 
-# NOTE: this is deprecated
-class TrafficControlState(str, Enum):
-    # default state, no rate limiting
-    NORMAL = 'normal'
-
-    # task paused due to traffic control
-    THROTTLING = 'throttling'
-
-    # traffic control is temporarily paused
-    PAUSED = 'paused'
-
-
 @dataclass
 class State:
     """Represents the running state of an agent in the OpenHands system, saving data of its operation and memory.

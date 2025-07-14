@@ -1,7 +1,6 @@
 import os
-import sys
 from collections import deque
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from litellm import ChatCompletionToolParam
@@ -185,7 +184,7 @@ class ExtensionManagerAgent(Agent):
         # to the conversation manager for processing, but if we get a condensation
         # event we'll just return that instead of an action. The controller will
         # immediately ask the agent to step again with the new view.
-        condensed_history: List[Event] = []
+        condensed_history: list[Event] = []
         condensed_result = self.condenser.condensed_history(state)
         if isinstance(condensed_result, View):
             condensed_history = condensed_result.events

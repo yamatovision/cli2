@@ -20,7 +20,7 @@ from openhands.events.action import (
 )
 from openhands.events.action.mcp import MCPAction
 from openhands.events.action.message import SystemMessageAction
-from openhands.events.event import Event, RecallType
+from openhands.events.event import Event
 from openhands.events.observation import (
     AgentCondensationObservation,
     AgentDelegateObservation,
@@ -30,10 +30,6 @@ from openhands.events.observation import (
     FileEditObservation,
     FileReadObservation,
     UserRejectObservation,
-)
-from openhands.events.observation.agent import (
-    MicroagentKnowledge,
-    RecallObservation,
 )
 from openhands.events.observation.error import ErrorObservation
 from openhands.events.observation.mcp import MCPObservation
@@ -447,141 +443,6 @@ class ConversationMemory:
         elif isinstance(obs, AgentCondensationObservation):
             text = truncate_content(obs.content, max_message_chars)
             message = Message(role='user', content=[TextContent(text=text)])
-        elif (
-            isinstance(obs, RecallObservation)
-            and self.agent_config.enable_prompt_extensions
-        ):
-            if obs.recall_type == RecallType.WORKSPACE_CONTEXT:
-                # everything is optional, check if they are present
-                if obs.repo_name or obs.repo_directory:
-                    repo_info = RepositoryInfo(
-                        repo_name=obs.repo_name or '',
-                        repo_directory=obs.repo_directory or '',
-                    )
-                else:
-                    repo_info = None
-
-                date = obs.date
-
-                if obs.runtime_hosts or obs.additional_agent_instructions:
-                    runtime_info = RuntimeInfo(
-                        available_hosts=obs.runtime_hosts,
-                        additional_agent_instructions=obs.additional_agent_instructions,
-                        date=date,
-                        custom_secrets_descriptions=obs.custom_secrets_descriptions,
-                    )
-                else:
-                    runtime_info = RuntimeInfo(
-                        date=date,
-                        custom_secrets_descriptions=obs.custom_secrets_descriptions,
-                    )
-
-                conversation_instructions = None
-
-                if obs.conversation_instructions:
-                    conversation_instructions = ConversationInstructions(
-                        content=obs.conversation_instructions
-                    )
-
-                repo_instructions = (
-                    obs.repo_instructions if obs.repo_instructions else ''
-                )
-
-                # Have some meaningful content before calling the template
-                has_repo_info = repo_info is not None and (
-                    repo_info.repo_name or repo_info.repo_directory
-                )
-                has_runtime_info = runtime_info is not None and (
-                    runtime_info.date or runtime_info.custom_secrets_descriptions
-                )
-                has_repo_instructions = bool(repo_instructions.strip())
-                has_conversation_instructions = conversation_instructions is not None
-
-                # Filter and process microagent knowledge
-                filtered_agents = []
-                if obs.microagent_knowledge:
-                    # Exclude disabled microagents
-                    filtered_agents = [
-                        agent
-                        for agent in obs.microagent_knowledge
-                        if agent.name not in self.agent_config.disabled_microagents
-                    ]
-
-                has_microagent_knowledge = bool(filtered_agents)
-
-                # Generate appropriate content based on what is present
-                message_content = []
-
-                # Build the workspace context information
-                if (
-                    has_repo_info
-                    or has_runtime_info
-                    or has_repo_instructions
-                    or has_conversation_instructions
-                ):
-                    formatted_workspace_text = (
-                        self.prompt_manager.build_workspace_context(
-                            repository_info=repo_info,
-                            runtime_info=runtime_info,
-                            conversation_instructions=conversation_instructions,
-                            repo_instructions=repo_instructions,
-                        )
-                    )
-                    message_content.append(TextContent(text=formatted_workspace_text))
-
-                # Add microagent knowledge if present
-                if has_microagent_knowledge:
-                    formatted_microagent_text = (
-                        self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-                    )
-                    # Only append if the text is non-empty
-                    if formatted_microagent_text and formatted_microagent_text.strip():
-                        message_content.append(TextContent(text=formatted_microagent_text))
-
-                # Return the combined message if we have any content
-                if message_content:
-                    message = Message(role='user', content=message_content)  # type: ignore
-                else:
-                    return []
-            elif obs.recall_type == RecallType.KNOWLEDGE:
-                # Use prompt manager to build the microagent info
-                # First, filter out agents that appear in earlier RecallObservations
-                filtered_agents = self._filter_agents_in_microagent_obs(
-                    obs, current_index, events or []
-                )
-
-                # Create and return a message if there is microagent knowledge to include
-                if filtered_agents:
-                    # Exclude disabled microagents
-                    filtered_agents = [
-                        agent
-                        for agent in filtered_agents
-                        if agent.name not in self.agent_config.disabled_microagents
-                    ]
-
-                    # Only proceed if we still have agents after filtering out disabled ones
-                    if filtered_agents:
-                        formatted_text = self.prompt_manager.build_microagent_info(
-                            triggered_agents=filtered_agents,
-                        )
-
-                        return [
-                            Message(
-                                role='user', content=[TextContent(text=formatted_text)]
-                            )
-                        ]
-
-                # Return empty list if no microagents to include or all were disabled
-                return []
-        elif (
-            isinstance(obs, RecallObservation)
-            and not self.agent_config.enable_prompt_extensions
-        ):
-            # If prompt extensions are disabled, we don't add any additional info
-            # TODO: test this
-            return []
         else:
             # If an observation message is not returned, it will cause an error
             # when the LLM tries to return the next message

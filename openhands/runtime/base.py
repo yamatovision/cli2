@@ -50,10 +50,6 @@ from openhands.integrations.provider import (
     ProviderType,
 )
 from openhands.integrations.service_types import AuthenticationError
-from openhands.microagent import (
-    BaseMicroagent,
-    load_microagents_from_dir,
-)
 from openhands.runtime.plugins import (
     PluginRequirement,
     VSCodeRequirement,
@@ -552,49 +548,6 @@ fi
 
         self.log('info', 'Git pre-commit hook installed successfully')
 
-    def _load_microagents_from_directory(
-        self, microagents_dir: Path, source_description: str
-    ) -> list[BaseMicroagent]:
-        """Load microagents from a directory.
-
-        Args:
-            microagents_dir: Path to the directory containing microagents
-            source_description: Description of the source for logging purposes
-
-        Returns:
-            A list of loaded microagents
-        """
-        loaded_microagents: list[BaseMicroagent] = []
-        files = self.list_files(str(microagents_dir))
-
-        if not files:
-            return loaded_microagents
-
-        self.log(
-            'info',
-            f'Found {len(files)} files in {source_description} microagents directory',
-        )
-        zip_path = self.copy_from(str(microagents_dir))
-        microagent_folder = tempfile.mkdtemp()
-
-        try:
-            with ZipFile(zip_path, 'r') as zip_file:
-                zip_file.extractall(microagent_folder)
-
-            zip_path.unlink()
-            repo_agents, knowledge_agents = load_microagents_from_dir(microagent_folder)
-
-            self.log(
-                'info',
-                f'Loaded {len(repo_agents)} repo agents and {len(knowledge_agents)} knowledge agents from {source_description}',
-            )
-
-            loaded_microagents.extend(repo_agents.values())
-            loaded_microagents.extend(knowledge_agents.values())
-        finally:
-            shutil.rmtree(microagent_folder)
-
-        return loaded_microagents
 
     async def _get_authenticated_git_url(
         self, repo_name: str, git_provider_tokens: PROVIDER_TOKEN_TYPE | None
@@ -657,147 +610,6 @@ fi
 
         return remote_url
 
-    def get_microagents_from_org_or_user(
-        self, selected_repository: str
-    ) -> list[BaseMicroagent]:
-        """Load microagents from the organization or user level .openhands repository.
-
-        For example, if the repository is github.com/acme-co/api, this will check if
-        github.com/acme-co/.openhands exists. If it does, it will clone it and load
-        the microagents from the ./microagents/ folder.
-
-        Args:
-            selected_repository: The repository path (e.g., "github.com/acme-co/api")
-
-        Returns:
-            A list of loaded microagents from the org/user level repository
-        """
-        loaded_microagents: list[BaseMicroagent] = []
-
-        repo_parts = selected_repository.split('/')
-        if len(repo_parts) < 2:
-            return loaded_microagents
-
-        # Extract the domain and org/user name
-        org_name = repo_parts[-2]
-
-        # Construct the org-level .openhands repo path
-        org_openhands_repo = f'{org_name}/.openhands'
-
-        self.log(
-            'info',
-            f'Checking for org-level microagents at {org_openhands_repo}',
-        )
-
-        # Try to clone the org-level .openhands repo
-        try:
-            # Create a temporary directory for the org-level repo
-            org_repo_dir = self.workspace_root / f'org_openhands_{org_name}'
-
-            # Get authenticated URL and do a shallow clone (--depth 1) for efficiency
-            try:
-                remote_url = call_async_from_sync(
-                    self._get_authenticated_git_url,
-                    GENERAL_TIMEOUT,
-                    org_openhands_repo,
-                    self.git_provider_tokens,
-                )
-            except Exception as e:
-                raise Exception(str(e))
-            clone_cmd = (
-                f'GIT_TERMINAL_PROMPT=0 git clone --depth 1 {remote_url} {org_repo_dir}'
-            )
-
-            action = CmdRunAction(command=clone_cmd)
-            obs = self.run_action(action)
-
-            if isinstance(obs, CmdOutputObservation) and obs.exit_code == 0:
-                self.log(
-                    'info',
-                    f'Successfully cloned org-level microagents from {org_openhands_repo}',
-                )
-
-                # Load microagents from the org-level repo
-                org_microagents_dir = org_repo_dir / 'microagents'
-                loaded_microagents = self._load_microagents_from_directory(
-                    org_microagents_dir, 'org-level'
-                )
-
-                # Clean up the org repo directory
-                shutil.rmtree(org_repo_dir)
-            else:
-                self.log(
-                    'info',
-                    f'No org-level microagents found at {org_openhands_repo}',
-                )
-
-        except Exception as e:
-            self.log('error', f'Error loading org-level microagents: {str(e)}')
-
-        return loaded_microagents
-
-    def get_microagents_from_selected_repo(
-        self, selected_repository: str | None
-    ) -> list[BaseMicroagent]:
-        """Load microagents from the selected repository.
-        If selected_repository is None, load microagents from the current workspace.
-        This is the main entry point for loading microagents.
-
-        This method also checks for user/org level microagents stored in a .openhands repository.
-        For example, if the repository is github.com/acme-co/api, it will also check for
-        github.com/acme-co/.openhands and load microagents from there if it exists.
-        """
-        loaded_microagents: list[BaseMicroagent] = []
-        microagents_dir = self.workspace_root / '.openhands' / 'microagents'
-        repo_root = None
-
-        # Check for user/org level microagents if a repository is selected
-        if selected_repository:
-            # Load microagents from the org/user level repository
-            org_microagents = self.get_microagents_from_org_or_user(selected_repository)
-            loaded_microagents.extend(org_microagents)
-
-            # Continue with repository-specific microagents
-            repo_root = self.workspace_root / selected_repository.split('/')[-1]
-            microagents_dir = repo_root / '.openhands' / 'microagents'
-
-        self.log(
-            'info',
-            f'Selected repo: {selected_repository}, loading microagents from {microagents_dir} (inside runtime)',
-        )
-
-        # Legacy Repo Instructions
-        # Check for legacy .openhands_instructions file
-        obs = self.read(
-            FileReadAction(path=str(self.workspace_root / '.openhands_instructions'))
-        )
-        if isinstance(obs, ErrorObservation) and repo_root is not None:
-            # If the instructions file is not found in the workspace root, try to load it from the repo root
-            self.log(
-                'debug',
-                f'.openhands_instructions not present, trying to load from repository {microagents_dir=}',
-            )
-            obs = self.read(
-                FileReadAction(path=str(repo_root / '.openhands_instructions'))
-            )
-
-        if isinstance(obs, FileReadObservation):
-            self.log('info', 'openhands_instructions microagent loaded.')
-            loaded_microagents.append(
-                BaseMicroagent.load(
-                    path='.openhands_instructions',
-                    microagent_dir=None,
-                    file_content=obs.content,
-                )
-            )
-
-        # Load microagents from directory
-        repo_microagents = self._load_microagents_from_directory(
-            microagents_dir, 'repository'
-        )
-        loaded_microagents.extend(repo_microagents)
-
-        return loaded_microagents
 
     def run_action(self, action: Action) -> Observation:
         """Run an action and return the resulting observation.
