@@ -139,6 +139,8 @@ def display_initialization_animation(text: str, is_loaded: asyncio.Event) -> Non
 
 
 def display_banner(session_id: str) -> None:
+    import os
+    import getpass
     from .branding import get_current_banner, get_current_brand_name
     
     # 動的バナー表示
@@ -148,34 +150,19 @@ def display_banner(session_id: str) -> None:
         style=get_default_style(),
     )
 
-    brand_name = get_current_brand_name()
-    print_formatted_text(HTML(f'<grey>{brand_name} CLI v{__version__}</grey>'))
-
-    print_formatted_text('')
-    print_formatted_text(HTML(f'<grey>{get_message("session_id", sid=session_id)}</grey>'))
+    # セッション情報を表示
+    current_dir = os.getcwd()
+    current_user = getpass.getuser()
+    
+    print_formatted_text(HTML(f'<grey>セッションディレクトリ：</grey><yellow>{current_dir}</yellow>'))
+    print_formatted_text(HTML(f'<grey>ログインユーザー：</grey><cyan>{current_user}</cyan>'))
+    print_formatted_text(HTML(f'<grey>モード：</grey><green>新規プロジェクト</green>'))
     print_formatted_text('')
 
 
 def display_welcome_message(message: str = '') -> None:
-    from .branding import is_bluelamp_brand
-    
-    print_formatted_text(
-        HTML(f"<blue>{get_message('lets_start')}</blue>\n"), style=get_default_style(),
-    )
-    
-    # ヘルプメッセージをブランドに応じて変更
-    help_text = '/helpでヘルプを表示' if is_bluelamp_brand() else 'Type /help for help'
-    
-    if message:
-        print_formatted_text(
-            HTML(f'{message} <grey>{help_text}</grey>'),
-            style=get_default_style(),
-        )
-    else:
-        print_formatted_text(
-            HTML(f'{get_message("build_prompt")} <grey>{help_text}</grey>'),
-            style=get_default_style(),
-        )
+    # ウェルカムメッセージを表示しない（コメントアウト）
+    pass
 
 
 def display_initial_user_prompt(prompt: str) -> None:

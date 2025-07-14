@@ -191,24 +191,7 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
         else:
             display_banner(session_id=sid)
         
-    if config.default_agent == 'ExtensionManagerAgent':
-        print_formatted_text(
-            HTML('<ansigreen>🔨 ExtensionManagerAgent - 拡張マネージャー</ansigreen>\n')
-        )
-        print_formatted_text(
-            HTML('<grey>コードの実装とビルドを専門とするエージェントです。</grey>\n')
-        )
-    elif config.default_agent == 'OrchestratorAgent':
-        print_formatted_text(
-            HTML('<ansigreen>📐 OrchestratorAgent - オーケストレーター</ansigreen>\n')
-        )
-        print_formatted_text(
-            HTML('<grey>システム設計とアーキテクチャを専門とするエージェントです。</grey>\n')
-        )
-    else:
-        print_formatted_text(
-            HTML('<ansigreen>🚀 CodeActAgent - 標準AI開発支援エージェント</ansigreen>\n')
-        )
+    # エージェント情報の表示を削除
 
     # Run the first session
     new_session_requested = await run_session(

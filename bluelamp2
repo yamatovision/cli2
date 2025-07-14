@@ -32,9 +32,8 @@ PYTHON_BIN="$VENV_PATH/bin/python"
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # セッション情報を表示
-echo "🔵 BlueLamp Extension Manager Agent"
-echo "セッションID: extension_manager_agent"
-echo "拡張マネージャーがあなたのアプリの実装を完了させます"
+echo "エージェント：拡張マネージャー"
+echo "ブルーランプ拡張モードを起動しています..."
 echo ""
 
 # メインセッションを実行

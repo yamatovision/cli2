@@ -32,9 +32,8 @@ PYTHON_BIN="$VENV_PATH/bin/python"
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # セッション情報を表示
-echo "🔵 BlueLamp Orchestrator Agent"
-echo "セッションID: orchestrator_agent"
-echo "オーケストレーターがあなたのアプリの設計を統括します"
+echo "🔵エージェント:オーケストレーター"
+echo "ブルーランプを起動しています.."
 echo ""
 
 # メインセッションを実行

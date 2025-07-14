@@ -73,8 +73,16 @@ class Agent(ABC):
                 return None
 
             system_message = self.prompt_manager.get_system_message()
-            print(f"🎭 [SYSTEM MESSAGE] Agent: {self.name}, Message length: {len(system_message) if system_message else 0}")
-            print(f"🎭 [SYSTEM MESSAGE] First 200 chars: {system_message[:200] if system_message else 'None'}...")
+            
+            # エージェント名を日本語に変換
+            agent_name_jp = self.name
+            if self.name == 'OrchestratorAgent':
+                agent_name_jp = 'オーケストレーター'
+            elif self.name == 'ExtensionManagerAgent':
+                agent_name_jp = '拡張マネージャー'
+            
+            # システムメッセージのログを表示
+            print(f"🎭 [担当エージェント]：{agent_name_jp}")
 
             # Get tools if available
             tools = getattr(self, 'tools', None)
