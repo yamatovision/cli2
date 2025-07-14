@@ -8,7 +8,7 @@ import logging
 from typing import Optional, TYPE_CHECKING
 
 from .prompt_client import PortalPromptClient
-from .prompt_mapping import is_portal_prompt, get_prompt_id
+from .prompt_mapping import is_portal_prompt
 from openhands.utils.prompt import PromptManager
 
 if TYPE_CHECKING:
@@ -35,8 +35,11 @@ class PortalPromptManager(PromptManager):
             portal_base_url: PortalのベースURL
             enable_portal: Portal連携を有効にするか
         """
-        # Portal専用ファイルの場合は親クラスの初期化をスキップ
-        if enable_portal and is_portal_prompt(system_prompt_filename):
+        # エージェント名を抽出
+        agent_name = self._extract_agent_name(system_prompt_filename)
+        
+        # Portal専用エージェントの場合は親クラスの初期化をスキップ
+        if enable_portal and agent_name and is_portal_prompt(agent_name):
             # 親クラスの属性を直接設定（ローカルファイル読み込みをスキップ）
             self.prompt_dir = prompt_dir
             self.system_template = None  # type: ignore
@@ -55,6 +58,17 @@ class PortalPromptManager(PromptManager):
         
         logger.info(f"PortalPromptManager初期化: portal={enable_portal}, file={system_prompt_filename}")
     
+    def _extract_agent_name(self, filename: str) -> Optional[str]:
+        """ファイル名からエージェント名を抽出"""
+        if filename.endswith('_system_prompt.j2'):
+            return filename.replace('_system_prompt.j2', '')
+        elif filename == 'system_prompt.j2':
+            # デフォルトのsystem_prompt.j2の場合、ディレクトリ名からエージェント名を推測
+            import os
+            agent_name = os.path.basename(self.prompt_dir)
+            return agent_name if agent_name else None
+        return None
+    
     async def _fetch_portal_content(self, retry_on_auth_error: bool = True) -> Optional[str]:
         """Portal APIからプロンプト内容を取得"""
         if not self.enable_portal or not self.portal_client:
@@ -62,7 +76,8 @@ class PortalPromptManager(PromptManager):
             
         try:
             # Portal連携対象かチェック
-            if not is_portal_prompt(self.system_prompt_filename):
+            agent_name = self._extract_agent_name(self.system_prompt_filename)
+            if not agent_name or not is_portal_prompt(agent_name):
                 logger.debug(f"Portal連携対象外: {self.system_prompt_filename}")
                 return None
             
@@ -98,13 +113,13 @@ class PortalPromptManager(PromptManager):
                             logger.error(f"認証エラー: {e}")
                             return None
             
-            # Portal APIから取得
-            content = await self.portal_client.fetch_prompt_by_filename(self.system_prompt_filename)
+            # エージェント名を使ってPortal APIから取得
+            content = await self.portal_client.fetch_prompt_by_agent_name(agent_name)
             if content:
-                logger.info(f"Portal プロンプト取得成功: {self.system_prompt_filename}")
+                logger.info(f"Portal プロンプト取得成功: {agent_name}")
                 return content
             else:
-                logger.warning(f"Portal プロンプト取得失敗: {self.system_prompt_filename}")
+                logger.warning(f"Portal プロンプト取得失敗: {agent_name}")
                 return None
                 
         except Exception as e:

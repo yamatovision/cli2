@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 import aiohttp
 
-from .prompt_mapping import get_prompt_id, get_prompt_title, get_local_filename
+from .prompt_mapping import get_prompt_id, get_prompt_title, get_agent_name
 from openhands.security.obscure_storage import get_obscure_storage
 
 logger = logging.getLogger('bluelamp.portal.prompt_client')
@@ -106,19 +106,19 @@ class PortalPromptClient:
             logger.error(f"プロンプト取得エラー: {e}")
             return None
     
-    async def fetch_prompt_by_filename(self, local_filename: str) -> Optional[str]:
+    async def fetch_prompt_by_agent_name(self, agent_name: str) -> Optional[str]:
         """
-        ローカルファイル名からプロンプトを取得
+        エージェント名からプロンプトを取得
         
         Args:
-            local_filename: ローカルプロンプトファイル名（例: 'feature_extension.j2'）
+            agent_name: エージェント名（例: 'orchestrator', 'requirements_engineer'）
             
         Returns:
             プロンプト内容（文字列）またはNone
         """
-        prompt_id = get_prompt_id(local_filename)
+        prompt_id = get_prompt_id(agent_name)
         if not prompt_id:
-            logger.warning(f"Portal連携対象外のファイル: {local_filename}")
+            logger.warning(f"Portal連携対象外のエージェント: {agent_name}")
             return None
             
         return await self.fetch_prompt(prompt_id)
@@ -154,7 +154,7 @@ class PortalPromptClient:
         利用可能なプロンプト一覧を取得
         
         Returns:
-            {local_filename: prompt_id} の辞書
+            {agent_name: prompt_id} の辞書
         """
         try:
             # APIキーを取得
@@ -189,9 +189,9 @@ class PortalPromptClient:
                             
                             for prompt in prompts:
                                 prompt_id = prompt['id']
-                                local_filename = get_local_filename(prompt_id)
-                                if local_filename:
-                                    result[local_filename] = prompt_id
+                                agent_name = get_agent_name(prompt_id)
+                                if agent_name:
+                                    result[agent_name] = prompt_id
                                     
                             logger.info(f"利用可能プロンプト一覧取得成功: {len(result)}件")
                             return result
@@ -210,19 +210,19 @@ class PortalPromptClient:
 
 
 # 便利関数
-async def fetch_portal_prompt(local_filename: str, base_url: Optional[str] = None) -> Optional[str]:
+async def fetch_portal_prompt(agent_name: str, base_url: Optional[str] = None) -> Optional[str]:
     """
-    ローカルファイル名からPortalプロンプトを取得する便利関数
+    エージェント名からPortalプロンプトを取得する便利関数
     
     Args:
-        local_filename: ローカルプロンプトファイル名
+        agent_name: エージェント名
         base_url: PortalのベースURL（オプション）
         
     Returns:
         プロンプト内容またはNone
     """
     client = PortalPromptClient(base_url=base_url)
-    return await client.fetch_prompt_by_filename(local_filename)
+    return await client.fetch_prompt_by_agent_name(agent_name)
 
 
 # テスト用関数
@@ -247,7 +247,7 @@ if __name__ == "__main__":
         
         # プロンプト取得テスト
         print("\nプロンプト取得テスト...")
-        content = await client.fetch_prompt_by_filename('feature_extension.j2')
+        content = await client.fetch_prompt_by_agent_name('feature_extension')
         if content:
             print(f"✅ プロンプト取得成功: {len(content)}文字")
             print(f"内容プレビュー: {content[:100]}...")

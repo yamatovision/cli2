@@ -43,6 +43,9 @@ PROMPT_TITLES = {
     '6862397f1428c1efc592f6e6': '13: リファクタリング実装エージェント',
 }
 
+# プロンプトIDからエージェント名への逆引きマップ
+ID_TO_AGENT = {v: k for k, v in PROMPT_MAPPING.items()}
+
 def get_prompt_id(agent_name: str) -> str | None:
     """エージェント名からPortal プロンプトIDを取得"""
     return PROMPT_MAPPING.get(agent_name)
@@ -73,3 +76,4 @@ def get_all_agents() -> list[str]:
 def get_all_prompt_ids() -> list[str]:
     """全プロンプトIDのリストを取得"""
     return list(PROMPT_MAPPING.values())
+
