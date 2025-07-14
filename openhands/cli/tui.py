@@ -195,6 +195,7 @@ def display_event(event: Event, config: OpenHandsConfig) -> None:
                 display_command(event)
 
             if event.confirmation_state == ActionConfirmationStatus.CONFIRMED:
+                pass  # Already displayed
         elif isinstance(event, CmdOutputObservation):
             display_command_output(event.content)
         elif isinstance(event, FileEditObservation):
