@@ -67,6 +67,9 @@ class PortalPromptManager(PromptManager):
             import os
             agent_name = os.path.basename(self.prompt_dir)
             return agent_name if agent_name else None
+        elif '.' not in filename:
+            # 拡張子がない場合はそのままエージェント名として扱う
+            return filename
         return None
     
     async def _fetch_portal_content(self, retry_on_auth_error: bool = True) -> Optional[str]:
