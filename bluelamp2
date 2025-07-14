@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# BlueLamp CLI - Implementation Agent
-# 実装エージェントがあなたのアプリの実装を完了させます
+# BlueLamp CLI - Extension Manager Agent
+# 拡張マネージャーがあなたのアプリの実装を完了させます
 
 # シンボリックリンクを解決して実際のディレクトリを取得
 if [ -L "$0" ]; then
@@ -32,9 +32,9 @@ PYTHON_BIN="$VENV_PATH/bin/python"
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # セッション情報を表示
-echo "🔵 BlueLamp Implementation Agent"
-echo "セッションID: implementation_agent"
-echo "実装エージェントがあなたのアプリの実装を完了させます"
+echo "🔵 BlueLamp Extension Manager Agent"
+echo "セッションID: extension_manager_agent"
+echo "拡張マネージャーがあなたのアプリの実装を完了させます"
 echo ""
 
 # メインセッションを実行

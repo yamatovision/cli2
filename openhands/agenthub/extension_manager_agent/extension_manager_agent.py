@@ -79,7 +79,7 @@ class ExtensionManagerAgent(Agent):
         - llm (LLM): The llm to be used by this agent
         - config (AgentConfig): The configuration for this agent
         """
-        # ExtensionManagerAgentは常に実装エージェントのプロンプトを使用
+        # ExtensionManagerAgentは常に拡張マネージャーのプロンプトを使用
         config.system_prompt_filename = 'expansion_orchestrator'
         
         super().__init__(llm, config)
@@ -100,7 +100,7 @@ class ExtensionManagerAgent(Agent):
     def prompt_manager(self) -> PromptManager:
         if self._prompt_manager is None:
             # Portal連携を有効にしてPromptManagerを作成
-            # 実装エージェント専用のプロンプトファイルを使用
+            # 拡張マネージャー専用のプロンプトファイルを使用
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
                 system_prompt_filename='expansion_orchestrator',

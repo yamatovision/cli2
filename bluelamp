@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# BlueLamp CLI - Blueprint Agent
-# 設計エージェントであなたのアプリの青写真を創りましょう
+# BlueLamp CLI - Orchestrator Agent
+# オーケストレーターがあなたのアプリの設計を統括します
 
 # シンボリックリンクを解決して実際のディレクトリを取得
 if [ -L "$0" ]; then
@@ -32,9 +32,9 @@ PYTHON_BIN="$VENV_PATH/bin/python"
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # セッション情報を表示
-echo "🔵 BlueLamp Blueprint Agent"
-echo "セッションID: blueprint_agent"
-echo "設計エージェントであなたのアプリの青写真を創りましょう"
+echo "🔵 BlueLamp Orchestrator Agent"
+echo "セッションID: orchestrator_agent"
+echo "オーケストレーターがあなたのアプリの設計を統括します"
 echo ""
 
 # メインセッションを実行
