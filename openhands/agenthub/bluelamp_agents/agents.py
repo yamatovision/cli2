@@ -114,8 +114,8 @@ class EnvironmentSetup(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class PrototypeImplementation(BlueLampBaseAgent):
-    """★7 プロトタイプ実装: 初期プロトタイプとMVP開発"""
+class PrcImplementation(BlueLampBaseAgent):
+    """★7 PRC実装: プロトタイプ実装とコア機能開発"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -124,8 +124,8 @@ class PrototypeImplementation(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class BackendImplementation(BlueLampBaseAgent):
-    """★8 バックエンド実装: サーバーサイドロジックとAPI開発"""
+class DebugAgent(BlueLampBaseAgent):
+    """★8 デバッグエージェント: バグ修正とエラー解決"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -134,8 +134,8 @@ class BackendImplementation(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class TestQualityVerification(BlueLampBaseAgent):
-    """★9 テスト品質検証: テストコード作成と品質保証"""
+class DeploySpecialist(BlueLampBaseAgent):
+    """★9 デプロイ専門家: デプロイメントとインフラ管理"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -144,8 +144,8 @@ class TestQualityVerification(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class APIIntegration(BlueLampBaseAgent):
-    """★10 API統合: 外部APIとの統合実装"""
+class ExpansionOrchestrator(BlueLampBaseAgent):
+    """★10 拡張オーケストレーター: 機能拡張の統合管理"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -154,8 +154,8 @@ class APIIntegration(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class DebugDetective(BlueLampBaseAgent):
-    """★11 デバッグ探偵: バグ修正とエラー解決"""
+class PageCreator(BlueLampBaseAgent):
+    """★11 ページ作成: 新規ページとコンポーネント作成"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -164,8 +164,8 @@ class DebugDetective(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class DeploySpecialist(BlueLampBaseAgent):
-    """★12 デプロイスペシャリスト: デプロイメントとインフラ管理"""
+class RefactoringPlanner(BlueLampBaseAgent):
+    """★12 リファクタリング計画: コード改善計画策定"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
@@ -174,8 +174,8 @@ class DeploySpecialist(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class GitHubManager(BlueLampBaseAgent):
-    """★13 GitHubマネージャー: Git管理とリポジトリ運用"""
+class RefactoringImplementation(BlueLampBaseAgent):
+    """★13 リファクタリング実装: コード改善実行"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig

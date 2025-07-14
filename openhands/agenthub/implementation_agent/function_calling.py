@@ -251,37 +251,37 @@ def response_to_actions(
                 )
             elif tool_call.function.name == 'delegate_to_prototype_implementation':
                 action = AgentDelegateAction(
-                    agent='PrototypeImplementation',
+                    agent='PrcImplementation',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_backend_implementation':
                 action = AgentDelegateAction(
-                    agent='BackendImplementation',
+                    agent='DebugAgent',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_test_quality_verification':
                 action = AgentDelegateAction(
-                    agent='TestQualityVerification',
+                    agent='DeploySpecialist',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_api_integration':
                 action = AgentDelegateAction(
-                    agent='APIIntegration',
+                    agent='ExpansionOrchestrator',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_debug_detective':
                 action = AgentDelegateAction(
-                    agent='DebugDetective',
+                    agent='PageCreator',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_deploy_specialist':
                 action = AgentDelegateAction(
-                    agent='DeploySpecialist',
+                    agent='RefactoringPlanner',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_github_manager':
                 action = AgentDelegateAction(
-                    agent='GitHubManager',
+                    agent='RefactoringImplementation',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_typescript_manager':

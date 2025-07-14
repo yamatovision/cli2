@@ -112,13 +112,13 @@ def test_expected_mapping():
         'SystemArchitect': 'system_architect',
         'ImplementationConsultant': 'implementation_consultant',
         'EnvironmentSetup': 'environment_setup',
-        'PrototypeImplementation': 'prc_implementation',
-        'BackendImplementation': 'debug_agent',
-        'TestQualityVerification': 'deploy_specialist',
-        'APIIntegration': 'expansion_orchestrator',
-        'DebugDetective': 'page_creator',
-        'DeploySpecialist': 'refactoring_planner',
-        'GitHubManager': 'refactoring_implementation',
+        'PrcImplementation': 'prc_implementation',
+        'DebugAgent': 'debug_agent',
+        'DeploySpecialist': 'deploy_specialist',
+        'ExpansionOrchestrator': 'expansion_orchestrator',
+        'PageCreator': 'page_creator',
+        'RefactoringPlanner': 'refactoring_planner',
+        'RefactoringImplementation': 'refactoring_implementation',
     }
     
     # 実際の設定を読み取り

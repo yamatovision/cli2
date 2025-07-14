@@ -9,9 +9,10 @@ from litellm import (
     ModelResponse,
 )
 
-from openhands.agenthub.blueprint_agent.tools import (
+from openhands.agenthub.implementation_agent.tools import (
     # BrowserTool,  # browsergym削除済みのため除外
     FinishTool,
+
     LLMBasedFileEditTool,
     ThinkTool,
     create_cmd_run_tool,
@@ -49,7 +50,7 @@ def combine_thought(action: Action, thought: str) -> Action:
 
 
 def response_to_actions(
-    response: ModelResponse, mcp_tool_names: list[str] | None = None, available_tools: list[str] | None = None
+    response: ModelResponse, mcp_tool_names: list[str] | None = None
 ) -> list[Action]:
     actions: list[Action] = []
     assert len(response.choices) == 1, 'Only one choice is supported for now'
@@ -57,7 +58,7 @@ def response_to_actions(
     # StreamingChoices doesn't have message attribute, only Choices does
     if not hasattr(choice, 'message'):
         return actions
-    assistant_msg = choice.message
+    assistant_msg = choice.message  # type: ignore
     if hasattr(assistant_msg, 'tool_calls') and assistant_msg.tool_calls:
         # Check if there's assistant_msg.content. If so, add it to the thought
         thought = ''
@@ -250,37 +251,37 @@ def response_to_actions(
                 )
             elif tool_call.function.name == 'delegate_to_prototype_implementation':
                 action = AgentDelegateAction(
-                    agent='PrototypeImplementation',
+                    agent='PrcImplementation',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_backend_implementation':
                 action = AgentDelegateAction(
-                    agent='BackendImplementation',
+                    agent='DebugAgent',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_test_quality_verification':
                 action = AgentDelegateAction(
-                    agent='TestQualityVerification',
+                    agent='DeploySpecialist',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_api_integration':
                 action = AgentDelegateAction(
-                    agent='APIIntegration',
+                    agent='ExpansionOrchestrator',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_debug_detective':
                 action = AgentDelegateAction(
-                    agent='DebugDetective',
+                    agent='PageCreator',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_deploy_specialist':
                 action = AgentDelegateAction(
-                    agent='DeploySpecialist',
+                    agent='RefactoringPlanner',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_github_manager':
                 action = AgentDelegateAction(
-                    agent='GitHubManager',
+                    agent='RefactoringImplementation',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_typescript_manager':

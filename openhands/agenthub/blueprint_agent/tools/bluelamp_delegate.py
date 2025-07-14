@@ -126,7 +126,7 @@ def create_bluelamp_delegate_tools():
             type='function',
             function={
                 'name': 'delegate_to_prototype_implementation',
-                'description': 'フロントエンド実装タスクをPrototypeImplementationに委譲。モックAPI使用のプロトタイプ開発を依頼する際に使用',
+                'description': 'フロントエンド実装タスクをPrcImplementationに委譲。モックAPI使用のプロトタイプ開発を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
@@ -145,7 +145,7 @@ def create_bluelamp_delegate_tools():
             type='function',
             function={
                 'name': 'delegate_to_backend_implementation',
-                'description': 'バックエンド実装タスクをBackendImplementationに委譲。垂直スライス実装と統合テスト作成を依頼する際に使用',
+                'description': 'バックエンド実装タスクをDebugAgentに委譲。垂直スライス実装と統合テスト作成を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
@@ -164,7 +164,7 @@ def create_bluelamp_delegate_tools():
             type='function',
             function={
                 'name': 'delegate_to_test_quality_verification',
-                'description': 'テスト実行タスクをTestQualityVerificationに委譲。統合テストの実行と品質保証を依頼する際に使用',
+                'description': 'テスト実行タスクをDeploySpecialistに委譲。統合テストの実行と品質保証を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
@@ -183,7 +183,7 @@ def create_bluelamp_delegate_tools():
             type='function',
             function={
                 'name': 'delegate_to_api_integration',
-                'description': 'API統合タスクをAPIIntegrationに委譲。モックAPIから実APIへの置換を依頼する際に使用',
+                'description': 'API統合タスクをExpansionOrchestratorに委譲。モックAPIから実APIへの置換を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
@@ -202,7 +202,7 @@ def create_bluelamp_delegate_tools():
             type='function',
             function={
                 'name': 'delegate_to_debug_detective',
-                'description': 'デバッグタスクをDebugDetectiveに委譲。エラー調査と修正を依頼する際に使用',
+                'description': 'デバッグタスクをPageCreatorに委譲。エラー調査と修正を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {

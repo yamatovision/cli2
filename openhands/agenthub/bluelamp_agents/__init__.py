@@ -14,33 +14,17 @@ from .agents import (
     SystemArchitect,
     ImplementationConsultant,
     EnvironmentSetup,
-    PrototypeImplementation,
-    BackendImplementation,
-    TestQualityVerification,
-    APIIntegration,
-    DebugDetective,
+    PrcImplementation,
+    DebugAgent,
     DeploySpecialist,
-    GitHubManager,
+    ExpansionOrchestrator,
+    PageCreator,
+    RefactoringPlanner,
+    RefactoringImplementation,
 )
 from openhands.controller.agent import Agent
 
-# 13個のBlueLampエージェントを一括登録
-# 各エージェントは14エージェント構造（00-13）のプロンプトにマッピング
-# 
-# マッピング詳細:
-# RequirementsEngineer → requirements_engineer (01)
-# UIUXDesigner → uiux_designer (02)
-# DataModelingEngineer → data_modeling_engineer (03)
-# SystemArchitect → system_architect (04)
-# ImplementationConsultant → implementation_consultant (05)
-# EnvironmentSetup → environment_setup (06)
-# PrototypeImplementation → prc_implementation (07)
-# BackendImplementation → debug_agent (08)
-# TestQualityVerification → deploy_specialist (09)
-# APIIntegration → expansion_orchestrator (10)
-# DebugDetective → page_creator (11)
-# DeploySpecialist → refactoring_planner (12)
-# GitHubManager → refactoring_implementation (13)
+# 13個のBlueLampエージェント - クラス名とプロンプトが一致
 BLUELAMP_AGENTS = [
     ('RequirementsEngineer', RequirementsEngineer),
     ('UIUXDesigner', UIUXDesigner),
@@ -48,13 +32,13 @@ BLUELAMP_AGENTS = [
     ('SystemArchitect', SystemArchitect),
     ('ImplementationConsultant', ImplementationConsultant),
     ('EnvironmentSetup', EnvironmentSetup),
-    ('PrototypeImplementation', PrototypeImplementation),
-    ('BackendImplementation', BackendImplementation),
-    ('TestQualityVerification', TestQualityVerification),
-    ('APIIntegration', APIIntegration),
-    ('DebugDetective', DebugDetective),
+    ('PrcImplementation', PrcImplementation),
+    ('DebugAgent', DebugAgent),
     ('DeploySpecialist', DeploySpecialist),
-    ('GitHubManager', GitHubManager),
+    ('ExpansionOrchestrator', ExpansionOrchestrator),
+    ('PageCreator', PageCreator),
+    ('RefactoringPlanner', RefactoringPlanner),
+    ('RefactoringImplementation', RefactoringImplementation),
 ]
 
 for name, cls in BLUELAMP_AGENTS:

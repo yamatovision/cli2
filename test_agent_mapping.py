@@ -15,13 +15,13 @@ from openhands.agenthub.bluelamp_agents import (
     SystemArchitect,
     ImplementationConsultant,
     EnvironmentSetup,
-    PrototypeImplementation,
-    BackendImplementation,
-    TestQualityVerification,
-    APIIntegration,
-    DebugDetective,
+    PrcImplementation,
+    DebugAgent,
     DeploySpecialist,
-    GitHubManager,
+    ExpansionOrchestrator,
+    PageCreator,
+    RefactoringPlanner,
+    RefactoringImplementation,
 )
 from openhands.portal.prompt_mapping import get_prompt_id_by_agent_name, get_all_agents
 from openhands.core.config import AgentConfig
@@ -39,13 +39,13 @@ def test_agent_mapping():
         (SystemArchitect, 'system_architect', '04'),
         (ImplementationConsultant, 'implementation_consultant', '05'),
         (EnvironmentSetup, 'environment_setup', '06'),
-        (PrototypeImplementation, 'prc_implementation', '07'),
-        (BackendImplementation, 'debug_agent', '08'),
-        (TestQualityVerification, 'deploy_specialist', '09'),
-        (APIIntegration, 'expansion_orchestrator', '10'),
-        (DebugDetective, 'page_creator', '11'),
-        (DeploySpecialist, 'refactoring_planner', '12'),
-        (GitHubManager, 'refactoring_implementation', '13'),
+        (PrcImplementation, 'prc_implementation', '07'),
+        (DebugAgent, 'debug_agent', '08'),
+        (DeploySpecialist, 'deploy_specialist', '09'),
+        (ExpansionOrchestrator, 'expansion_orchestrator', '10'),
+        (PageCreator, 'page_creator', '11'),
+        (RefactoringPlanner, 'refactoring_planner', '12'),
+        (RefactoringImplementation, 'refactoring_implementation', '13'),
     ]
     
     all_passed = True
