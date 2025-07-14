@@ -19,7 +19,6 @@ from openhands.events.event import Event
 from openhands.integrations.provider import ProviderToken, ProviderType
 from openhands.llm.llm import LLM
 from openhands.memory.memory import Memory
-from openhands.microagent.microagent import BaseMicroagent
 from openhands.runtime import get_runtime_cls
 from openhands.runtime.base import Runtime
 from openhands.security import SecurityAnalyzer, options
@@ -163,13 +162,8 @@ def create_memory(
 
     if runtime:
         # sets available hosts
-        memory.set_runtime_info(runtime, {})
+        memory.set_runtime_info(runtime)
 
-        # loads microagents from repo/.openhands/microagents
-        microagents: list[BaseMicroagent] = runtime.get_microagents_from_selected_repo(
-            selected_repository,
-        )
-        memory.load_user_workspace_microagents(microagents)
 
         if selected_repository and repo_directory:
             memory.set_repository_info(selected_repository, repo_directory)

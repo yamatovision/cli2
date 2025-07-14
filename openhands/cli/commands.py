@@ -45,9 +45,8 @@ async def handle_commands(
     config: OpenHandsConfig,
     current_dir: str,
     settings_store: FileSettingsStore,
-) -> tuple[bool, bool, bool]:
+) -> tuple[bool, bool]:
     close_repl = False
-    reload_microagents = False
     new_session_requested = False
 
     if command == '/exit':
@@ -59,7 +58,7 @@ async def handle_commands(
     elif command == '/help':
         handle_help_command(config.default_agent)
     elif command == '/init':
-        close_repl, reload_microagents = await handle_init_command(
+        close_repl = await handle_init_command(
             config, event_stream, current_dir,
         )
     elif command == '/status':
@@ -78,7 +77,7 @@ async def handle_commands(
         action = MessageAction(content=command)
         event_stream.add_event(action, EventSource.USER)
 
-    return close_repl, reload_microagents, new_session_requested
+    return close_repl, new_session_requested
 
 
 def handle_exit_command(
@@ -107,33 +106,12 @@ def handle_help_command(agent_type: str | None = None) -> None:
 
 async def handle_init_command(
     config: OpenHandsConfig, event_stream: EventStream, current_dir: str,
-) -> tuple[bool, bool]:
-    REPO_MD_CREATE_PROMPT = """
-        Please explore this repository. Create the file .openhands/microagents/repo.md with:
-            - A description of the project
-            - An overview of the file structure
-            - Any information on how to run tests or other relevant commands
-            - Any other information that would be helpful to a brand new developer
-        Keep it short--just a few paragraphs will do.
-    """
-    close_repl = False
-    reload_microagents = False
-
-    if config.runtime == 'local':
-        init_repo = await init_repository(current_dir)
-        if init_repo:
-            event_stream.add_event(
-                MessageAction(content=REPO_MD_CREATE_PROMPT),
-                EventSource.USER,
-            )
-            reload_microagents = True
-            close_repl = True
-    else:
-        print_formatted_text(
-            '\nCLIからのリポジトリ初期化はローカルランタイムでのみサポートされています。\n',
-        )
-
-    return close_repl, reload_microagents
+) -> bool:
+    # Microagent functionality has been removed
+    print_formatted_text(
+        '\n/initコマンドは削除されました。\n',
+    )
+    return False
 
 
 def handle_status_command(usage_metrics: UsageMetrics, sid: str) -> None:
@@ -208,61 +186,6 @@ async def handle_resume_command(
     return close_repl, new_session_requested
 
 
-async def init_repository(current_dir: str) -> bool:
-    repo_file_path = Path(current_dir) / '.openhands' / 'microagents' / 'repo.md'
-    init_repo = False
-
-    if repo_file_path.exists():
-        try:
-            # Path.exists() ensures repo_file_path is not None, so we can safely pass it to read_file
-            content = await asyncio.get_event_loop().run_in_executor(
-                None, read_file, repo_file_path,
-            )
-
-            print_formatted_text(
-                'リポジトリ情報ファイル (repo.md) は既に存在します。\n',
-            )
-
-            container = Frame(
-                TextArea(
-                    text=content,
-                    read_only=True,
-                    style=COLOR_GREY(),
-                    wrap_lines=True,
-                ),
-                title='Repository Instructions (repo.md)',
-                style=f'fg:{COLOR_GREY()}',
-            )
-            print_container(container)
-            print_formatted_text('')  # Add a newline after the frame
-
-            init_repo = (
-                cli_confirm(
-                    'リポジトリ情報を再初期化しますか？',
-                    ['はい、再初期化する', 'いいえ、しない'],
-                )
-                == 0
-            )
-
-            if init_repo:
-                write_to_file(repo_file_path, '')
-        except Exception:
-            print_formatted_text('リポジトリ情報ファイル (repo.md) の読み込みエラー')
-            init_repo = False
-    else:
-        print_formatted_text(
-            '\nリポジトリを探索してリポジトリ情報ファイルを作成します。\n',
-        )
-
-        init_repo = (
-            cli_confirm(
-                'リポジトリ情報ファイルを作成しますか？',
-                ['はい、作成する', 'いいえ、しない'],
-            )
-            == 0
-        )
-
-    return init_repo
 
 
 def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -> bool:

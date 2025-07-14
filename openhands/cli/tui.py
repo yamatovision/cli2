@@ -30,6 +30,7 @@ from prompt_toolkit.widgets import Frame, TextArea
 from openhands import __version__
 from openhands.cli.branding import COLORS, STYLE_DICT, MESSAGES, COMMAND_DESCRIPTIONS, get_message
 from openhands.core.config import OpenHandsConfig
+from openhands.core.exceptions import UserCancelledError
 from openhands.core.schema import AgentState
 from openhands.events import EventSource, EventStream
 from openhands.events.action import (

@@ -66,7 +66,6 @@ from openhands.mcp import add_mcp_tools_to_agent
 from openhands.memory.condenser.impl.llm_summarizing_condenser import (
     LLMSummarizingCondenserConfig,
 )
-from openhands.microagent.microagent import BaseMicroagent
 from openhands.runtime.base import Runtime
 from openhands.storage.settings.file_settings_store import FileSettingsStore
 
@@ -115,7 +114,6 @@ async def run_session(
     session_name: str | None = None,
     skip_banner: bool = False,
 ) -> bool:
-    reload_microagents = False
     new_session_requested = False
 
     sid = generate_sid(config, session_name)
@@ -158,7 +156,7 @@ async def run_session(
     usage_metrics = UsageMetrics()
 
     async def prompt_for_next_task(agent_state: str) -> None:
-        nonlocal reload_microagents, new_session_requested
+        nonlocal new_session_requested
         while True:
             next_message = await read_prompt_input(
                 agent_state, multiline=config.cli_multiline_input, agent_type=config.default_agent,
@@ -169,7 +167,6 @@ async def run_session(
 
             (
                 close_repl,
-                reload_microagents,
                 new_session_requested,
             ) = await handle_commands(
                 next_message,
@@ -185,7 +182,7 @@ async def run_session(
                 return
 
     async def on_event_async(event: Event) -> None:
-        nonlocal reload_microagents, is_paused, always_confirm_mode
+        nonlocal is_paused, always_confirm_mode
         display_event(event, config)
         update_usage_metrics(event, usage_metrics)
 
@@ -198,13 +195,6 @@ async def run_session(
                 if is_paused.is_set():
                     return
 
-                # Reload microagents after initialization of repo.md
-                if reload_microagents:
-                    microagents: list[BaseMicroagent] = (
-                        runtime.get_microagents_from_selected_repo(None)
-                    )
-                    memory.load_user_workspace_microagents(microagents)
-                    reload_microagents = False
                 await prompt_for_next_task(event.agent_state)
 
             if event.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
@@ -261,7 +251,6 @@ async def run_session(
             selected_repository=config.sandbox.selected_repo,
         )
 
-    # when memory is created, it will load the microagents from the selected repository
     memory = create_memory(
         runtime=runtime,
         event_stream=event_stream,

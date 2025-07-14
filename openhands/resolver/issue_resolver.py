@@ -189,7 +189,7 @@ class IssueResolver:
 
         # Set up workspace mount via sandbox.volumes
         config.sandbox.volumes = f"{workspace_base}:/workspace:rw"
-        config.agents = {'CodeActAgent': AgentConfig(disabled_microagents=['github'])}
+        config.agents = {'CodeActAgent': AgentConfig()}
 
         cls.update_sandbox_config(
             config,

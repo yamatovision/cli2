@@ -54,10 +54,13 @@ class Memory:
         # Currently no events to handle since RecallAction is removed
         pass
 
-    def set_repository_info(self, repository_info: RepositoryInfo):
+    def set_repository_info(self, selected_repository: str, repo_directory: str):
         """Sets the repository info (name, instructions, etc.) for prompt injection (templating)."""
         logger.debug('Setting repository info')
-        self.repository_info = repository_info
+        self.repository_info = RepositoryInfo(
+            repo_name=selected_repository,
+            repo_directory=repo_directory
+        )
 
     def set_runtime_info(self, runtime: Runtime):
         """Sets the runtime info (available tools, etc.) for prompt injection (templating)."""
@@ -71,9 +74,9 @@ class Memory:
         
         self.runtime_info = RuntimeInfo(
             date=date_str,
-            environment_class=runtime.__class__.__name__,
-            enabled_tools=runtime.config.enable_tools,
-            disabled_tools=runtime.config.disable_tools,
+            available_hosts={},
+            additional_agent_instructions='',
+            custom_secrets_descriptions={},
         )
 
     def set_conversation_instructions(
@@ -85,8 +88,7 @@ class Memory:
 
     def get_repo_instructions(self) -> str:
         """Returns repository instructions if available."""
-        if self.repository_info and self.repository_info.repo_instructions:
-            return self.repository_info.repo_instructions
+        # Repository instructions are not part of RepositoryInfo anymore
         return ''
 
     def close(self):

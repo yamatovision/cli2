@@ -489,7 +489,7 @@ class AgentController:
         if observation.llm_metrics is not None:
             self.state_tracker.merge_metrics(observation.llm_metrics)
 
-        # this happens for runnable actions and microagent actions
+        # this happens for runnable actions
         if self._pending_action and self._pending_action.id == observation.cause:
             if self.state.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
                 return

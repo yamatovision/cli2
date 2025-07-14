@@ -7,10 +7,10 @@ from pydantic import SecretStr
 
 from openhands.cli.tui import (
     COLOR_GREY,
-    UserCancelledError,
     cli_confirm,
     kb_cancel,
 )
+from openhands.core.exceptions import UserCancelledError
 from openhands.cli.utils import (
     VERIFIED_ANTHROPIC_MODELS,
     VERIFIED_MISTRAL_MODELS,

@@ -45,7 +45,6 @@ class PortalPromptManager(PromptManager):
             self.system_template = None  # type: ignore
             self.user_template = None  # type: ignore
             self.additional_info_template = None  # type: ignore
-            self.microagent_info_template = None  # type: ignore
         else:
             # 通常のローカルファイル処理
             super().__init__(prompt_dir, system_prompt_filename)
