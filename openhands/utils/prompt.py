@@ -6,7 +6,6 @@ from jinja2 import Template
 
 from openhands.controller.state.state import State
 from openhands.core.message import Message, TextContent
-from openhands.events.observation.agent import MicroagentKnowledge
 
 
 @dataclass
@@ -58,7 +57,6 @@ class PromptManager:
         )
         self.user_template: Template = self._load_template('user_prompt')
         self.additional_info_template: Template = self._load_template('additional_info')
-        self.microagent_info_template: Template = self._load_template('microagent_info')
 
     def _load_system_template(self, system_prompt_filename: str) -> Template:
         """Load the system prompt template using the specified filename."""
@@ -116,19 +114,6 @@ class PromptManager:
             conversation_instructions=conversation_instructions,
         ).strip()
 
-    def build_microagent_info(
-        self,
-        triggered_agents: list[MicroagentKnowledge],
-    ) -> str:
-        """Renders the microagent info template with the triggered agents.
-
-        Args:
-            triggered_agents: A list of MicroagentKnowledge objects containing information
-                              about triggered microagents.
-        """
-        return self.microagent_info_template.render(
-            triggered_agents=triggered_agents
-        ).strip()
 
     def add_turns_left_reminder(self, messages: list[Message], state: State) -> None:
         latest_user_message = next(

@@ -1,7 +1,6 @@
 import copy
 from typing import Any
 
-from openhands.events.event import RecallType
 from openhands.events.observation.agent import (
     AgentCondensationObservation,
     AgentStateChangedObservation,

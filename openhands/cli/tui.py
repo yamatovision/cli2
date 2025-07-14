@@ -654,7 +654,3 @@ def kb_cancel() -> KeyBindings:
 
     return bindings
 
-
-class UserCancelledError(Exception):
-    """Raised when the user cancels an operation via key binding."""
-

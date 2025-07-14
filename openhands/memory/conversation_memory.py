@@ -478,53 +478,6 @@ class ConversationMemory:
                 ].cache_prompt = True  # Last item inside the message content
                 break
 
-    def _filter_agents_in_microagent_obs(
-        self, obs: RecallObservation, current_index: int, events: list[Event]
-    ) -> list[MicroagentKnowledge]:
-        """Filter out agents that appear in earlier RecallObservations.
-
-        Args:
-            obs: The current RecallObservation to filter
-            current_index: The index of the current event in the events list
-            events: The list of all events
-
-        Returns:
-            list[MicroagentKnowledge]: The filtered list of microagent knowledge
-        """
-        if obs.recall_type != RecallType.KNOWLEDGE:
-            return obs.microagent_knowledge
-
-        # For each agent in the current microagent observation, check if it appears in any earlier microagent observation
-        filtered_agents = []
-        for agent in obs.microagent_knowledge:
-            # Keep this agent if it doesn't appear in any earlier observation
-            # that is, if this is the first microagent observation with this microagent
-            if not self._has_agent_in_earlier_events(agent.name, current_index, events):
-                filtered_agents.append(agent)
-
-        return filtered_agents
-
-    def _has_agent_in_earlier_events(
-        self, agent_name: str, current_index: int, events: list[Event]
-    ) -> bool:
-        """Check if an agent appears in any earlier RecallObservation in the event list.
-
-        Args:
-            agent_name: The name of the agent to look for
-            current_index: The index of the current event in the events list
-            events: The list of all events
-
-        Returns:
-            bool: True if the agent appears in an earlier RecallObservation, False otherwise
-        """
-        for event in events[:current_index]:
-            # Note that this check includes the WORKSPACE_CONTEXT
-            if isinstance(event, RecallObservation):
-                if any(
-                    agent.name == agent_name for agent in event.microagent_knowledge
-                ):
-                    return True
-        return False
 
     @staticmethod
     def _filter_unmatched_tool_calls(
