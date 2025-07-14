@@ -80,7 +80,7 @@ class ImplementationAgent(Agent):
         - config (AgentConfig): The configuration for this agent
         """
         # ImplementationAgentは常に実装エージェントのプロンプトを使用
-        config.system_prompt_filename = 'implementation_agent_system_prompt.j2'
+        config.system_prompt_filename = 'expansion_orchestrator'
         
         super().__init__(llm, config)
         self.pending_actions: deque['Action'] = deque()
@@ -103,7 +103,7 @@ class ImplementationAgent(Agent):
             # 実装エージェント専用のプロンプトファイルを使用
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
-                system_prompt_filename='implementation_agent_system_prompt.j2',
+                system_prompt_filename='expansion_orchestrator',
                 enable_portal=True
             )
 

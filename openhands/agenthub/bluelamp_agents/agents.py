@@ -60,7 +60,7 @@ class RequirementsEngineer(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'requirements_engineer.j2'
+        config.system_prompt_filename = 'requirements_engineer'
         super().__init__(llm, config)
 
 
@@ -70,7 +70,7 @@ class UIUXDesigner(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'ui_ux_designer.j2'
+        config.system_prompt_filename = 'uiux_designer'
         super().__init__(llm, config)
 
 
@@ -80,7 +80,7 @@ class DataModelingEngineer(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'data_modeling_engineer.j2'
+        config.system_prompt_filename = 'data_modeling_engineer'
         super().__init__(llm, config)
 
 
@@ -90,7 +90,7 @@ class SystemArchitect(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'system_architect.j2'
+        config.system_prompt_filename = 'system_architect'
         super().__init__(llm, config)
 
 
@@ -100,7 +100,7 @@ class ImplementationConsultant(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'implementation_consultant.j2'
+        config.system_prompt_filename = 'implementation_consultant'
         super().__init__(llm, config)
 
 
@@ -110,7 +110,7 @@ class EnvironmentSetup(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'environment_setup.j2'
+        config.system_prompt_filename = 'environment_setup'
         super().__init__(llm, config)
 
 
@@ -120,7 +120,7 @@ class PrototypeImplementation(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'prototype_implementation.j2'
+        config.system_prompt_filename = 'prc_implementation'
         super().__init__(llm, config)
 
 
@@ -130,7 +130,7 @@ class BackendImplementation(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'backend_implementation.j2'
+        config.system_prompt_filename = 'debug_agent'
         super().__init__(llm, config)
 
 
@@ -140,7 +140,7 @@ class TestQualityVerification(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'test_quality_verification.j2'
+        config.system_prompt_filename = 'deploy_specialist'
         super().__init__(llm, config)
 
 
@@ -150,7 +150,7 @@ class APIIntegration(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'api_integration.j2'
+        config.system_prompt_filename = 'expansion_orchestrator'
         super().__init__(llm, config)
 
 
@@ -160,7 +160,7 @@ class DebugDetective(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'debug_detective.j2'
+        config.system_prompt_filename = 'page_creator'
         super().__init__(llm, config)
 
 
@@ -170,7 +170,7 @@ class DeploySpecialist(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'deploy_specialist.j2'
+        config.system_prompt_filename = 'refactoring_planner'
         super().__init__(llm, config)
 
 
@@ -180,7 +180,7 @@ class GitHubManager(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'github_manager.j2'
+        config.system_prompt_filename = 'refactoring_implementation'
         super().__init__(llm, config)
 
 
@@ -190,7 +190,7 @@ class TypeScriptManager(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'typescript_manager.j2'
+        config.system_prompt_filename = 'debug_agent'
         super().__init__(llm, config)
 
 
@@ -200,7 +200,7 @@ class FeatureExtension(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'feature_extension.j2'
+        config.system_prompt_filename = 'expansion_orchestrator'
         super().__init__(llm, config)
 
 
@@ -210,5 +210,5 @@ class RefactoringExpert(BlueLampBaseAgent):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'refactoring_expert.j2'
+        config.system_prompt_filename = 'refactoring_implementation'
         super().__init__(llm, config)
