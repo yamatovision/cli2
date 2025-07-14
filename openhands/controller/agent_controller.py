@@ -649,13 +649,9 @@ class AgentController:
         Args:
             action (AgentDelegateAction): The action containing information about the delegate agent to start.
         """
-        print(f"🎯 [AGENT CONTROLLER] Attempting to delegate to agent: {action.agent}")
-        print(f"🎯 [AGENT CONTROLLER] Available agents in registry: {Agent.list_agents()}")
         try:
             agent_cls: type[Agent] = Agent.get_cls(action.agent)
-            print(f"🎯 [AGENT CONTROLLER] Found agent class: {agent_cls}")
         except Exception as e:
-            print(f"❌ [AGENT CONTROLLER] Failed to get agent class: {e}")
             raise
         agent_config = self.agent_configs.get(action.agent, self.agent.config)
         llm_config = self.agent_to_llm_config.get(action.agent, self.agent.llm.config)
@@ -768,6 +764,14 @@ class AgentController:
 
         # unset delegate so parent can resume normal handling
         self.delegate = None
+        
+        # 親エージェントに戻る時のログを表示
+        agent_name_jp = self.agent.name
+        if self.agent.name == 'OrchestratorAgent':
+            agent_name_jp = 'オーケストレーター'
+        elif self.agent.name == 'ExtensionManagerAgent':
+            agent_name_jp = '拡張マネージャー'
+        print(f"🎭 [担当エージェント]：{agent_name_jp}")
 
     async def _step(self) -> None:
         """Executes a single step of the parent or delegate agent. Detects stuck agents and limits on the number of iterations and the task budget."""

@@ -80,6 +80,32 @@ class Agent(ABC):
                 agent_name_jp = 'オーケストレーター'
             elif self.name == 'ExtensionManagerAgent':
                 agent_name_jp = '拡張マネージャー'
+            elif self.name == 'RequirementsEngineer':
+                agent_name_jp = '要件定義エンジニア'
+            elif self.name == 'UIUXDesigner':
+                agent_name_jp = 'UI/UXデザイナー'
+            elif self.name == 'DataModelingEngineer':
+                agent_name_jp = 'データモデリングエンジニア'
+            elif self.name == 'SystemArchitect':
+                agent_name_jp = 'システムアーキテクト'
+            elif self.name == 'ImplementationConsultant':
+                agent_name_jp = '実装コンサルタント'
+            elif self.name == 'EnvironmentSetup':
+                agent_name_jp = '環境構築スペシャリスト'
+            elif self.name == 'PrcImplementation':
+                agent_name_jp = '実装エンジニア'
+            elif self.name == 'DebugAgent':
+                agent_name_jp = 'デバッグエンジニア'
+            elif self.name == 'DeploySpecialist':
+                agent_name_jp = 'デプロイスペシャリスト'
+            elif self.name == 'ExpansionOrchestrator':
+                agent_name_jp = '拡張オーケストレーター'
+            elif self.name == 'PageCreator':
+                agent_name_jp = 'ページクリエーター'
+            elif self.name == 'RefactoringPlanner':
+                agent_name_jp = 'リファクタリングプランナー'
+            elif self.name == 'RefactoringImplementation':
+                agent_name_jp = 'リファクタリング実装エンジニア'
             
             # システムメッセージのログを表示
             print(f"🎭 [担当エージェント]：{agent_name_jp}")

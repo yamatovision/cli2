@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI2 デザインテーマ選択</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background: #111;
+        }
+
+        .header h1 {
+            color: #00ff88;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .theme-card {
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            background: #111;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .theme-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .theme-description {
+            color: #ccc;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        /* テーマ1: プロフェッショナル・ターミナル */
+        .theme-1 {
+            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
+        }
+
+        .theme-1 .theme-title {
+            background: #2d3748;
+            color: #00d4aa;
+            border: 1px solid #00d4aa;
+        }
+
+        .theme-1 .demo-terminal {
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            color: #e2e8f0;
+        }
+
+        .theme-1 .demo-prompt {
+            color: #00d4aa;
+        }
+
+        .theme-1 .demo-output {
+            color: #cbd5e0;
+        }
+
+        .theme-1 .demo-button {
+            background: #2d3748;
+            color: #00d4aa;
+            border: 1px solid #00d4aa;
+        }
+
+        .theme-1 .demo-button:hover {
+            background: #00d4aa;
+            color: #1a202c;
+        }
+
+        /* テーマ2: サイバーパンク */
+        .theme-2 {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%);
+        }
+
+        .theme-2 .theme-title {
+            background: #2a0845;
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        .theme-2 .demo-terminal {
+            background: #0d0d0d;
+            border: 1px solid #ff00ff;
+            color: #00ffff;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+
+        .theme-2 .demo-prompt {
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        .theme-2 .demo-output {
+            color: #00ffff;
+        }
+
+        .theme-2 .demo-button {
+            background: #2a0845;
+            color: #ff00ff;
+            border: 1px solid #ff00ff;
+            text-shadow: 0 0 5px #ff00ff;
+        }
+
+        .theme-2 .demo-button:hover {
+            background: #ff00ff;
+            color: #0d0d0d;
+            text-shadow: none;
+        }
+
+        /* テーマ3: ミニマル・モノクローム */
+        .theme-3 {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #212529;
+        }
+
+        .theme-3 .theme-title {
+            background: #ffffff;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .theme-3 .demo-terminal {
+            background: #ffffff;
+            border: 2px solid #dee2e6;
+            color: #495057;
+        }
+
+        .theme-3 .demo-prompt {
+            color: #6c757d;
+            font-weight: bold;
+        }
+
+        .theme-3 .demo-output {
+            color: #495057;
+        }
+
+        .theme-3 .demo-button {
+            background: #ffffff;
+            color: #495057;
+            border: 2px solid #dee2e6;
+        }
+
+        .theme-3 .demo-button:hover {
+            background: #495057;
+            color: #ffffff;
+        }
+
+        /* テーマ4: レトロ・グリーン */
+        .theme-4 {
+            background: linear-gradient(135deg, #001100 0%, #002200 100%);
+        }
+
+        .theme-4 .theme-title {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .theme-4 .demo-terminal {
+            background: #000000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .theme-4 .demo-prompt {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .theme-4 .demo-output {
+            color: #00cc00;
+        }
+
+        .theme-4 .demo-button {
+            background: #003300;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .theme-4 .demo-button:hover {
+            background: #00ff00;
+            color: #000000;
+            text-shadow: none;
+        }
+
+        /* 共通デモ要素 */
+        .demo-terminal {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            min-height: 120px;
+        }
+
+        .demo-line {
+            margin-bottom: 8px;
+        }
+
+        .demo-prompt::before {
+            content: "$ ";
+        }
+
+        .demo-output {
+            margin-left: 10px;
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .demo-button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 0.9em;
+        }
+
+        .selection-area {
+            text-align: center;
+            padding: 30px;
+            border: 2px solid #333;
+            border-radius: 12px;
+            background: #111;
+            margin-top: 40px;
+        }
+
+        .selection-area h2 {
+            color: #00ff88;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .selection-area p {
+            color: #ccc;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .theme-selector {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .theme-option {
+            padding: 12px 24px;
+            background: #2d3748;
+            color: #00ff88;
+            border: 2px solid #00ff88;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-size: 1em;
+        }
+
+        .theme-option:hover {
+            background: #00ff88;
+            color: #1a202c;
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00d4aa);
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 1.5s infinite;
+        }
+
+        .status-online {
+            background: #00ff88;
+        }
+
+        .status-processing {
+            background: #ffaa00;
+        }
+
+        .status-error {
+            background: #ff4444;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        /* テーマ5: エレガント・ブルー（Facebook/Meta Blue） */
+        .theme-5 {
+            background: linear-gradient(135deg, #f0f2f5 0%, #e4e6ea 100%);
+            color: #1c1e21;
+        }
+
+        .theme-5 .theme-title {
+            background: #4267B2;
+            color: #ffffff;
+            border: 1px solid #4267B2;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(66, 103, 178, 0.3);
+        }
+
+        .theme-5 .demo-terminal {
+            background: #ffffff;
+            border: 2px solid #4267B2;
+            color: #1c1e21;
+            box-shadow: 0 4px 12px rgba(66, 103, 178, 0.15);
+        }
+
+        .theme-5 .demo-prompt {
+            color: #4267B2;
+            font-weight: 600;
+        }
+
+        .theme-5 .demo-output {
+            color: #42526e;
+        }
+
+        .theme-5 .demo-button {
+            background: #4267B2;
+            color: #ffffff;
+            border: 1px solid #4267B2;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(66, 103, 178, 0.2);
+        }
+
+        .theme-5 .demo-button:hover {
+            background: #365899;
+            border-color: #365899;
+            box-shadow: 0 4px 8px rgba(66, 103, 178, 0.3);
+        }
+
+        /* テーマ6: プレミアム・ネイビー */
+        .theme-6 {
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+        }
+
+        .theme-6 .theme-title {
+            background: #2563eb;
+            color: #f8fafc;
+            border: 1px solid #3b82f6;
+            font-weight: 600;
+        }
+
+        .theme-6 .demo-terminal {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+        }
+
+        .theme-6 .demo-prompt {
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        .theme-6 .demo-output {
+            color: #cbd5e1;
+        }
+
+        .theme-6 .demo-button {
+            background: #2563eb;
+            color: #f8fafc;
+            border: 1px solid #3b82f6;
+            font-weight: 500;
+        }
+
+        .theme-6 .demo-button:hover {
+            background: #1d4ed8;
+            border-color: #2563eb;
+        }
+
+        /* テーマ7: アイス・ブルー */
+        .theme-7 {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            color: #0c4a6e;
+        }
+
+        .theme-7 .theme-title {
+            background: #0ea5e9;
+            color: #ffffff;
+            border: 1px solid #0284c7;
+            font-weight: 600;
+        }
+
+        .theme-7 .demo-terminal {
+            background: #ffffff;
+            border: 2px solid #bae6fd;
+            color: #0c4a6e;
+            box-shadow: 0 4px 6px rgba(14, 165, 233, 0.1);
+        }
+
+        .theme-7 .demo-prompt {
+            color: #0284c7;
+            font-weight: 600;
+        }
+
+        .theme-7 .demo-output {
+            color: #075985;
+        }
+
+        .theme-7 .demo-button {
+            background: #0ea5e9;
+            color: #ffffff;
+            border: 1px solid #0284c7;
+            font-weight: 500;
+        }
+
+        .theme-7 .demo-button:hover {
+            background: #0284c7;
+            border-color: #0369a1;
+        }
+
+        /* テーマ8: ディープ・オーシャン */
+        .theme-8 {
+            background: linear-gradient(135deg, #0c1426 0%, #1e3a5f 100%);
+        }
+
+        .theme-8 .theme-title {
+            background: #1e40af;
+            color: #dbeafe;
+            border: 1px solid #3b82f6;
+            font-weight: 600;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .theme-8 .demo-terminal {
+            background: #1e293b;
+            border: 1px solid #1e40af;
+            color: #e2e8f0;
+            box-shadow: 0 0 20px rgba(30, 64, 175, 0.3);
+        }
+
+        .theme-8 .demo-prompt {
+            color: #60a5fa;
+            font-weight: 600;
+            text-shadow: 0 0 5px rgba(96, 165, 250, 0.5);
+        }
+
+        .theme-8 .demo-output {
+            color: #cbd5e1;
+        }
+
+        .theme-8 .demo-button {
+            background: #1e40af;
+            color: #dbeafe;
+            border: 1px solid #3b82f6;
+            font-weight: 500;
+            text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+
+        .theme-8 .demo-button:hover {
+            background: #3b82f6;
+            border-color: #60a5fa;
+            text-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CLI2 デザインテーマ選択</h1>
+            <p>OpenHands AI開発エージェント - 商用CLIアプリケーション</p>
+        </div>
+
+        <div class="themes-grid">
+            <!-- テーマ1: プロフェッショナル・ターミナル -->
+            <div class="theme-card theme-1">
+                <div class="theme-title">1. プロフェッショナル・ターミナル</div>
+                <div class="theme-description">
+                    信頼性と機能性を重視した、現代的なターミナル環境。<br>
+                    商用ツールにふさわしい洗練されたデザイン。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Ready for AI-powered development</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ2: サイバーパンク -->
+            <div class="theme-card theme-2">
+                <div class="theme-title">2. サイバーパンク</div>
+                <div class="theme-description">
+                    未来的でエネルギッシュな、SF映画のような世界観。<br>
+                    革新性とテクノロジーの先進性を表現。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">NEURAL LINK ESTABLISHED</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">PROCESSING... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">EXECUTE</button>
+                    <button class="demo-button">CONFIG</button>
+                    <button class="demo-button">HELP</button>
+                </div>
+            </div>
+
+            <!-- テーマ3: ミニマル・モノクローム -->
+            <div class="theme-card theme-3">
+                <div class="theme-title">3. ミニマル・モノクローム</div>
+                <div class="theme-description">
+                    シンプルで洗練された、Apple風のクリーンデザイン。<br>
+                    集中力を高める、ノイズのない環境。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Ready for development</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ5: エレガント・ブルー（Facebook/Meta Blue） -->
+            <div class="theme-card theme-5">
+                <div class="theme-title">5. エレガント・ブルー</div>
+                <div class="theme-description">
+                    Facebook/Meta Blue (#4267B2) を使用した深みのある紺色デザイン。<br>
+                    信頼性とプロフェッショナリズムを表現する洗練されたスタイル。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Ready for AI-powered development</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ6: プレミアム・ネイビー -->
+            <div class="theme-card theme-6">
+                <div class="theme-title">6. プレミアム・ネイビー</div>
+                <div class="theme-description">
+                    高級感のあるネイビーブルーベース。<br>
+                    プロフェッショナルな印象と落ち着いた雰囲気。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Premium development environment ready</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ7: アイス・ブルー -->
+            <div class="theme-card theme-7">
+                <div class="theme-title">7. アイス・ブルー</div>
+                <div class="theme-description">
+                    爽やかで清潔感のある水色ベース。<br>
+                    集中力を高める涼しげで上品なデザイン。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Crystal clear development environment</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ8: ディープ・オーシャン -->
+            <div class="theme-card theme-8">
+                <div class="theme-title">8. ディープ・オーシャン</div>
+                <div class="theme-description">
+                    深海のような神秘的な青系デザイン。<br>
+                    集中力と創造性を刺激する深みのある世界観。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">Deep ocean development environment</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">Processing... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">実行</button>
+                    <button class="demo-button">設定</button>
+                    <button class="demo-button">ヘルプ</button>
+                </div>
+            </div>
+
+            <!-- テーマ4: レトロ・グリーン -->
+            <div class="theme-card theme-4">
+                <div class="theme-title">4. レトロ・グリーン</div>
+                <div class="theme-description">
+                    懐かしいターミナルの雰囲気を再現した、クラシックスタイル。<br>
+                    ハッカー文化への敬意を込めた伝統的なデザイン。
+                </div>
+                <div class="demo-terminal">
+                    <div class="demo-line">
+                        <span class="demo-prompt">openhands</span>
+                        <span class="demo-output">SYSTEM READY</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="demo-prompt">user</span>
+                        <span class="demo-output">Create a Python function to parse JSON</span>
+                    </div>
+                    <div class="demo-line">
+                        <span class="status-indicator status-processing"></span>
+                        <span class="demo-output">PROCESSING... [████████░░] 80%</span>
+                    </div>
+                </div>
+                <div class="demo-controls">
+                    <button class="demo-button">EXECUTE</button>
+                    <button class="demo-button">CONFIG</button>
+                    <button class="demo-button">HELP</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="selection-area">
+            <h2>テーマを選択してください</h2>
+            <p>各テーマをご確認いただき、最も近いイメージのものをお選びください</p>
+            <div class="theme-selector">
+                <button class="theme-option" onclick="selectTheme(1)">テーマ1を選択</button>
+                <button class="theme-option" onclick="selectTheme(2)">テーマ2を選択</button>
+                <button class="theme-option" onclick="selectTheme(3)">テーマ3を選択</button>
+                <button class="theme-option" onclick="selectTheme(4)">テーマ4を選択</button>
+                <button class="theme-option" onclick="selectTheme(5)">テーマ5を選択</button>
+                <button class="theme-option" onclick="selectTheme(6)">テーマ6を選択</button>
+                <button class="theme-option" onclick="selectTheme(7)">テーマ7を選択</button>
+                <button class="theme-option" onclick="selectTheme(8)">テーマ8を選択</button>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function selectTheme(themeNumber) {
+            const themes = {
+                1: "プロフェッショナル・ターミナル",
+                2: "サイバーパンク", 
+                3: "ミニマル・モノクローム",
+                4: "レトロ・グリーン",
+                5: "エレガント・ブルー",
+                6: "プレミアム・ネイビー",
+                7: "アイス・ブルー",
+                8: "ディープ・オーシャン"
+            };
+            
+            // プログレスバーアニメーション
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = '100%';
+            
+            setTimeout(() => {
+                alert(`「${themes[themeNumber]}」を選択しました！\n\nこのテーマでモックアップを作成します。\n気になる点や変更したい部分があれば、お聞かせください。`);
+            }, 500);
+        }
+
+        // 初期化時のアニメーション
+        window.addEventListener('load', () => {
+            const cards = document.querySelectorAll('.theme-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>

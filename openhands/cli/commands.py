@@ -87,7 +87,7 @@ def handle_exit_command(
     close_repl = False
 
     confirm_exit = (
-        cli_confirm('\nTerminate session?', ['Yes, proceed', 'No, dismiss']) == 0
+        cli_confirm('\nセッションを終了しますか？', ['はい終了します', 'いいえ続けます']) == 0
     )
 
     if confirm_exit:
@@ -130,7 +130,7 @@ async def handle_init_command(
             close_repl = True
     else:
         print_formatted_text(
-            '\nRepository initialization through the CLI is only supported for local runtime.\n',
+            '\nCLIからのリポジトリ初期化はローカルランタイムでのみサポートされています。\n',
         )
 
     return close_repl, reload_microagents
@@ -148,8 +148,8 @@ def handle_new_command(
 
     new_session_requested = (
         cli_confirm(
-            '\nCurrent session will be terminated and you will lose the conversation history.\n\nContinue?',
-            ['Yes, proceed', 'No, dismiss'],
+            '\n現在のセッションが終了し、会話履歴が失われます。\n\n続行しますか？',
+            ['はい、続行', 'いいえ、やめる'],
         )
         == 0
     )
@@ -220,7 +220,7 @@ async def init_repository(current_dir: str) -> bool:
             )
 
             print_formatted_text(
-                'Repository instructions file (repo.md) already exists.\n',
+                'リポジトリ情報ファイル (repo.md) は既に存在します。\n',
             )
 
             container = Frame(
@@ -238,8 +238,8 @@ async def init_repository(current_dir: str) -> bool:
 
             init_repo = (
                 cli_confirm(
-                    'Do you want to re-initialize?',
-                    ['Yes, re-initialize', 'No, dismiss'],
+                    'リポジトリ情報を再初期化しますか？',
+                    ['はい、再初期化する', 'いいえ、しない'],
                 )
                 == 0
             )
@@ -247,17 +247,17 @@ async def init_repository(current_dir: str) -> bool:
             if init_repo:
                 write_to_file(repo_file_path, '')
         except Exception:
-            print_formatted_text('Error reading repository instructions file (repo.md)')
+            print_formatted_text('リポジトリ情報ファイル (repo.md) の読み込みエラー')
             init_repo = False
     else:
         print_formatted_text(
-            '\nRepository instructions file will be created by exploring the repository.\n',
+            '\nリポジトリを探索してリポジトリ情報ファイルを作成します。\n',
         )
 
         init_repo = (
             cli_confirm(
-                'Do you want to proceed?',
-                ['Yes, create', 'No, dismiss'],
+                'リポジトリ情報ファイルを作成しますか？',
+                ['はい、作成する', 'いいえ、しない'],
             )
             == 0
         )
@@ -298,7 +298,7 @@ def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -
         print_formatted_text('')
 
         confirm = (
-            cli_confirm('Do you wish to continue?', ['Yes, proceed', 'No, exit']) == 0
+            cli_confirm('続行しますか？', ['はい、続行', 'いいえ、終了']) == 0
         )
 
         if confirm:

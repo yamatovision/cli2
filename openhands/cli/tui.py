@@ -566,16 +566,16 @@ async def read_confirmation_input() -> str:
         with patch_stdout():
             print_formatted_text('')
             confirmation: str = await prompt_session.prompt_async(
-                HTML('<gold>Proceed with action? (y)es/(n)o/(a)lways > </gold>'),
+                HTML('<gold>実行を進めていいですか？ h(はい)/i(いいえ)/t(つねに許可) > </gold>'),
             )
 
             confirmation = '' if confirmation is None else confirmation.strip().lower()
 
-            if confirmation in ['y', 'yes']:
+            if confirmation in ['h', 'はい']:
                 return 'yes'
-            if confirmation in ['n', 'no']:
+            if confirmation in ['i', 'いいえ']:
                 return 'no'
-            if confirmation in ['a', 'always']:
+            if confirmation in ['t', 'つねに', 'つねに許可']:
                 return 'always'
             return 'no'
     except (KeyboardInterrupt, EOFError):
@@ -593,7 +593,7 @@ async def process_agent_pause(done: asyncio.Event, event_stream: EventStream) ->
                 or key_press.key == Keys.ControlD
             ):
                 print_formatted_text('')
-                print_formatted_text(HTML('<gold>Pausing the agent...</gold>'))
+                print_formatted_text(HTML('<gold>エージェントの動作をキャンセルしています...</gold>'))
                 event_stream.add_event(
                     ChangeAgentStateAction(AgentState.PAUSED),
                     EventSource.USER,

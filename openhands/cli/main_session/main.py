@@ -179,6 +179,10 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
     # Read task from file, CLI args, or stdin
     task_str = read_task(args, config.cli_multiline_input)
+    
+    # 初期タスクがない場合は自動的に「はじめましょう。」を送信
+    if not task_str:
+        task_str = "はじめましょう。"
 
     # Show welcome message based on agent
     if not banner_shown:
