@@ -121,16 +121,16 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★7 プロトタイプ実装
+        # ★7 PRC実装
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_prototype_implementation',
-                'description': 'フロントエンド実装タスクをPrcImplementationに委譲。モックAPI使用のプロトタイプ開発を依頼する際に使用',
+                'name': 'delegate_to_prc_implementation',
+                'description': 'PRC実装タスクをPrcImplementationに委譲。プロトタイプ実装とコア機能開発を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '実行するプロトタイプ実装タスクの詳細'},
+                        'task': {'type': 'string', 'description': '実行するPRC実装タスクの詳細'},
                         'context': {'type': 'object', 'description': '実装要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
                         'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}

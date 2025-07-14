@@ -245,7 +245,7 @@ def response_to_actions(
                     agent='EnvironmentSetup',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_prototype_implementation':
+            elif tool_call.function.name == 'delegate_to_prc_implementation':
                 action = AgentDelegateAction(
                     agent='PrcImplementation',
                     inputs=arguments,
