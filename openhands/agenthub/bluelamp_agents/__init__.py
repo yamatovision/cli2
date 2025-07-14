@@ -1,10 +1,11 @@
 """
 BlueLamp専門エージェント群
 
-13個のBlueLampエージェントが14エージェント構造（00-13）にマッピング:
+12個のBlueLampエージェントが13エージェント構造（00-12）にマッピング:
 - 00: orchestrator (OrchestratorAgent用)
-- 01-13: 各BlueLampエージェントが対応
-- 重複なし、Portal API統合完了
+- 01-12: 各BlueLampエージェントが対応
+- RefactoringPlannerとRefactoringImplementationを統合してRefactoringEngineerに
+- Portal API統合完了
 """
 
 from .agents import (
@@ -19,12 +20,11 @@ from .agents import (
     DeploySpecialist,
     ExpansionOrchestrator,
     PageCreator,
-    RefactoringPlanner,
-    RefactoringImplementation,
+    RefactoringEngineer,
 )
 from openhands.controller.agent import Agent
 
-# 13個のBlueLampエージェント - クラス名とプロンプトが一致
+# 12個のBlueLampエージェント - クラス名とプロンプトが一致
 BLUELAMP_AGENTS = [
     ('RequirementsEngineer', RequirementsEngineer),
     ('UIUXDesigner', UIUXDesigner),
@@ -37,8 +37,7 @@ BLUELAMP_AGENTS = [
     ('DeploySpecialist', DeploySpecialist),
     ('ExpansionOrchestrator', ExpansionOrchestrator),
     ('PageCreator', PageCreator),
-    ('RefactoringPlanner', RefactoringPlanner),
-    ('RefactoringImplementation', RefactoringImplementation),
+    ('RefactoringEngineer', RefactoringEngineer),
 ]
 
 for name, cls in BLUELAMP_AGENTS:

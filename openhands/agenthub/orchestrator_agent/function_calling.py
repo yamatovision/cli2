@@ -265,14 +265,9 @@ def response_to_actions(
                     agent='DeploySpecialist',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_refactoring_planner':
+            elif tool_call.function.name == 'delegate_to_refactoring_engineer':
                 action = AgentDelegateAction(
-                    agent='RefactoringPlanner',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_refactoring_implementation':
-                action = AgentDelegateAction(
-                    agent='RefactoringImplementation',
+                    agent='RefactoringEngineer',
                     inputs=arguments,
                 )
             else:

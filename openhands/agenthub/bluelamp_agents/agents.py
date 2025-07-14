@@ -164,23 +164,13 @@ class PageCreator(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class RefactoringPlanner(BlueLampBaseAgent):
-    """★12 リファクタリング計画: コード改善計画策定"""
+class RefactoringEngineer(BlueLampBaseAgent):
+    """★12 リファクタリングエンジニア: コード改善計画策定と実装"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from openhands.core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'refactoring_planner'
-        super().__init__(llm, config)
-
-
-class RefactoringImplementation(BlueLampBaseAgent):
-    """★13 リファクタリング実装: コード改善実行"""
-    def __init__(self, llm: Any, config: Any = None):
-        if config is None:
-            from openhands.core.config import AgentConfig
-            config = AgentConfig()
-        config.system_prompt_filename = 'refactoring_implementation'
+        config.system_prompt_filename = 'refactoring_engineer'
         super().__init__(llm, config)
 
 

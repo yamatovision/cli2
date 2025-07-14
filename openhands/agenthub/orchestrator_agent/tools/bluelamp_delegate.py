@@ -5,7 +5,7 @@ from litellm import ChatCompletionToolParam
 # BlueLamp専門エージェント委譲ツール定義
 
 def create_bluelamp_delegate_tools():
-    """14個のBlueLamp専門エージェントへの委譲ツールを生成（Portal APIマッピング準拠）"""
+    """12個のBlueLamp専門エージェントへの委譲ツールを生成（Portal APIマッピング準拠）"""
     return [
         # ★1 要件定義エンジニア
         ChatCompletionToolParam(
@@ -198,35 +198,16 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★12 リファクタリング計画エージェント
+        # ★12 リファクタリングエンジニア
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_refactoring_planner',
-                'description': 'リファクタリング計画タスクをRefactoringPlannerに委譲。コード分析とリファクタリング計画を依頼する際に使用',
+                'name': 'delegate_to_refactoring_engineer',
+                'description': 'リファクタリングタスクをRefactoringEngineerに委譲。コード分析、計画策定、実装まで統合的に依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '実行するリファクタリング計画タスクの詳細'},
-                        'context': {'type': 'object', 'description': 'コード改善要件などの追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★13 リファクタリング実装エージェント
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_refactoring_implementation',
-                'description': 'リファクタリング実装タスクをRefactoringImplementationに委譲。コード改善の実装と最適化を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行するリファクタリング実装タスクの詳細'},
+                        'task': {'type': 'string', 'description': '実行するリファクタリングタスクの詳細'},
                         'context': {'type': 'object', 'description': 'コード改善要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
                         'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}

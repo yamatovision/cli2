@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-14エージェント構造のマッピングテスト
+12エージェント構造のマッピングテスト
 各BlueLampエージェントが正しいプロンプトにマッピングされているかを確認
+RefactoringPlannerとRefactoringImplementationを統合してRefactoringEngineerに
 """
 
 import sys
@@ -20,8 +21,7 @@ from openhands.agenthub.bluelamp_agents import (
     DeploySpecialist,
     ExpansionOrchestrator,
     PageCreator,
-    RefactoringPlanner,
-    RefactoringImplementation,
+    RefactoringEngineer,
 )
 from openhands.portal.prompt_mapping import get_prompt_id_by_agent_name, get_all_agents
 from openhands.core.config import AgentConfig
@@ -29,7 +29,7 @@ from openhands.core.config import AgentConfig
 def test_agent_mapping():
     """各BlueLampエージェントのマッピングをテスト"""
     
-    print("=== 14エージェント構造マッピングテスト ===\n")
+    print("=== 12エージェント構造マッピングテスト ===\n")
     
     # テスト対象エージェントとその期待されるプロンプト名
     test_cases = [
@@ -44,8 +44,7 @@ def test_agent_mapping():
         (DeploySpecialist, 'deploy_specialist', '09'),
         (ExpansionOrchestrator, 'expansion_orchestrator', '10'),
         (PageCreator, 'page_creator', '11'),
-        (RefactoringPlanner, 'refactoring_planner', '12'),
-        (RefactoringImplementation, 'refactoring_implementation', '13'),
+        (RefactoringEngineer, 'refactoring_engineer', '12'),
     ]
     
     all_passed = True
@@ -118,7 +117,7 @@ def test_portal_api_connection():
         return False
 
 if __name__ == "__main__":
-    print("BlueLamp 14エージェント構造マッピングテスト開始\n")
+    print("BlueLamp 12エージェント構造マッピングテスト開始\n")
     
     mapping_ok = test_agent_mapping()
     api_ok = test_portal_api_connection()

@@ -102,10 +102,8 @@ class Agent(ABC):
                 agent_name_jp = '拡張オーケストレーター'
             elif self.name == 'PageCreator':
                 agent_name_jp = 'ページクリエーター'
-            elif self.name == 'RefactoringPlanner':
-                agent_name_jp = 'リファクタリングプランナー'
-            elif self.name == 'RefactoringImplementation':
-                agent_name_jp = 'リファクタリング実装エンジニア'
+            elif self.name == 'RefactoringEngineer':
+                agent_name_jp = 'リファクタリングエンジニア'
             
             # システムメッセージのログを表示
             print(f"🎭 [担当エージェント]：{agent_name_jp}")
