@@ -1,14 +1,19 @@
+# Standard library imports
 import asyncio
 import logging
 import os
 import sys
 
+# Third-party imports
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear
 
+# OpenHands imports
 import openhands.agenthub
 import openhands.cli.suppress_warnings  # noqa: F401
+
+# CLI module imports
 from openhands.cli.commands import (
     check_folder_security_agreement,
     handle_commands,
@@ -27,19 +32,23 @@ from openhands.cli.tui import (
     read_confirmation_input,
     read_prompt_input,
 )
-from openhands.cli.utils import (
-    update_usage_metrics,
-)
+from openhands.cli.utils import update_usage_metrics
+
+# Controller imports
 from openhands.controller import AgentController
 from openhands.controller.agent import Agent
+
+# Core configuration imports
 from openhands.core.config import (
     OpenHandsConfig,
     parse_arguments,
     setup_config_from_args,
 )
-from openhands.core.config.utils import get_workspace_mount_path
 from openhands.core.config.condenser_config import NoOpCondenserConfig
 from openhands.core.config.mcp_config import OpenHandsMCPConfigImpl
+from openhands.core.config.utils import get_workspace_mount_path
+
+# Core functionality imports
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.loop import run_agent_until_done
 from openhands.core.schema import AgentState
@@ -51,15 +60,17 @@ from openhands.core.setup import (
     generate_sid,
     initialize_repository_for_runtime,
 )
+
+# Event system imports
 from openhands.events import EventSource, EventStreamSubscriber
 from openhands.events.action import (
     ChangeAgentStateAction,
     MessageAction,
 )
 from openhands.events.event import Event
-from openhands.events.observation import (
-    AgentStateChangedObservation,
-)
+from openhands.events.observation import AgentStateChangedObservation
+
+# Other imports
 from openhands.io import read_task
 from openhands.mcp import add_mcp_tools_to_agent
 from openhands.memory.condenser.impl.llm_summarizing_condenser import (
