@@ -28,7 +28,6 @@ from openhands.cli.tui import (
     process_agent_pause,
     read_confirmation_input,
     read_prompt_input,
-    update_streaming_output,
 )
 from openhands.cli.utils import (
     update_usage_metrics,
