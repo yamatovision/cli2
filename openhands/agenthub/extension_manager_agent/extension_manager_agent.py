@@ -9,19 +9,19 @@ if TYPE_CHECKING:
     from openhands.events.action import Action
     from openhands.llm.llm import ModelResponse
 
-import openhands.agenthub.blueprint_agent.function_calling as codeact_function_calling
-from openhands.agenthub.blueprint_agent.tools.bash import create_cmd_run_tool
-from openhands.agenthub.blueprint_agent.tools.bluelamp_delegate import (
+import openhands.agenthub.extension_manager_agent.function_calling as codeact_function_calling
+from openhands.agenthub.extension_manager_agent.tools.bash import create_cmd_run_tool
+from openhands.agenthub.extension_manager_agent.tools.bluelamp_delegate import (
     create_bluelamp_delegate_tools,
 )
-# from openhands.agenthub.blueprint_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
-from openhands.agenthub.blueprint_agent.tools.finish import FinishTool
+# from openhands.agenthub.extension_manager_agent.tools.browser import BrowserTool  # browsergym削除済みのため除外
+from openhands.agenthub.extension_manager_agent.tools.finish import FinishTool
 
-from openhands.agenthub.blueprint_agent.tools.llm_based_edit import LLMBasedFileEditTool
-from openhands.agenthub.blueprint_agent.tools.str_replace_editor import (
+from openhands.agenthub.extension_manager_agent.tools.llm_based_edit import LLMBasedFileEditTool
+from openhands.agenthub.extension_manager_agent.tools.str_replace_editor import (
     create_str_replace_editor_tool,
 )
-from openhands.agenthub.blueprint_agent.tools.think import ThinkTool
+from openhands.agenthub.extension_manager_agent.tools.think import ThinkTool
 from openhands.controller.agent import Agent
 from openhands.controller.state.state import State
 from openhands.core.config import AgentConfig
@@ -42,10 +42,10 @@ from openhands.utils.prompt import PromptManager
 from openhands.portal.portal_prompt_manager import PortalPromptManager
 
 
-class BlueprintAgent(Agent):
+class ExtensionManagerAgent(Agent):
     VERSION = '2.2'
     """
-    The Blueprint Agent is a design-focused agent for creating application blueprints.
+    The Extension Manager Agent is a specialized agent for implementing applications.
     The agent works by passing the model a list of action-observation pairs and prompting the model to take the next step.
 
     ### Overview
@@ -79,13 +79,16 @@ class BlueprintAgent(Agent):
         - llm (LLM): The llm to be used by this agent
         - config (AgentConfig): The configuration for this agent
         """
-        # 注意: config.system_prompt_filenameを強制上書きしない
-        # BlueLampエージェントなどが専用プロンプトを設定している場合は尊重する
+        # ExtensionManagerAgentは常に実装エージェントのプロンプトを使用
+        config.system_prompt_filename = 'expansion_orchestrator'
         
         super().__init__(llm, config)
         self.pending_actions: deque['Action'] = deque()
         self.reset()
         self.tools = self._get_tools()
+        
+        # デバッグ: system_prompt_filename を確認
+        logger.info(f"ExtensionManagerAgent initialized with system_prompt_filename: {self.config.system_prompt_filename}")
 
         # Create a ConversationMemory instance
         self.conversation_memory = ConversationMemory(self.config, self.prompt_manager)
@@ -97,10 +100,10 @@ class BlueprintAgent(Agent):
     def prompt_manager(self) -> PromptManager:
         if self._prompt_manager is None:
             # Portal連携を有効にしてPromptManagerを作成
-            # BlueLampオーケストレーターの場合はPortal APIから取得
+            # 実装エージェント専用のプロンプトファイルを使用
             self._prompt_manager = PortalPromptManager(
                 prompt_dir=os.path.join(os.path.dirname(__file__), 'prompts'),
-                system_prompt_filename=self.config.system_prompt_filename,
+                system_prompt_filename='expansion_orchestrator',
                 enable_portal=True
             )
 
@@ -142,13 +145,10 @@ class BlueprintAgent(Agent):
 
         # Add BlueLamp delegate tools if this is BlueLampOrchestrator
         # Check if the agent is registered as BlueLampOrchestrator
-        if hasattr(self, '__class__') and getattr(self.__class__, '__name__', '') == 'BlueprintAgent':
-            # This is the BlueLampOrchestrator (registered as BlueprintAgent)
+        if hasattr(self, '__class__') and getattr(self.__class__, '__name__', '') == 'ExtensionManagerAgent':
+            # This is the BlueLampOrchestrator (registered as ExtensionManagerAgent)
             # Add all 16 BlueLamp delegate tools
             tools.extend(create_bluelamp_delegate_tools())
-
-        # Store available tool names for validation
-        self._available_tool_names = [tool['function']['name'] for tool in tools]
 
         return tools
 
@@ -168,7 +168,6 @@ class BlueprintAgent(Agent):
 
         Returns:
         - CmdRunAction(command) - bash command to run
-
         - AgentDelegateAction(agent, inputs) - delegate action for (sub)task
         - MessageAction(content) - Message action to run (e.g. ask for clarification)
         - AgentFinishAction() - end the interaction
@@ -306,5 +305,4 @@ class BlueprintAgent(Agent):
         return codeact_function_calling.response_to_actions(
             response,
             mcp_tool_names=list(self.mcp_tools.keys()),
-            available_tools=getattr(self, '_available_tool_names', None),
         )

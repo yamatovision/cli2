@@ -1,4 +1,4 @@
-"""Main entry point for openhands3 with CodeActAgent2."""
+"""Main entry point for BlueLamp agents (OrchestratorAgent and ExtensionManagerAgent)."""
 
 import asyncio
 import logging
@@ -88,19 +88,16 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     # 環境変数から実行コマンドを取得
     command_name = os.environ.get('BLUELAMP_COMMAND', '')
     
-    if command_name == 'bluelamp3':
-        config.default_agent = 'ExpansionAgent'
-        logger.info("bluelamp3コマンド検出: ExpansionAgentを使用")
-    elif command_name == 'bluelamp2':
-        config.default_agent = 'ImplementationAgent'
-        logger.info("bluelamp2コマンド検出: ImplementationAgentを使用")
+    if command_name == 'bluelamp2':
+        config.default_agent = 'ExtensionManagerAgent'
+        logger.info("bluelamp2コマンド検出: ExtensionManagerAgentを使用")
     elif command_name == 'bluelamp':
-        config.default_agent = 'BlueprintAgent'
-        logger.info("bluelampコマンド検出: BlueprintAgentを使用")
+        config.default_agent = 'OrchestratorAgent'
+        logger.info("bluelampコマンド検出: OrchestratorAgentを使用")
     else:
-        # デフォルトはBlueprintAgent
-        config.default_agent = 'BlueprintAgent'
-        logger.info(f"デフォルト: BlueprintAgentを使用 (BLUELAMP_COMMAND='{command_name}')")
+        # デフォルトはOrchestratorAgent
+        config.default_agent = 'OrchestratorAgent'
+        logger.info(f"デフォルト: OrchestratorAgentを使用 (BLUELAMP_COMMAND='{command_name}')")
 
     # Load settings from Settings Store
     settings_store = await FileSettingsStore.get_instance(config=config, user_id=None)
@@ -187,56 +184,26 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     if not banner_shown:
         clear()
         # Use appropriate session ID based on agent type
-        if config.default_agent == 'ExpansionAgent':
-            display_banner(session_id='expansion_agent')
-        elif config.default_agent == 'ImplementationAgent':
-            display_banner(session_id='implementation_agent')
-        elif config.default_agent == 'BlueprintAgent':
-            display_banner(session_id='blueprint_agent')
-        elif config.default_agent == 'CodeActAgent2':
-            display_banner(session_id='codeact-agent2')
+        if config.default_agent == 'ExtensionManagerAgent':
+            display_banner(session_id='extension_manager_agent')
+        elif config.default_agent == 'OrchestratorAgent':
+            display_banner(session_id='orchestrator_agent')
         else:
             display_banner(session_id=sid)
         
-    if config.default_agent == 'ExpansionAgent':
+    if config.default_agent == 'ExtensionManagerAgent':
         print_formatted_text(
-            HTML('<ansigreen>🔵 ExpansionAgent - 拡張エージェント</ansigreen>\n')
-        )
-        print_formatted_text(
-            HTML('<grey>アプリケーションの機能拡張と改善を専門とするエージェントです。</grey>\n')
-        )
-    elif config.default_agent == 'ImplementationAgent':
-        print_formatted_text(
-            HTML('<ansigreen>🔨 ImplementationAgent - 実装エージェント</ansigreen>\n')
+            HTML('<ansigreen>🔨 ExtensionManagerAgent - 拡張マネージャー</ansigreen>\n')
         )
         print_formatted_text(
             HTML('<grey>コードの実装とビルドを専門とするエージェントです。</grey>\n')
         )
-    elif config.default_agent == 'BlueprintAgent':
+    elif config.default_agent == 'OrchestratorAgent':
         print_formatted_text(
-            HTML('<ansigreen>📐 BlueprintAgent - 設計エージェント</ansigreen>\n')
+            HTML('<ansigreen>📐 OrchestratorAgent - オーケストレーター</ansigreen>\n')
         )
         print_formatted_text(
             HTML('<grey>システム設計とアーキテクチャを専門とするエージェントです。</grey>\n')
-        )
-    elif config.default_agent == 'CodeActAgent2':
-        print_formatted_text(
-            HTML('<ansigreen>🚀 CodeActAgent2 - Portal連携マイクロエージェント統合版</ansigreen>\n')
-        )
-        print_formatted_text(
-            HTML('<grey>自動発動する専門領域:</grey>')
-        )
-        print_formatted_text(
-            HTML('<grey>  🔍 デバッグ探偵: debug, error, bug, エラー等</grey>')
-        )
-        print_formatted_text(
-            HTML('<grey>  ⚡ 機能拡張プランナー: feature, extension, 機能拡張等</grey>')
-        )
-        print_formatted_text(
-            HTML('<grey>  🔧 リファクタリングマネージャー: refactor, cleanup, リファクタリング等</grey>\n')
-        )
-        print_formatted_text(
-            HTML('<grey>キーワードに応じて自動的に専門知識が注入されます。</grey>\n')
         )
     else:
         print_formatted_text(

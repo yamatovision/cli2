@@ -5,7 +5,7 @@ from typing import Any, get_args, get_origin
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-OH_DEFAULT_AGENT = 'BlueprintAgent'
+OH_DEFAULT_AGENT = 'OrchestratorAgent'
 OH_MAX_ITERATIONS = 500
 
 

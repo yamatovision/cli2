@@ -2,7 +2,7 @@
 BlueLamp専門エージェント群
 
 13個のBlueLampエージェントが14エージェント構造（00-13）にマッピング:
-- 00: orchestrator (BlueprintAgent用)
+- 00: orchestrator (OrchestratorAgent用)
 - 01-13: 各BlueLampエージェントが対応
 - 重複なし、Portal API統合完了
 """
