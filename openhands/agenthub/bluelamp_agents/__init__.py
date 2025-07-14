@@ -14,13 +14,10 @@ from .agents import (
     DebugDetective,
     DeploySpecialist,
     GitHubManager,
-    TypeScriptManager,
-    FeatureExtension,
-    RefactoringExpert,
 )
 from openhands.controller.agent import Agent
 
-# 16エージェントを一括登録
+# 13エージェントを一括登録（14エージェント構造に対応）
 BLUELAMP_AGENTS = [
     ('RequirementsEngineer', RequirementsEngineer),
     ('UIUXDesigner', UIUXDesigner),
@@ -35,9 +32,6 @@ BLUELAMP_AGENTS = [
     ('DebugDetective', DebugDetective),
     ('DeploySpecialist', DeploySpecialist),
     ('GitHubManager', GitHubManager),
-    ('TypeScriptManager', TypeScriptManager),
-    ('FeatureExtension', FeatureExtension),
-    ('RefactoringExpert', RefactoringExpert),
 ]
 
 for name, cls in BLUELAMP_AGENTS:

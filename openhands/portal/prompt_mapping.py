@@ -47,6 +47,13 @@ def get_prompt_id(agent_name: str) -> str | None:
     """エージェント名からPortal プロンプトIDを取得"""
     return PROMPT_MAPPING.get(agent_name)
 
+def get_prompt_id_by_agent_name(agent_name: str) -> int:
+    """エージェント名から数値プロンプトIDを取得（テスト用）"""
+    agent_names = list(PROMPT_MAPPING.keys())
+    if agent_name in agent_names:
+        return agent_names.index(agent_name)
+    raise ValueError(f"Unknown agent name: {agent_name}")
+
 def get_agent_name(prompt_id: str) -> str | None:
     """Portal プロンプトIDからエージェント名を取得"""
     return ID_TO_AGENT.get(prompt_id)

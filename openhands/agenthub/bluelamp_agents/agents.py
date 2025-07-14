@@ -184,31 +184,3 @@ class GitHubManager(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class TypeScriptManager(BlueLampBaseAgent):
-    """★14 TypeScriptマネージャー: 型定義管理と型エラー修正"""
-    def __init__(self, llm: Any, config: Any = None):
-        if config is None:
-            from openhands.core.config import AgentConfig
-            config = AgentConfig()
-        config.system_prompt_filename = 'debug_agent'
-        super().__init__(llm, config)
-
-
-class FeatureExtension(BlueLampBaseAgent):
-    """★15 機能拡張: 新機能開発と既存機能強化"""
-    def __init__(self, llm: Any, config: Any = None):
-        if config is None:
-            from openhands.core.config import AgentConfig
-            config = AgentConfig()
-        config.system_prompt_filename = 'expansion_orchestrator'
-        super().__init__(llm, config)
-
-
-class RefactoringExpert(BlueLampBaseAgent):
-    """★16 リファクタリングエキスパート: コード改善と最適化"""
-    def __init__(self, llm: Any, config: Any = None):
-        if config is None:
-            from openhands.core.config import AgentConfig
-            config = AgentConfig()
-        config.system_prompt_filename = 'refactoring_implementation'
-        super().__init__(llm, config)
