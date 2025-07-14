@@ -306,5 +306,4 @@ class OrchestratorAgent(Agent):
         return codeact_function_calling.response_to_actions(
             response,
             mcp_tool_names=list(self.mcp_tools.keys()),
-            available_tools=getattr(self, '_available_tool_names', None),
         )
