@@ -103,11 +103,7 @@ def response_to_actions(
                         ) from e
 
 
-            elif tool_call.function.name == 'delegate_to_browsing_agent':
-                action = AgentDelegateAction(
-                    agent='BrowsingAgent',
-                    inputs=arguments,
-                )
+
 
             # ================================================
             # AgentFinishAction
@@ -254,49 +250,29 @@ def response_to_actions(
                     agent='PrcImplementation',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_backend_implementation':
+            elif tool_call.function.name == 'delegate_to_debug_agent':
                 action = AgentDelegateAction(
                     agent='DebugAgent',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_test_quality_verification':
-                action = AgentDelegateAction(
-                    agent='DeploySpecialist',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_api_integration':
-                action = AgentDelegateAction(
-                    agent='ExpansionOrchestrator',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_debug_detective':
+            elif tool_call.function.name == 'delegate_to_page_creator':
                 action = AgentDelegateAction(
                     agent='PageCreator',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_deploy_specialist':
                 action = AgentDelegateAction(
+                    agent='DeploySpecialist',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_refactoring_planner':
+                action = AgentDelegateAction(
                     agent='RefactoringPlanner',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_github_manager':
+            elif tool_call.function.name == 'delegate_to_refactoring_implementation':
                 action = AgentDelegateAction(
                     agent='RefactoringImplementation',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_typescript_manager':
-                action = AgentDelegateAction(
-                    agent='TypeScriptManager',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_feature_extension':
-                action = AgentDelegateAction(
-                    agent='FeatureExtension',
-                    inputs=arguments,
-                )
-            elif tool_call.function.name == 'delegate_to_refactoring_expert':
-                action = AgentDelegateAction(
-                    agent='RefactoringExpert',
                     inputs=arguments,
                 )
             else:

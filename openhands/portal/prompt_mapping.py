@@ -6,20 +6,34 @@ Portal APIのみを使用し、ローカル.j2ファイルは使用しません
 
 # エージェント名 → Portal プロンプトID (14エージェント構造: 00-13)
 PROMPT_MAPPING = {
-    'orchestrator': '6862397f1428c1efc592f6cc',              # 00: オーケストレーター (OrchestratorAgent用)
-    'requirements_engineer': '6862397f1428c1efc592f6ce',     # 01: 要件定義エンジニア
-    'uiux_designer': '6862397f1428c1efc592f6d0',             # 02: UIUXデザイナー
-    'data_modeling_engineer': '6862397f1428c1efc592f6d2',    # 03: データモデリングエンジニア
-    'system_architect': '6862397f1428c1efc592f6d4',          # 04: システムアーキテクト
-    'implementation_consultant': '6862397f1428c1efc592f6d6',  # 05: 実装コンサルタント
-    'environment_setup': '6862397f1428c1efc592f6d8',         # 06: 環境構築
-    'prc_implementation': '6862397f1428c1efc592f6da',         # 07: PRC実装エージェント
-    'debug_agent': '6862397f1428c1efc592f6dc',               # 08: デバッグエージェント
-    'deploy_specialist': '6862397f1428c1efc592f6de',         # 09: デプロイスペシャリスト
-    'expansion_orchestrator': '6862397f1428c1efc592f6e0',    # 10: 拡張オーケストレーター (ExtensionManagerAgent用)
-    'page_creator': '6862397f1428c1efc592f6e2',              # 11: 新ページ作成エージェント
-    'refactoring_planner': '6862397f1428c1efc592f6e4',       # 12: リファクタリング計画エージェント
-    'refactoring_implementation': '6862397f1428c1efc592f6e6', # 13: リファクタリング実装エージェント
+    # 00: オーケストレーター (OrchestratorAgent用)
+    'orchestrator': '6862397f1428c1efc592f6cc',
+    # 01: 要件定義エンジニア
+    'requirements_engineer': '6862397f1428c1efc592f6ce',
+    # 02: UIUXデザイナー
+    'uiux_designer': '6862397f1428c1efc592f6d0',
+    # 03: データモデリングエンジニア
+    'data_modeling_engineer': '6862397f1428c1efc592f6d2',
+    # 04: システムアーキテクト
+    'system_architect': '6862397f1428c1efc592f6d4',
+    # 05: 実装コンサルタント
+    'implementation_consultant': '6862397f1428c1efc592f6d6',
+    # 06: 環境構築
+    'environment_setup': '6862397f1428c1efc592f6d8',
+    # 07: PRC実装エージェント
+    'prc_implementation': '6862397f1428c1efc592f6da',
+    # 08: デバッグエージェント
+    'debug_agent': '6862397f1428c1efc592f6dc',
+    # 09: デプロイスペシャリスト
+    'deploy_specialist': '6862397f1428c1efc592f6de',
+    # 10: 拡張オーケストレーター (ExtensionManagerAgent用)
+    'expansion_orchestrator': '6862397f1428c1efc592f6e0',
+    # 11: 新ページ作成エージェント
+    'page_creator': '6862397f1428c1efc592f6e2',
+    # 12: リファクタリング計画エージェント
+    'refactoring_planner': '6862397f1428c1efc592f6e4',
+    # 13: リファクタリング実装エージェント
+    'refactoring_implementation': '6862397f1428c1efc592f6e6',
 }
 
 # 逆マッピング（プロンプトID → エージェント名）

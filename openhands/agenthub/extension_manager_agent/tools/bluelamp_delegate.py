@@ -140,69 +140,12 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★8 バックエンド実装
+        # ★08 デバッグエージェント
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_backend_implementation',
-                'description': 'バックエンド実装タスクをDebugAgentに委譲。垂直スライス実装と統合テスト作成を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行するバックエンド実装タスクの詳細'},
-                        'context': {'type': 'object', 'description': '実装要件などの追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★9 テスト品質検証
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_test_quality_verification',
-                'description': 'テスト実行タスクをDeploySpecialistに委譲。統合テストの実行と品質保証を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行するテスト検証タスクの詳細'},
-                        'context': {'type': 'object', 'description': 'テスト要件などの追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★10 API統合
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_api_integration',
-                'description': 'API統合タスクをExpansionOrchestratorに委譲。モックAPIから実APIへの置換を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行するAPI統合タスクの詳細'},
-                        'context': {'type': 'object', 'description': 'API要件などの追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★11 デバッグ探偵
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_debug_detective',
-                'description': 'デバッグタスクをPageCreatorに委譲。エラー調査と修正を依頼する際に使用',
+                'name': 'delegate_to_debug_agent',
+                'description': 'デバッグタスクをDebugAgentに委譲。エラー調査と修正を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
@@ -217,7 +160,26 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★12 デプロイスペシャリスト
+        # ★11 新ページ作成エージェント
+        ChatCompletionToolParam(
+            type='function',
+            function={
+                'name': 'delegate_to_page_creator',
+                'description': '新ページ作成タスクをPageCreatorに委譲。新しいページの作成と実装を依頼する際に使用',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'task': {'type': 'string', 'description': '実行するページ作成タスクの詳細'},
+                        'context': {'type': 'object', 'description': 'ページ作成要件などの追加コンテキスト'},
+                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
+                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
+                    },
+                    'required': ['task']
+                }
+            }
+        ),
+
+        # ★09 デプロイスペシャリスト
         ChatCompletionToolParam(
             type='function',
             function={
@@ -236,17 +198,17 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★13 GitHubマネージャー
+        # ★12 リファクタリング計画エージェント
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_github_manager',
-                'description': 'Git管理タスクをGitHubManagerに委譲。複雑なGit操作やリポジトリ管理を依頼する際に使用',
+                'name': 'delegate_to_refactoring_planner',
+                'description': 'リファクタリング計画タスクをRefactoringPlannerに委譲。コード分析とリファクタリング計画を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '実行するGit管理タスクの詳細'},
-                        'context': {'type': 'object', 'description': 'Git操作要件などの追加コンテキスト'},
+                        'task': {'type': 'string', 'description': '実行するリファクタリング計画タスクの詳細'},
+                        'context': {'type': 'object', 'description': 'コード改善要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
                         'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
@@ -255,55 +217,16 @@ def create_bluelamp_delegate_tools():
             }
         ),
 
-        # ★14 TypeScriptマネージャー
+        # ★13 リファクタリング実装エージェント
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_typescript_manager',
-                'description': '型エラー修正タスクをTypeScriptManagerに委譲。型定義管理と型エラー解消を依頼する際に使用',
+                'name': 'delegate_to_refactoring_implementation',
+                'description': 'リファクタリング実装タスクをRefactoringImplementationに委譲。コード改善の実装と最適化を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '実行する型エラー修正タスクの詳細'},
-                        'errors': {'type': 'array', 'items': {'type': 'string'}, 'description': '型エラーのリスト'},
-                        'context': {'type': 'object', 'description': '型エラーに関する追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★15 機能拡張
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_feature_extension',
-                'description': '新機能開発タスクをFeatureExtensionに委譲。新機能計画書作成と実装を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行する機能拡張タスクの詳細'},
-                        'context': {'type': 'object', 'description': '機能要件などの追加コンテキスト'},
-                        'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
-                    },
-                    'required': ['task']
-                }
-            }
-        ),
-
-        # ★16 リファクタリングエキスパート
-        ChatCompletionToolParam(
-            type='function',
-            function={
-                'name': 'delegate_to_refactoring_expert',
-                'description': 'リファクタリングタスクをRefactoringExpertに委譲。コード改善と最適化を依頼する際に使用',
-                'parameters': {
-                    'type': 'object',
-                    'properties': {
-                        'task': {'type': 'string', 'description': '実行するリファクタリングタスクの詳細'},
+                        'task': {'type': 'string', 'description': '実行するリファクタリング実装タスクの詳細'},
                         'context': {'type': 'object', 'description': 'コード改善要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
                         'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
