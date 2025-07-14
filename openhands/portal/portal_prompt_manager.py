@@ -280,36 +280,3 @@ def create_portal_prompt_manager(
     )
 
 
-# テスト用関数
-async def test_portal_prompt_manager():
-    """PortalPromptManagerのテスト"""
-    import tempfile
-    
-    # テスト用の一時ディレクトリとファイルを作成
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # テスト用ローカルプロンプトファイルを作成
-        test_prompt_path = os.path.join(temp_dir, 'feature_extension.j2')
-        with open(test_prompt_path, 'w') as f:
-            f.write("# Local Test Prompt\nThis is a local test prompt.")
-        
-        # PortalPromptManagerを作成
-        manager = PortalPromptManager(
-            prompt_dir=temp_dir,
-            system_prompt_filename='feature_extension.j2',
-            enable_portal=True
-        )
-        
-        print("Portal接続テスト...")
-        if await manager.test_portal_connection():
-            print("✅ Portal接続成功")
-        else:
-            print("❌ Portal接続失敗")
-        
-        print("\nプロンプト取得テスト...")
-        content = await manager.get_system_message_async()
-        print(f"取得したプロンプト: {len(content)}文字")
-        print(f"内容プレビュー: {content[:100]}...")
-
-
-if __name__ == "__main__":
-    asyncio.run(test_portal_prompt_manager())
