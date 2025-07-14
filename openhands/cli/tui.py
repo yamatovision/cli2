@@ -50,39 +50,36 @@ from openhands.events.observation import (
 )
 from openhands.llm.metrics import Metrics
 
-# Global TextArea for streaming output
-streaming_output_text_area: TextArea | None = None
 
-# Color and styling constants - Dynamic branding
+print_lock = threading.Lock()
+
+
+# Branding utility functions
 def get_default_style():
     """現在のブランドに応じたスタイルを返す"""
     from .branding import get_style_dict
     return Style.from_dict(get_style_dict())
 
-# 関数として使用（遅延評価）
-DEFAULT_STYLE = get_default_style
-
-# 後方互換性のための色定数（動的）
 def get_color_grey():
+    """Get grey color from current branding."""
     from .branding import get_current_colors
     return get_current_colors()['grey']
 
 def get_color_gold():
+    """Get primary color from current branding."""
     from .branding import get_current_colors
     return get_current_colors()['primary']
 
-# 関数として使用（遅延評価）
-COLOR_GREY = get_color_grey
-COLOR_GOLD = get_color_gold
-
 def get_commands():
+    """Get command descriptions from current branding."""
     from .branding import get_current_command_descriptions
     return get_current_command_descriptions()
 
-# 関数として使用（遅延評価）
+# 後方互換性のための定数（動的評価）
+DEFAULT_STYLE = get_default_style
+COLOR_GREY = get_color_grey
+COLOR_GOLD = get_color_gold
 COMMANDS = get_commands
-
-print_lock = threading.Lock()
 
 
 class UsageMetrics:
@@ -178,7 +175,6 @@ def display_initial_user_prompt(prompt: str) -> None:
 
 # Prompt output display functions
 def display_event(event: Event, config: OpenHandsConfig) -> None:
-    global streaming_output_text_area
     with print_lock:
         if isinstance(event, Action):
             if hasattr(event, 'thought'):
@@ -308,16 +304,6 @@ def display_file_read(event: FileReadObservation) -> None:
     print_container(container)
 
 
-
-
-def update_streaming_output(text: str):
-    """Update the streaming output TextArea with new text."""
-    global streaming_output_text_area
-
-    # Append the new text to the existing content
-    if streaming_output_text_area is not None:
-        current_text = streaming_output_text_area.text
-        streaming_output_text_area.text = current_text + text
 
 
 # Interactive command output display functions
