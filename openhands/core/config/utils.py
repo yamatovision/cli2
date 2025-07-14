@@ -26,7 +26,7 @@ from openhands.core.config.config_utils import (
     OH_DEFAULT_AGENT,
     OH_MAX_ITERATIONS,
 )
-from openhands.core.config.extended_config import ExtendedConfig
+
 
 from openhands.core.config.llm_config import LLMConfig
 from openhands.core.config.mcp_config import MCPConfig
@@ -287,14 +287,7 @@ def load_from_toml(cfg: OpenHandsConfig, toml_file: str = 'config.toml') -> None
             'Default LLM summarizing condenser assigned to default agent (no condenser in config)',
         )
 
-    # Process extended section if present
-    if 'extended' in toml_config:
-        try:
-            cfg.extended = ExtendedConfig(toml_config['extended'])
-        except (TypeError, KeyError, ValidationError) as e:
-            logger.openhands_logger.warning(
-                f'Cannot parse [extended] config from toml, values have not been applied.\nError: {e}',
-            )
+
 
     # Check for unknown sections
     known_sections = {
