@@ -87,12 +87,12 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     # 環境変数から実行コマンドを取得
     command_name = os.environ.get('BLUELAMP_COMMAND', '')
     
-    if command_name == 'bluelamp2':
+    if command_name in ['bluelamp2', 'ブルーランプ拡張']:
         config.default_agent = 'ExtensionManagerAgent'
-        logger.info("bluelamp2コマンド検出: ExtensionManagerAgentを使用")
-    elif command_name == 'bluelamp':
+        logger.info(f"{command_name}コマンド検出: ExtensionManagerAgentを使用")
+    elif command_name in ['bluelamp', 'ブルーランプ']:
         config.default_agent = 'OrchestratorAgent'
-        logger.info("bluelampコマンド検出: OrchestratorAgentを使用")
+        logger.info(f"{command_name}コマンド検出: OrchestratorAgentを使用")
     else:
         # デフォルトはOrchestratorAgent
         config.default_agent = 'OrchestratorAgent'

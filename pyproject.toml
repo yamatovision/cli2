@@ -5,12 +5,25 @@ requires = [
 ]
 
 [tool.poetry]
-name = "openhands-ai"
-version = "0.45.0"
-description = "OpenHands: Code Less, Make More"
-authors = [ "OpenHands" ]
+name = "bluelamp-ai"
+version = "1.2.4"
+description = "BlueLamp AI: 日本語対応AIエージェントシステム - オーケストレーターと拡張マネージャー（最新版）"
+readme = "README_PUBLIC.md"
+authors = [ "BlueLamp Team" ]
 license = "MIT"
-repository = "https://github.com/All-Hands-AI/OpenHands"
+repository = "https://github.com/your-repo/bluelamp-ai"
+keywords = ["ai", "agent", "japanese", "automation", "development"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Natural Language :: Japanese",
+]
 packages = [
   { include = "openhands/**/*" },
   { include = "pyproject.toml", to = "openhands" },
@@ -18,7 +31,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12,<3.14"
+python = ">=3.10"
 litellm = "^1.60.0, !=1.64.4, !=1.67.*"            # avoid 1.64.4 (known bug) & 1.67.* (known bug #10272)
 aiohttp = ">=3.9.0,!=3.11.13"                      # Pin to avoid yanked version 3.11.13
 google-generativeai = "*"                          # To use litellm with Gemini Pro API
@@ -34,6 +47,8 @@ json-repair = "*"
 html2text = "*"
 pexpect = "*"
 jinja2 = "^3.1.3"
+fastapi = "*"
+docker = "*"
 tenacity = ">=8.5,<10.0"
 zope-interface = "7.2"
 pathspec = "^0.12.1"
@@ -106,12 +121,13 @@ gevent = ">=24.2.1,<26.0.0"
 
 
 [tool.poetry.scripts]
+# 開発用内部コマンド（一般配布では非表示）
 openhands = "openhands.cli.main:main"
 openhands2 = "openhands.cli.main_delegation:main"
 openhands3 = "openhands.cli.main_session:main"
-bluelamp = "openhands.cli.main:main"
-bluelamp2 = "openhands.cli.main_delegation:main"
-bluelamp3 = "openhands.cli.main_session:main"
+# 一般公開用日本語コマンド
+"ブルーランプ" = "openhands.cli.bluelamp_public:main"
+"ブルーランプ拡張" = "openhands.cli.bluelamp_extension_public:main"
 
 
 

@@ -134,6 +134,37 @@ def display_initialization_animation(text: str, is_loaded: asyncio.Event) -> Non
     sys.stdout.flush()
 
 
+def get_bluelamp_version() -> str:
+    """pyproject.tomlからバージョンを取得"""
+    import os
+    import re
+    
+    try:
+        # pyproject.tomlのパスを取得
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # cli/tui.py から cli2/ ディレクトリのpyproject.tomlを探す
+        pyproject_path = os.path.join(current_dir, '..', '..', 'pyproject.toml')
+        
+        if os.path.exists(pyproject_path):
+            with open(pyproject_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+                # 正規表現でバージョンを抽出
+                version_match = re.search(r'version = "([^"]+)"', content)
+                if version_match:
+                    return version_match.group(1)
+        
+        # パッケージとしてインストールされている場合
+        try:
+            import importlib.metadata
+            return importlib.metadata.version('bluelamp-ai')
+        except:
+            pass
+            
+        return 'unknown'
+    except Exception:
+        return 'unknown'
+
+
 def display_banner(session_id: str) -> None:
     import os
     import getpass
@@ -146,13 +177,25 @@ def display_banner(session_id: str) -> None:
         style=get_default_style(),
     )
 
+    # バージョン情報を表示
+    version = get_bluelamp_version()
+    print_formatted_text(HTML(f'<grey>BlueLamp CLI  v</grey><cyan>{version}</cyan>'))
+    print_formatted_text('')
+
     # セッション情報を表示
     current_dir = os.getcwd()
     current_user = getpass.getuser()
     
+    # コマンド名に基づいてモードを動的に決定
+    command_name = os.environ.get('BLUELAMP_COMMAND', '')
+    if command_name in ['bluelamp2', 'ブルーランプ拡張']:
+        mode_display = '拡張モード'
+    else:
+        mode_display = '新規プロジェクト'
+    
     print_formatted_text(HTML(f'<grey>セッションディレクトリ：</grey><yellow>{current_dir}</yellow>'))
     print_formatted_text(HTML(f'<grey>ログインユーザー：</grey><cyan>{current_user}</cyan>'))
-    print_formatted_text(HTML(f'<grey>モード：</grey><green>新規プロジェクト</green>'))
+    print_formatted_text(HTML(f'<grey>モード：</grey><green>{mode_display}</green>'))
     print_formatted_text('')
 
 

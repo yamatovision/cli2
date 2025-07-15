@@ -14,18 +14,11 @@ def get_version():
     except FileNotFoundError:
         pass
 
+    # Use importlib.metadata (Python 3.8+ standard library)
     try:
         from importlib.metadata import PackageNotFoundError, version
-
         return version(__package_name__)
     except (ImportError, PackageNotFoundError):
-        pass
-
-    try:
-        from pkg_resources import DistributionNotFound, get_distribution  # type: ignore
-
-        return get_distribution(__package_name__).version
-    except (ImportError, DistributionNotFound):
         pass
 
     return 'unknown'
