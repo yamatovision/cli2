@@ -391,6 +391,16 @@ class AgentController:
         """
         # If we have a delegate that is not finished or errored, forward events to it
         if self.delegate is not None:
+            # STOPPED state should be applied to parent as well to ensure proper shutdown
+            if isinstance(event, ChangeAgentStateAction) and event.agent_state == AgentState.STOPPED:
+                asyncio.get_event_loop().run_until_complete(
+                    self.set_agent_state_to(AgentState.STOPPED)
+                )
+                asyncio.get_event_loop().run_until_complete(
+                    self.delegate._on_event(event)
+                )
+                return
+            
             delegate_state = self.delegate.get_agent_state()
             if (
                 delegate_state
