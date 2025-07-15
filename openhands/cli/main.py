@@ -162,7 +162,8 @@ async def run_session(
 
     usage_metrics = UsageMetrics()
 
-    async def prompt_for_next_task(agent_state: str) -> None:
+    async def prompt_for_next_task(agent_state: str) -> bool:
+        """Prompt for next task and return True if session should be closed."""
         nonlocal new_session_requested
         while True:
             next_message = await read_prompt_input(
@@ -186,7 +187,8 @@ async def run_session(
             )
 
             if close_repl:
-                return
+                return True
+        return False
 
     async def on_event_async(event: Event) -> None:
         nonlocal is_paused, always_confirm_mode
@@ -202,7 +204,9 @@ async def run_session(
                 if is_paused.is_set():
                     return
 
-                await prompt_for_next_task(event.agent_state)
+                close_repl = await prompt_for_next_task(event.agent_state)
+                if close_repl:
+                    return
 
             if event.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
                 # If the agent is paused, do not prompt for confirmation
@@ -235,7 +239,9 @@ async def run_session(
 
             if event.agent_state == AgentState.PAUSED:
                 is_paused.clear()  # Revert the event state before prompting for user input
-                await prompt_for_next_task(event.agent_state)
+                close_repl = await prompt_for_next_task(event.agent_state)
+                if close_repl:
+                    return
 
             if event.agent_state == AgentState.RUNNING:
                 display_agent_running_message()
