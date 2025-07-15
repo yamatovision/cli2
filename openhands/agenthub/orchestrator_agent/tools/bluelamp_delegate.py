@@ -19,7 +19,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行する要件定義タスクの詳細'},
                         'context': {'type': 'object', 'description': 'プロジェクト情報などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -38,7 +37,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するUI/UXデザインタスクの詳細'},
                         'context': {'type': 'object', 'description': 'デザイン要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -57,7 +55,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するデータモデリングタスクの詳細'},
                         'context': {'type': 'object', 'description': 'データ要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -76,7 +73,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するシステム設計タスクの詳細'},
                         'context': {'type': 'object', 'description': 'システム要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -95,7 +91,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行する実装計画タスクの詳細'},
                         'context': {'type': 'object', 'description': 'プロジェクト要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -114,7 +109,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行する環境構築タスクの詳細'},
                         'context': {'type': 'object', 'description': '環境要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -133,7 +127,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するPRC実装タスクの詳細'},
                         'context': {'type': 'object', 'description': '実装要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -153,7 +146,6 @@ def create_bluelamp_delegate_tools():
                         'error': {'type': 'string', 'description': 'エラーメッセージやスタックトレース'},
                         'context': {'type': 'object', 'description': 'デバッグに必要な追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -172,7 +164,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するページ作成タスクの詳細'},
                         'context': {'type': 'object', 'description': 'ページ作成要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -191,7 +182,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するデプロイタスクの詳細'},
                         'context': {'type': 'object', 'description': 'デプロイ要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }
@@ -210,7 +200,6 @@ def create_bluelamp_delegate_tools():
                         'task': {'type': 'string', 'description': '実行するリファクタリングタスクの詳細'},
                         'context': {'type': 'object', 'description': 'コード改善要件などの追加コンテキスト'},
                         'requirements': {'type': 'string', 'description': '制約条件・要件'},
-                        'completion_criteria': {'type': 'string', 'description': '完了条件の明確な定義'}
                     },
                     'required': ['task']
                 }

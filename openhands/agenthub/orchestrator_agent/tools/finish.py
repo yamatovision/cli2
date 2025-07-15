@@ -2,19 +2,15 @@ from litellm import ChatCompletionToolParam, ChatCompletionToolParamFunctionChun
 
 from openhands.llm.tool_names import FINISH_TOOL_NAME
 
-_FINISH_DESCRIPTION = """Signals the completion of the current task or conversation.
+_FINISH_DESCRIPTION = """このツールが使用されると現在の会話を終了して権限委譲元のAIに戻ります。
+このツールは基本的にtaskが完了した時に権限委譲元のAIに戻すために利用しますが
+現在の会話が中断されますのでtaskが完了したと思っても必ずユーザーにタスク完了確認をとり
+完了の承認をもらった時にはじめてtask_completedフィールドをTrueに設定してください。
 
-Use this tool when:
-- You have successfully completed the user's requested task
-- You cannot proceed further due to technical limitations or missing information
+権限委譲元のAIに対しては実行したアクションとその結果の要約のメッセージを含めてください
+ユーザーからの許可を取らない限りtask_completedフィールドをTrueに設定してはなりません。
 
-The message should include:
-- A clear summary of actions taken and their results
-- Any next steps for the user
-- Explanation if you're unable to complete the task
-- Any follow-up questions if more information is needed
-
-The task_completed field should be set to True if you believed you have completed the task, and False otherwise.
+task_completedフィールドは、ユーザーから完了承認を得た場合のみTrueに設定し、それ以外はFalseに設定してください。
 """
 
 FinishTool = ChatCompletionToolParam(
