@@ -494,11 +494,12 @@ class AgentController:
             log_level, str(observation_to_print), extra={'msg_type': 'OBSERVATION'}
         )
 
-        # 🔍 DEBUG: Observation受信調査用ログ
-        obs_type = type(observation).__name__
-        obs_cause = getattr(observation, 'cause', 'None')
-        pending_id = getattr(self._pending_action, 'id', 'None') if self._pending_action else 'None'
-        print(f"📥 [DEBUG] Observation受信: {obs_type}(cause={obs_cause}) - pending_action_id={pending_id}")
+        # Simplified observation logging
+        if self._pending_action:
+            obs_type = type(observation).__name__
+            obs_cause = getattr(observation, 'cause', 'None')
+            pending_id = getattr(self._pending_action, 'id', 'None')
+            self.log('debug', f"Observation received: {obs_type}(cause={obs_cause}) - pending_action_id={pending_id}")
 
         # TODO: these metrics come from the draft editor, and they get accumulated into controller's state metrics and the agent's llm metrics
         # In the future, we should have a more principled way to sharing metrics across all LLM instances for a given conversation
@@ -508,17 +509,8 @@ class AgentController:
         # this happens for runnable actions
         if self._pending_action and self._pending_action.id == observation.cause:
             if self.state.agent_state == AgentState.AWAITING_USER_CONFIRMATION:
-                # 🔍 DEBUG: 確認待ち状態でのpending_action保持ログ
-                action_id = getattr(self._pending_action, 'id', 'unknown')
-                action_type = type(self._pending_action).__name__
-                print(f"⏸️ [DEBUG] 確認待ち状態: {action_type}(id={action_id}) - pending_action保持中")
                 return
 
-            # 🔍 DEBUG: pending_actionクリア調査用ログ
-            action_id = getattr(self._pending_action, 'id', 'unknown')
-            action_type = type(self._pending_action).__name__
-            print(f"✅ [DEBUG] pending_actionクリア: {action_type}(id={action_id}) - observation.cause={observation.cause}")
-            
             self._pending_action = None
 
             if self.state.agent_state == AgentState.USER_CONFIRMED:
@@ -608,11 +600,6 @@ class AgentController:
         if self._pending_action is not None and (
             new_state in (AgentState.USER_CONFIRMED, AgentState.USER_REJECTED)
         ):
-            # 🔍 DEBUG: ユーザー確認/拒否時のpending_action処理ログ
-            action_id = getattr(self._pending_action, 'id', 'unknown')
-            action_type = type(self._pending_action).__name__
-            print(f"🔄 [DEBUG] ユーザー応答処理: {action_type}(id={action_id}) - new_state={new_state}")
-            
             if hasattr(self._pending_action, 'thought'):
                 self._pending_action.thought = ''  # type: ignore[union-attr]
             if new_state == AgentState.USER_CONFIRMED:
@@ -622,21 +609,14 @@ class AgentController:
             self._pending_action.confirmation_state = confirmation_state  # type: ignore[attr-defined]
             self._pending_action._id = None  # type: ignore[attr-defined]
             self.event_stream.add_event(self._pending_action, EventSource.AGENT)
-            
-            print(f"🔄 [DEBUG] pending_actionイベント再送信: confirmation_state={confirmation_state}")
 
-        # 🔧 FIX: PAUSED状態でのpending_actionクリア処理
+        # PAUSED状態でのpending_actionクリア処理
         if self._pending_action is not None and new_state == AgentState.PAUSED:
-            action_id = getattr(self._pending_action, 'id', 'unknown')
-            action_type = type(self._pending_action).__name__
-            print(f"⏸️ [DEBUG] PAUSED状態: {action_type}(id={action_id}) - pending_actionクリア")
-            
             # 確認待ち状態のアクションを拒否として処理
             if hasattr(self._pending_action, 'confirmation_state'):
                 self._pending_action.confirmation_state = ActionConfirmationStatus.REJECTED  # type: ignore[attr-defined]
                 self._pending_action._id = None  # type: ignore[attr-defined]
                 self.event_stream.add_event(self._pending_action, EventSource.AGENT)
-                print(f"⏸️ [DEBUG] 確認待ちアクションを拒否として処理")
             
             self._pending_action = None
 
@@ -796,9 +776,8 @@ class AgentController:
         # emit the delegate result observation
         obs = AgentDelegateObservation(outputs=delegate_outputs, content=content)
         
-        # デバッグ用：AgentDelegateObservationの内容をログ出力
-        print(f"🔍 [DEBUG] AgentDelegateObservation content: {content[:200]}...")
-        print(f"🔍 [DEBUG] AgentDelegateObservation outputs: {delegate_outputs}")
+        # Log delegate observation for debugging if needed
+        self.log('debug', f"AgentDelegateObservation received: {len(content)} chars, {len(delegate_outputs)} outputs")
 
         # associate the delegate action with the initiating tool call
         for event in reversed(self.state.history):
@@ -948,45 +927,7 @@ class AgentController:
         current_time = time.time()
         elapsed_time = current_time - timestamp
 
-        # Log if the pending action has been active for a long time (but don't clear it)
-        if elapsed_time > 60.0:  # 1 minute - just for logging purposes
-            action_id = getattr(action, 'id', 'unknown')
-            action_type = type(action).__name__
-            self.log(
-                'warning',
-                f'Pending action active for {elapsed_time:.2f}s: {action_type} (id={action_id})',
-                extra={'msg_type': 'PENDING_ACTION_TIMEOUT'},
-            )
 
-        # Force clear pending action after 5 minutes to prevent infinite execution
-        if elapsed_time > 300.0:  # 5 minutes timeout
-            action_id = getattr(action, 'id', 'unknown')
-            action_type = type(action).__name__
-            self.log(
-                'error', 
-                f'Controller timeout: Force clearing pending action after {elapsed_time:.2f}s: {action_type} (id={action_id})',
-                extra={'msg_type': 'CONTROLLER_FORCE_TIMEOUT'}
-            )
-            
-            # Create error observation for user feedback
-            from openhands.events.observation import ErrorObservation
-            error_obs = ErrorObservation(
-                content=f'Command execution timed out after {elapsed_time:.2f} seconds. The operation was automatically terminated.',
-                error_id='CONTROLLER_TIMEOUT'
-            )
-            error_obs.cause = action.id
-            
-            # Schedule error observation handling
-            import asyncio
-            try:
-                asyncio.create_task(self._handle_observation(error_obs))
-            except RuntimeError:
-                # If no event loop is running, log the error instead
-                self.log('error', f'Failed to send timeout error observation: {error_obs.content}')
-            
-            # Force clear pending action
-            self._pending_action_info = None
-            return None
 
         return action
 

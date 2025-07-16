@@ -109,6 +109,11 @@ def response_to_actions(
             # AgentFinishAction
             # ================================================
             elif tool_call.function.name == FinishTool['function']['name']:
+                # デバッグ用：finishツール呼び出しの詳細をログ出力
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Tool called with arguments: {arguments}")
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Message: {arguments.get('message', '')}")
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Task completed: {arguments.get('task_completed', None)}")
+                
                 action = AgentFinishAction(
                     final_thought=arguments.get('message', ''),
                     task_completed=arguments.get('task_completed', None),

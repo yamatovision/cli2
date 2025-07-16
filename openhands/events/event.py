@@ -68,6 +68,10 @@ class Event:
             return int(cause_val) if cause_val is not None else None
         return None
 
+    @cause.setter
+    def cause(self, value: int | None) -> None:
+        self._cause = value
+
     @property
     def timeout(self) -> float | None:
         if hasattr(self, '_timeout'):

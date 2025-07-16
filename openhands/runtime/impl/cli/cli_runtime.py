@@ -418,22 +418,12 @@ class CLIRuntime(Runtime):
             )
             # exit_code = -1 # This is already set if timed_out is True
 
-        # 🔍 DEBUG: バックグラウンドプロセス調査用ログ
-        if '&' in command:
-            print(f"🚨 [DEBUG] バックグラウンドコマンド検出: '{command}'")
-            print(f"🚨 [DEBUG] exit_code: {exit_code}, timed_out: {timed_out}")
-            print(f"🚨 [DEBUG] output length: {len(complete_output)}")
-            print(f"🚨 [DEBUG] metadata: {obs_metadata}")
-
         observation = CmdOutputObservation(
             command=command,
             content=complete_output,
             exit_code=exit_code,
             metadata=obs_metadata,
         )
-        
-        # 🔍 DEBUG: Observation詳細ログ
-        print(f"🔍 [DEBUG] CmdOutputObservation作成: id={getattr(observation, 'id', 'None')}, cause={getattr(observation, 'cause', 'None')}")
         
         return observation
 

@@ -58,14 +58,14 @@ class BlueLampBaseAgent(OrchestratorAgent):
                 filtered_tools.append(tool)
         
         # デバッグ用：委譲先エージェントが利用可能なツール一覧をログ出力
-        print(f"🔧 [TOOLS DEBUG] {self.__class__.__name__} available tools: {tool_names}")
+        logger.debug(f"🔧 [TOOLS DEBUG] {self.__class__.__name__} available tools: {tool_names}")
         
         # finishツールの詳細をログ出力
         for tool in filtered_tools:
             if hasattr(tool, 'function') and hasattr(tool.function, 'name'):  # type: ignore
                 if tool.function.name == 'finish':  # type: ignore
-                    print(f"🏁 [FINISH TOOL DEBUG] Description: {tool.function.description}")  # type: ignore
-                    print(f"🏁 [FINISH TOOL DEBUG] Parameters: {tool.function.parameters}")  # type: ignore
+                    logger.debug(f"🏁 [FINISH TOOL DEBUG] Description: {tool.function.description}")  # type: ignore
+                    logger.debug(f"🏁 [FINISH TOOL DEBUG] Parameters: {tool.function.parameters}")  # type: ignore
         
         return filtered_tools
 
