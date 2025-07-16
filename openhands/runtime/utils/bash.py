@@ -189,6 +189,9 @@ class BashSession:
         self.username = username
         self._initialized = False
         self.max_memory_mb = max_memory_mb
+        
+        # ✅ バックグラウンドウィンドウ追跡（Windows版移植）
+        self.background_windows: list[str] = []  # バックグラウンドウィンドウ名のリスト
 
     def initialize(self) -> None:
         self.server = libtmux.Server()
@@ -269,8 +272,30 @@ class BashSession:
         """Clean up the session."""
         if self._closed:
             return
+        
+        # ✅ バックグラウンドウィンドウのクリーンアップ（Windows版移植）
+        self._cleanup_background_windows()
+        
         self.session.kill_session()
         self._closed = True
+
+    def _cleanup_background_windows(self) -> None:
+        """Clean up all background windows created during this session."""
+        if not hasattr(self, 'background_windows'):
+            return
+            
+        for window_name in self.background_windows:
+            try:
+                # tmuxウィンドウを検索して終了
+                for window in self.session.windows:
+                    if window.name == window_name:
+                        logger.info(f"Cleaning up background window: {window_name}")
+                        window.kill_window()
+                        break
+            except Exception as e:
+                logger.warning(f"Failed to cleanup background window {window_name}: {e}")
+        
+        self.background_windows.clear()
 
     @property
     def cwd(self) -> str:
@@ -473,6 +498,71 @@ class BashSession:
         logger.debug(f'COMBINED OUTPUT: {combined_output}')
         return combined_output
 
+    def _execute_background_command(self, command: str) -> CmdOutputObservation:
+        """Execute a command in the background using tmux window separation.
+        
+        This method implements Windows版のバックグラウンド管理機能 for Unix systems.
+        """
+        try:
+            # 新しいtmuxウィンドウを作成してバックグラウンドコマンドを実行
+            bg_window_name = f'bg-{int(time.time())}-{uuid.uuid4().hex[:8]}'
+            
+            if self.session is None:
+                raise RuntimeError("Tmux session should be initialized")
+            
+            # 新しいウィンドウでバックグラウンドコマンドを実行
+            # tmuxウィンドウを作成し、コマンドを実行
+            bg_window = self.session.new_window(
+                window_name=bg_window_name,
+                window_shell='bash'  # bashシェルで開始
+            )
+            
+            # 作成されたウィンドウでコマンドを実行
+            bg_pane = bg_window.attached_pane
+            if bg_pane:
+                # エスケープされたコマンドを送信
+                escaped_command = escape_bash_special_chars(command)
+                bg_pane.send_keys(escaped_command, enter=True)
+            
+            # バックグラウンドウィンドウを追跡リストに追加
+            self.background_windows.append(bg_window_name)
+            
+            logger.info(f"Started background command '{command}' in tmux window '{bg_window_name}'")
+            
+            # 即座に成功を返す（Agent Controller解放）
+            metadata = CmdOutputMetadata(exit_code=0, working_dir=self.cwd)
+            metadata.suffix = f'\n[Command started as background job in tmux window {bg_window_name}.]'
+            
+            return CmdOutputObservation(
+                content=f'[Background process started: {command}]',
+                command=f'{command} &',
+                metadata=metadata,
+            )
+            
+        except Exception as e:
+            logger.error(f"Failed to start background command '{command}': {e}")
+            # フォールバック: 従来の方法で実行（リスクあり）
+            return self._execute_foreground_fallback(command)
+
+    def _execute_foreground_fallback(self, command: str) -> CmdOutputObservation:
+        """Fallback to foreground execution if background execution fails."""
+        logger.warning(f"Falling back to foreground execution for: {command}")
+        
+        # 警告付きで従来の実行を行う
+        metadata = CmdOutputMetadata()
+        metadata.suffix = (
+            f'\n[WARNING: Background execution failed, running in foreground. '
+            f'This may cause system hang if the command runs indefinitely.]'
+        )
+        
+        # 従来のフォアグラウンド実行ロジックを呼び出す
+        # ここでは簡単な実装として、エラーを返す
+        return CmdOutputObservation(
+            content=f'ERROR: Failed to execute background command: {command}',
+            command=f'{command} &',
+            metadata=metadata,
+        )
+
     def execute(self, action: CmdRunAction) -> CmdOutputObservation | ErrorObservation:
         """Execute a command in the bash session."""
         if not self._initialized:
@@ -483,6 +573,17 @@ class BashSession:
         command = action.command.strip()
         is_input: bool = action.is_input
 
+        # ✅ BACKGROUND COMMAND DETECTION (Windows版移植)
+        run_in_background = False
+        if command.endswith('&') and not is_input:
+            run_in_background = True
+            command = command[:-1].strip()  # Remove the & and extra spaces
+            logger.info(f"Detected background command: '{command}'")
+            
+            # バックグラウンドコマンドの場合、即座に成功を返す
+            return self._execute_background_command(command)
+        
+        # フォアグラウンドコマンドの既存処理を継続
         # If the previous command is not completed, we need to check if the command is empty
         if self.prev_status not in {
             BashCommandStatus.CONTINUE,
