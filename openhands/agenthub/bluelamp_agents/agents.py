@@ -38,18 +38,35 @@ class BlueLampBaseAgent(OrchestratorAgent):
         tools = super()._get_tools()
         # 委譲関連ツールを除外（delegate_で始まるツール名）
         filtered_tools = []
+        tool_names = []
+        
         for tool in tools:
             # ChatCompletionToolParamオブジェクトの場合
             if hasattr(tool, 'function') and hasattr(tool.function, 'name'):  # type: ignore
-                if not tool.function.name.startswith('delegate_'):  # type: ignore
+                tool_name = tool.function.name  # type: ignore
+                tool_names.append(tool_name)
+                if not tool_name.startswith('delegate_'):
                     filtered_tools.append(tool)
             # dict形式の場合
             elif isinstance(tool, dict) and 'function' in tool:
-                if not tool.get('function', {}).get('name', '').startswith('delegate_'):
+                tool_name = tool.get('function', {}).get('name', '')
+                tool_names.append(tool_name)
+                if not tool_name.startswith('delegate_'):
                     filtered_tools.append(tool)
             else:
                 # その他のツールはそのまま含める
                 filtered_tools.append(tool)
+        
+        # デバッグ用：委譲先エージェントが利用可能なツール一覧をログ出力
+        print(f"🔧 [TOOLS DEBUG] {self.__class__.__name__} available tools: {tool_names}")
+        
+        # finishツールの詳細をログ出力
+        for tool in filtered_tools:
+            if hasattr(tool, 'function') and hasattr(tool.function, 'name'):  # type: ignore
+                if tool.function.name == 'finish':  # type: ignore
+                    print(f"🏁 [FINISH TOOL DEBUG] Description: {tool.function.description}")  # type: ignore
+                    print(f"🏁 [FINISH TOOL DEBUG] Parameters: {tool.function.parameters}")  # type: ignore
+        
         return filtered_tools
 
 

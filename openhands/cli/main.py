@@ -109,6 +109,22 @@ async def cleanup_session(
         agent.reset()
         runtime.close()
         await controller.close()
+        
+        # 🚀 自動セッション削除機能
+        try:
+            from openhands.storage.session_cleanup import auto_cleanup_sessions
+            cleanup_result = auto_cleanup_sessions(
+                max_age_days=7,  # 7日以上古いセッションを削除
+                dry_run=False,   # 実際に削除実行
+                max_delete_count=50  # 一度に最大50個まで削除
+            )
+            if cleanup_result["deleted_count"] > 0:
+                logger.info(
+                    f"自動セッション削除: {cleanup_result['deleted_count']}個のセッション削除 "
+                    f"({cleanup_result['deleted_size_mb']:.1f}MB節約)"
+                )
+        except Exception as cleanup_error:
+            logger.warning(f"自動セッション削除エラー: {cleanup_error}")
 
     except Exception as e:
         logger.error(f'Error during session cleanup: {e}')
