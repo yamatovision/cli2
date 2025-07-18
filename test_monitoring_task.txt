@@ -1,0 +1,7 @@
+TASK: サーバー起動コマンドを実行してください。
+
+以下のコマンドを実行してください：
+cd /Users/tatsuya/Desktop/variantsupporter/backend && npm start
+
+このコマンドはポート競合エラーを発生させます。
+監視ログを確認してスタック箇所を特定してください。
