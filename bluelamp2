@@ -15,7 +15,7 @@ else
 fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 
-# 現在のディレクトリを保存
+# 現在のディレクトリを保存（ユーザーが実行したディレクトリ）
 CURRENT_DIR="$(pwd)"
 
 # 環境変数を新しい形式に設定
@@ -24,17 +24,25 @@ export SANDBOX_VOLUMES="$CURRENT_DIR:/workspace:rw"
 # 実行コマンドを識別するための環境変数
 export BLUELAMP_COMMAND="bluelamp2"
 
-# Poetry仮想環境のPythonパスを直接指定
-VENV_PATH="/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/bluelamp-ai-7sUMeoa0-py3.12"
-PYTHON_BIN="$VENV_PATH/bin/python"
-
 # Pythonパスを設定
 export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
 
 # セッション情報を表示
-echo "エージェント：拡張マネージャー"
+echo "🔵エージェント：拡張マネージャー"
 echo "ブルーランプ拡張モードを起動しています..."
 echo ""
 
-# メインセッションを実行
-exec "$PYTHON_BIN" -m openhands.cli.main_session "$@"
+# プロジェクトディレクトリに一時的に移動してPoetryで実行
+# pushd/popdを使って元のディレクトリを記憶
+pushd "$SCRIPT_DIR" > /dev/null
+
+# メインセッションを実行（新しいパス構造に対応）
+# 実行後は自動的に元のディレクトリに戻る
+poetry run python -m extensions.cli.main_session "$@"
+EXIT_CODE=$?
+
+# 元のディレクトリに戻る
+popd > /dev/null
+
+# 終了コードを返す
+exit $EXIT_CODE

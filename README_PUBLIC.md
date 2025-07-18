@@ -36,6 +36,19 @@ pip install bluelamp-ai
 - Python 3.12以上
 - 適切なAPIキー設定（Claude、OpenAI等）
 
+### オプショナル機能のインストール
+
+```bash
+# ドキュメント処理機能（PDF、PPTX、DOCX対応）
+poetry install --with runtime
+
+# クラウドサービス統合機能（Redis、AWS、GCP等）
+poetry install --with integrations
+
+# 開発・テスト環境
+poetry install --with dev,test
+```
+
 ## 🎯 使用例
 
 1. 新しいプロジェクトディレクトリで `ブルーランプ` を実行

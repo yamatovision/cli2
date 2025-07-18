@@ -25,13 +25,15 @@ classifiers = [
     "Natural Language :: Japanese",
 ]
 packages = [
-  { include = "openhands/**/*" },
-  { include = "pyproject.toml", to = "openhands" },
-  { include = "poetry.lock", to = "openhands" },
+  { include = "core" },
+  { include = "extensions" },
+  { include = "resources" },
+  { include = "pyproject.toml" },
+  { include = "poetry.lock" },
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.12,<4.0"
 litellm = "^1.60.0, !=1.64.4, !=1.67.*"            # avoid 1.64.4 (known bug) & 1.67.* (known bug #10272)
 aiohttp = ">=3.9.0,!=3.11.13"                      # Pin to avoid yanked version 3.11.13
 google-generativeai = "*"                          # To use litellm with Gemini Pro API
@@ -67,30 +69,16 @@ sse-starlette = "^2.1.3"
 psutil = "*"
 python-json-logger = "^3.2.1"
 prompt-toolkit = "^3.0.50"
-poetry = "^2.1.2"
+# poetry = "^2.1.2"  # 削除: 循環依存回避
 anyio = "4.9.0"
 pythonnet = "*"
 fastmcp = "^2.5.2"
 python-frontmatter = "^1.1.0"
-# TODO: Should these go into the runtime group?
-ipywidgets = "^8.1.5"
-qtconsole = "^5.6.1"
-PyPDF2 = "*"
-python-pptx = "*"
-pylatexenc = "*"
-python-docx = "*"
+# Runtime dependencies moved to separate group
 bashlex = "^0.18"
 openhands_aci = "0.3.0"
 
-# TODO: These are integrations that should probably be optional
-redis = ">=5.2,<7.0"
-minio = "^7.2.8"
-daytona = "0.21.1"
-stripe = ">=11.5,<13.0"
-google-cloud-aiplatform = "*"
-anthropic = { extras = [ "vertex" ], version = "*" }
-boto3 = "*"
-kubernetes = "^33.1.0"
+# Cloud integrations moved to separate group
 pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev]
@@ -103,6 +91,32 @@ pre-commit = "4.2.0"
 build = "*"
 types-setuptools = "*"
 pytest = "^8.4.0"
+
+# Document processing dependencies (optional)
+[tool.poetry.group.runtime]
+optional = true
+
+[tool.poetry.group.runtime.dependencies]
+ipywidgets = "^8.1.5"
+qtconsole = "^5.6.1"
+PyPDF2 = "*"
+python-pptx = "*"
+pylatexenc = "*"
+python-docx = "*"
+
+# Cloud service integrations (optional)
+[tool.poetry.group.integrations]
+optional = true
+
+[tool.poetry.group.integrations.dependencies]
+redis = ">=5.2,<7.0"
+minio = "^7.2.8"
+daytona = "0.21.1"
+stripe = ">=11.5,<13.0"
+google-cloud-aiplatform = "*"
+anthropic = { extras = [ "vertex" ], version = "*" }
+boto3 = "*"
+kubernetes = "^33.1.0"
 
 [tool.poetry.group.test]
 optional = true
@@ -122,12 +136,12 @@ gevent = ">=24.2.1,<26.0.0"
 
 [tool.poetry.scripts]
 # 開発用内部コマンド（一般配布では非表示）
-openhands = "openhands.cli.main:main"
-openhands2 = "openhands.cli.main_delegation:main"
-openhands3 = "openhands.cli.main_session:main"
+openhands = "extensions.cli.main:main"
+openhands2 = "extensions.cli.main_delegation:main"
+openhands3 = "extensions.cli.main_session:main"
 # 一般公開用日本語コマンド
-"ブルーランプ" = "openhands.cli.bluelamp_public:main"
-"ブルーランプ拡張" = "openhands.cli.bluelamp_extension_public:main"
+"ブルーランプ" = "extensions.cli.bluelamp_public:main"
+"ブルーランプ拡張" = "extensions.cli.bluelamp_extension_public:main"
 
 
 
