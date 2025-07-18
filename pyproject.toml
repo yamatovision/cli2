@@ -93,6 +93,8 @@ types-setuptools = "*"
 pytest = "^8.4.0"
 
 # Document processing dependencies (optional)
+vulture = "^2.14"
+pyflakes = "^3.4.0"
 [tool.poetry.group.runtime]
 optional = true
 

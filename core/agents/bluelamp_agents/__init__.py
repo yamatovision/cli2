@@ -1,10 +1,11 @@
 """
 BlueLamp専門エージェント群
 
-12個のBlueLampエージェントが13エージェント構造（00-12）にマッピング:
-- 00: orchestrator (OrchestratorAgent用)
-- 01-12: 各BlueLampエージェントが対応
-- RefactoringPlannerとRefactoringImplementationを統合してRefactoringEngineerに
+14個のBlueLampエージェントが新構造（01-14）にマッピング:
+- 01-14: 各BlueLampエージェントが対応
+- 07: プロトタイプ実装（新設）
+- 08: 実装エージェント（PRC実装から名称変更）
+- 14: AI親和性診断（新設）
 - Portal API統合完了
 """
 
@@ -15,16 +16,18 @@ from .agents import (
     SystemArchitect,
     ImplementationConsultant,
     EnvironmentSetup,
-    PrcImplementation,
+    PrototypeImplementation,
+    ImplementationAgent,
     DebugAgent,
     DeploySpecialist,
-    ExpansionOrchestrator,
+    # ExpansionOrchestrator は ExtensionManagerAgent に統一
     PageCreator,
     RefactoringEngineer,
+    AIFriendlinessDiagnostic,
 )
 from core.agents.agent import Agent
 
-# 12個のBlueLampエージェント - クラス名とプロンプトが一致
+# 13個のBlueLamp専門エージェント - クラス名とプロンプトが一致
 BLUELAMP_AGENTS = [
     ('RequirementsEngineer', RequirementsEngineer),
     ('UIUXDesigner', UIUXDesigner),
@@ -32,12 +35,14 @@ BLUELAMP_AGENTS = [
     ('SystemArchitect', SystemArchitect),
     ('ImplementationConsultant', ImplementationConsultant),
     ('EnvironmentSetup', EnvironmentSetup),
-    ('PrcImplementation', PrcImplementation),
+    ('PrototypeImplementation', PrototypeImplementation),
+    ('ImplementationAgent', ImplementationAgent),
     ('DebugAgent', DebugAgent),
     ('DeploySpecialist', DeploySpecialist),
-    ('ExpansionOrchestrator', ExpansionOrchestrator),
+    # ExpansionOrchestrator は ExtensionManagerAgent に統一されました
     ('PageCreator', PageCreator),
     ('RefactoringEngineer', RefactoringEngineer),
+    ('AIFriendlinessDiagnostic', AIFriendlinessDiagnostic),
 ]
 
 for name, cls in BLUELAMP_AGENTS:

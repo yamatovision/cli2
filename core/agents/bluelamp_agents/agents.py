@@ -15,6 +15,21 @@ class BlueLampBaseAgent(OrchestratorAgent):
 
     VERSION = '1.0'
 
+    def __init__(self, llm, config):
+        """BlueLampエージェント用の初期化（system_prompt_filenameを保護）"""
+        # system_prompt_filenameを一時保存
+        original_filename = getattr(config, 'system_prompt_filename', None)
+        
+        # 親クラスの初期化を実行（これによりorchestratorに上書きされる）
+        super().__init__(llm, config)
+        
+        # 元のsystem_prompt_filenameを復元
+        if original_filename and original_filename != 'orchestrator':
+            config.system_prompt_filename = original_filename
+            # プロンプトマネージャーをリセットして新しいfilenameで再作成
+            self._prompt_manager = None
+            logger.info(f"BlueLampAgent system_prompt_filename restored to: {original_filename}")
+
     @property
     def prompt_manager(self) -> PromptManager:
         """BlueLampエージェント用のPortalプロンプトマネージャーを返す"""
@@ -131,18 +146,28 @@ class EnvironmentSetup(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class PrcImplementation(BlueLampBaseAgent):
-    """★7 PRC実装: プロトタイプ実装とコア機能開発"""
+class PrototypeImplementation(BlueLampBaseAgent):
+    """★7 プロトタイプ実装: 迅速なプロトタイプ作成と概念実証"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from core.config import AgentConfig
             config = AgentConfig()
-        config.system_prompt_filename = 'prc_implementation'
+        config.system_prompt_filename = 'prototype_implementation'
+        super().__init__(llm, config)
+
+
+class ImplementationAgent(BlueLampBaseAgent):
+    """★8 実装エージェント: Backend実装、統合テスト、Frontend UI、API統合"""
+    def __init__(self, llm: Any, config: Any = None):
+        if config is None:
+            from core.config import AgentConfig
+            config = AgentConfig()
+        config.system_prompt_filename = 'implementation_agent'
         super().__init__(llm, config)
 
 
 class DebugAgent(BlueLampBaseAgent):
-    """★8 デバッグエージェント: バグ修正とエラー解決"""
+    """★09 デバッグエージェント v3.0: バグ修正とエラー解決"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from core.config import AgentConfig
@@ -152,7 +177,7 @@ class DebugAgent(BlueLampBaseAgent):
 
 
 class DeploySpecialist(BlueLampBaseAgent):
-    """★9 デプロイ専門家: デプロイメントとインフラ管理"""
+    """#10 デプロイスペシャリスト: デプロイメントとインフラ管理"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from core.config import AgentConfig
@@ -161,18 +186,12 @@ class DeploySpecialist(BlueLampBaseAgent):
         super().__init__(llm, config)
 
 
-class ExpansionOrchestrator(BlueLampBaseAgent):
-    """★10 拡張オーケストレーター: 機能拡張の統合管理"""
-    def __init__(self, llm: Any, config: Any = None):
-        if config is None:
-            from core.config import AgentConfig
-            config = AgentConfig()
-        config.system_prompt_filename = 'expansion_orchestrator'
-        super().__init__(llm, config)
+# ExpansionOrchestrator は ExtensionManagerAgent に統一されました
+# 重複を避けるため削除
 
 
 class PageCreator(BlueLampBaseAgent):
-    """★11 ページ作成: 新規ページとコンポーネント作成"""
+    """★12 新ページ作成エージェント: 新規ページとコンポーネント作成"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from core.config import AgentConfig
@@ -182,12 +201,22 @@ class PageCreator(BlueLampBaseAgent):
 
 
 class RefactoringEngineer(BlueLampBaseAgent):
-    """★12 リファクタリングエンジニア: コード改善計画策定と実装"""
+    """#13 コード徹底除去専門リファクタリングエージェント v1.0: コード改善計画策定と実装"""
     def __init__(self, llm: Any, config: Any = None):
         if config is None:
             from core.config import AgentConfig
             config = AgentConfig()
         config.system_prompt_filename = 'refactoring_engineer'
+        super().__init__(llm, config)
+
+
+class AIFriendlinessDiagnostic(BlueLampBaseAgent):
+    """#14 Universal AI-Friendliness診断プロンプト v3.0: AI親和性診断と改善提案"""
+    def __init__(self, llm: Any, config: Any = None):
+        if config is None:
+            from core.config import AgentConfig
+            config = AgentConfig()
+        config.system_prompt_filename = 'ai_friendliness_diagnostic'
         super().__init__(llm, config)
 
 

@@ -1,6 +1,12 @@
 # エージェント別の固定タスク設定
 
 AGENT_FIXED_TASKS = {
+    'PrototypeImplementation': {
+        'task': '迅速なプロトタイプ作成と概念実証'
+    },
+    'ImplementationAgent': {
+        'task': 'Backend実装、統合テスト、Frontend UI、API統合の段階的実装'
+    },
     'RefactoringEngineer': {
         'task': 'プロジェクト全体のコード品質改善とリファクタリング'
     },
@@ -9,6 +15,9 @@ AGENT_FIXED_TASKS = {
     },
     'PageCreator': {
         'task': '新しいページの作成と実装'
+    },
+    'AIFriendlinessDiagnostic': {
+        'task': 'AI親和性診断と改善提案'
     }
 }
 

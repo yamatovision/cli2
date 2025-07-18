@@ -109,6 +109,11 @@ def response_to_actions(
             # AgentFinishAction
             # ================================================
             elif tool_call.function.name == FinishTool['function']['name']:
+                # デバッグ用：finishツール呼び出しの詳細をログ出力
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Tool called with arguments: {arguments}")
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Message: {arguments.get('message', '')}")
+                logger.debug(f"🏁 [FINISH CALL DEBUG] Task completed: {arguments.get('task_completed', None)}")
+                
                 action = AgentFinishAction(
                     final_thought=arguments.get('message', ''),
                     task_completed=arguments.get('task_completed', None),
@@ -245,9 +250,14 @@ def response_to_actions(
                     agent='EnvironmentSetup',
                     inputs=arguments,
                 )
-            elif tool_call.function.name == 'delegate_to_prc_implementation':
+            elif tool_call.function.name == 'delegate_to_prototype_implementation':
                 action = AgentDelegateAction(
-                    agent='PrcImplementation',
+                    agent='PrototypeImplementation',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_implementation_agent':
+                action = AgentDelegateAction(
+                    agent='ImplementationAgent',
                     inputs=arguments,
                 )
             elif tool_call.function.name == 'delegate_to_debug_agent':
@@ -268,6 +278,11 @@ def response_to_actions(
             elif tool_call.function.name == 'delegate_to_refactoring_engineer':
                 action = AgentDelegateAction(
                     agent='RefactoringEngineer',
+                    inputs=arguments,
+                )
+            elif tool_call.function.name == 'delegate_to_ai_friendliness_diagnostic':
+                action = AgentDelegateAction(
+                    agent='AIFriendlinessDiagnostic',
                     inputs=arguments,
                 )
             else:

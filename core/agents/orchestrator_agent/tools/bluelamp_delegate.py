@@ -1,13 +1,13 @@
-"""BlueLamp Delegate Tools"""
+"""BlueLamp Delegate Tools - 完全版"""
 
 from litellm import ChatCompletionToolParam
 
-# BlueLamp専門エージェント委譲ツール定義
+# BlueLamp専門エージェント委譲ツール定義（プロンプトマッピング準拠・ユーザー完了許可制）
 
 def create_bluelamp_delegate_tools():
-    """12個のBlueLamp専門エージェントへの委譲ツールを生成（Portal APIマッピング準拠）"""
+    """14個のBlueLamp専門エージェントへの委譲ツールを生成（#00オーケストレーターと★11拡張オーケストレーター以外全て）"""
     return [
-        # ★1 要件定義エンジニア
+        # #01 要件定義エンジニア
         ChatCompletionToolParam(
             type='function',
             function={
@@ -16,14 +16,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'ユーザーのヒアリングをして要件定義書を作成しSCOPE_PROGRESSを更新'},
+                        'task': {'type': 'string', 'description': '#01 要件定義エンジニアとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-        # ★2 UI/UXデザイナー
+        # #02 UI/UXデザイナー
         ChatCompletionToolParam(
             type='function',
             function={
@@ -32,14 +32,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '要件定義書に記載された全ページのモックアップ、データ契約基盤を構築し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '#02 UI/UXデザイナーとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-        # ★3 データモデリングエンジニア
+        # #03 データモデリングエンジニア
         ChatCompletionToolParam(
             type='function',
             function={
@@ -48,14 +48,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '要件定義とモックアップからデータ契約を最適化し、ディレクトリ構造を設計し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '#03 データモデリングエンジニアとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-        # ★4 システムアーキテクト
+        # #04 システムアーキテクト
         ChatCompletionToolParam(
             type='function',
             function={
@@ -64,7 +64,7 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'ユーザーにヒアリングして認証システムを設計し基本認証方針書を作成し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '#04 システムアーキテクトとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
@@ -80,7 +80,7 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '要件定義書に記載された全ページのPRC作成と実装順序決定を行い、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '★5 実装計画コンサルタントとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
@@ -96,30 +96,46 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'ユーザーを丁寧にガイドして外部サービス設定と環境変数構築を代行し、Git初期設定を完了し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '★6 環境構築としてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-        # ★7 PRC実装
+        # ★7 プロトタイプ実装
         ChatCompletionToolParam(
             type='function',
             function={
-                'name': 'delegate_to_prc_implementation',
-                'description': 'PRC実装タスクをPrcImplementationに委譲。Backend実装、統合テスト、Frontend UI、API統合を段階的に実装し、実データ主義で品質保証する際に使用',
+                'name': 'delegate_to_prototype_implementation',
+                'description': 'プロトタイプ実装タスクをPrototypeImplementationに委譲。初期プロトタイプ作成、基本機能実装、動作検証を依頼する際に使用',
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '指定されたPRCを6段階のPhaseで段階的に実装し、実データ主義で品質保証を行い、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '★7 プロトタイプ実装としてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-        # ★08 デバッグエージェント
+        # ★8 実装エージェント
+        ChatCompletionToolParam(
+            type='function',
+            function={
+                'name': 'delegate_to_implementation_agent',
+                'description': '実装タスクをImplementationAgentに委譲。本格的な機能実装、コード品質向上、統合テストを依頼する際に使用',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'task': {'type': 'string', 'description': '★8 実装エージェントとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
+                    },
+                    'required': ['task']
+                }
+            }
+        ),
+
+        # ★09 デバッグエージェント v3.0
         ChatCompletionToolParam(
             type='function',
             function={
@@ -128,16 +144,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'エラーを分類して根本原因を特定し、クリーンコードスコアを向上させる修正で解決し、ユーザーからの要望を全て満たし完了許可をユーザーから取得する'},
+                        'task': {'type': 'string', 'description': '★09 デバッグエージェント v3.0としてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
 
-
-
-        # ★09 デプロイスペシャリスト
+        # #10 デプロイスペシャリスト
         ChatCompletionToolParam(
             type='function',
             function={
@@ -146,13 +160,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': '非技術者を丁寧にガイドして本番環境デプロイとCI/CDパイプライン構築を代行し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '#10 デプロイスペシャリストとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
-        # ★11 新ページ作成エージェント
+
+        # ★12 新ページ作成エージェント
         ChatCompletionToolParam(
             type='function',
             function={
@@ -161,13 +176,14 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'ユーザーにヒアリングして新ページの要件を確定し、モックアップ作成、API仕様定義、PRC作成まで一貫して実行し、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '★12 新ページ作成エージェントとしてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
             }
         ),
-        # ★12 リファクタリングエンジニア
+
+        # #13 コード徹底除去専門リファクタリングエージェント v1.0
         ChatCompletionToolParam(
             type='function',
             function={
@@ -176,7 +192,23 @@ def create_bluelamp_delegate_tools():
                 'parameters': {
                     'type': 'object',
                     'properties': {
-                        'task': {'type': 'string', 'description': 'プロジェクト内の不要コードをローラー作戦で徹底除去し、連鎖削除によるシステム軽量化を行い、エージェントプロンプトに内包されている完了基準を全て満たす'},
+                        'task': {'type': 'string', 'description': '#13 コード徹底除去専門リファクタリングエージェント v1.0としてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
+                    },
+                    'required': ['task']
+                }
+            }
+        ),
+
+        # #14 Universal AI-Friendliness診断プロンプト v3.0
+        ChatCompletionToolParam(
+            type='function',
+            function={
+                'name': 'delegate_to_ai_friendliness_diagnostic',
+                'description': 'AI親和性診断タスクをAIFriendlinessDiagnosticに委譲。プロジェクト構造分析、AI作業効率スコア測定、改善提案を依頼する際に使用',
+                'parameters': {
+                    'type': 'object',
+                    'properties': {
+                        'task': {'type': 'string', 'description': '#14 Universal AI-Friendliness診断プロンプト v3.0としてのプロンプトの役割を果たしユーザーから完了許可をもらえるまで働く'},
                     },
                     'required': ['task']
                 }
