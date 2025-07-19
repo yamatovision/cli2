@@ -300,10 +300,24 @@ class ConversationMemory:
             ]
         elif isinstance(action, SystemMessageAction):
             # Convert SystemMessageAction to a system message
+            # Decrypt content if it was encrypted in memory cache
+            from extensions.security.memory_encryption import get_memory_encryption
+            
+            encryption = get_memory_encryption()
+            decrypted_content = encryption.decrypt(action.content)
+            
+            logger.debug(
+                "SECURITY: SystemMessageAction content decrypted for AI communication",
+                extra={
+                    'was_encrypted': encryption.is_encrypted(action.content),
+                    'content_length': len(decrypted_content)
+                }
+            )
+            
             return [
                 Message(
                     role='system',
-                    content=[TextContent(text=action.content)],
+                    content=[TextContent(text=decrypted_content)],
                     # Include tools if function calling is enabled
                     tool_calls=None,
                 )

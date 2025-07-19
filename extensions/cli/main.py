@@ -493,6 +493,13 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 
 def main():
+    # セキュリティシステムの初期化
+    try:
+        from extensions.security.system_init import initialize_system_components
+        initialize_system_components()
+    except Exception as e:
+        logger.warning(f"Security system initialization failed: {e}")
+    
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:

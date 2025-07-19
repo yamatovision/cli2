@@ -177,6 +177,28 @@ class EventStream(EventStore):
 
             data = event_to_dict(event)
             data = self._replace_secrets(data)
+            
+            # Encrypt SystemMessageAction content in memory cache for security
+            from core.events.action.message import SystemMessageAction
+            from extensions.security.memory_encryption import get_memory_encryption
+            
+            if isinstance(event, SystemMessageAction):
+                encryption = get_memory_encryption()
+                # For actions, content is stored in args
+                if 'args' in data and 'content' in data['args']:
+                    original_content = data['args']['content']
+                    data['args']['content'] = encryption.encrypt(original_content)
+                    logger.info(
+                        "SECURITY: SystemMessageAction content encrypted in memory cache",
+                        extra={
+                            'event_id': event.id,
+                            'user_id': self.user_id,
+                            'session_id': self.sid,
+                            'content_length': len(original_content),
+                            'encrypted_length': len(data['args']['content'])
+                        }
+                    )
+            
             event = event_from_dict(data)
             current_write_page.append(data)
 
@@ -185,19 +207,33 @@ class EventStream(EventStore):
                 self._write_page_cache = []
 
         if event.id is not None:
-            # Write the event to the store - this can take some time
-            event_json = json.dumps(data)
-            filename = self._get_filename_for_id(event.id, self.user_id)
-            if len(event_json) > 1_000_000:  # Roughly 1MB in bytes, ignoring encoding
-                logger.warning(
-                    f'Saving event JSON over 1MB: {len(event_json):,} bytes, filename: {filename}',
+            # Skip file storage for SystemMessageAction (security enhancement)
+            from core.events.action.message import SystemMessageAction
+            
+            if isinstance(event, SystemMessageAction):
+                logger.info(
+                    "SECURITY: SystemMessageAction file storage disabled to prevent prompt leakage",
                     extra={
+                        'event_id': event.id,
                         'user_id': self.user_id,
                         'session_id': self.sid,
-                        'size': len(event_json),
-                    },
+                        'content_length': len(event.content)
+                    }
                 )
-            self.file_store.write(filename, event_json)
+            else:
+                # Write the event to the store - this can take some time
+                event_json = json.dumps(data)
+                filename = self._get_filename_for_id(event.id, self.user_id)
+                if len(event_json) > 1_000_000:  # Roughly 1MB in bytes, ignoring encoding
+                    logger.warning(
+                        f'Saving event JSON over 1MB: {len(event_json):,} bytes, filename: {filename}',
+                        extra={
+                            'user_id': self.user_id,
+                            'session_id': self.sid,
+                            'size': len(event_json),
+                        },
+                    )
+                self.file_store.write(filename, event_json)
 
             # Store the cache page last - if it is not present during reads then it will simply be bypassed.
             self._store_cache_page(current_write_page)

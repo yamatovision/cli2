@@ -9,6 +9,13 @@ import sys
 
 def main():
     """ブルーランプ（オーケストレーター）のメインエントリーポイント"""
+    # セキュリティシステムの初期化
+    try:
+        from extensions.security.system_init import initialize_system_components
+        initialize_system_components()
+    except Exception as e:
+        print(f"Warning: Security system initialization failed: {e}")
+    
     # 実行コマンドを識別するための環境変数
     os.environ['BLUELAMP_COMMAND'] = 'ブルーランプ'
     

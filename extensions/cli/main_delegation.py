@@ -9,8 +9,8 @@ from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.shortcuts import clear
 
-import openhands.agenthub
-import openhands.cli.suppress_warnings  # noqa: F401
+import core.agents
+import extensions.cli.suppress_warnings  # noqa: F401
 from extensions.cli.commands import (
     check_folder_security_agreement,
     handle_commands,
@@ -255,6 +255,13 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 def main():
     """Entry point for openhands2 command."""
+    # セキュリティシステムの初期化
+    try:
+        from extensions.security.system_init import initialize_system_components
+        initialize_system_components()
+    except Exception as e:
+        logger.warning(f"Security system initialization failed: {e}")
+    
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
