@@ -184,7 +184,14 @@ def display_banner(session_id: str) -> None:
     print_formatted_text('')
 
     # セッション情報を表示
-    current_dir = os.getcwd()
+    # 実際のプロジェクトディレクトリを取得（SANDBOX_VOLUMESから）
+    sandbox_volumes = os.environ.get('SANDBOX_VOLUMES', '')
+    if sandbox_volumes and ':' in sandbox_volumes:
+        # "path:/workspace:rw" 形式から実際のパスを抽出
+        current_dir = sandbox_volumes.split(':')[0]
+    else:
+        # フォールバック: 現在のディレクトリ
+        current_dir = os.getcwd()
     current_user = getpass.getuser()
     
     # コマンド名に基づいてモードを動的に決定

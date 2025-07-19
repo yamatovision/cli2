@@ -6,7 +6,7 @@ requires = [
 
 [tool.poetry]
 name = "bluelamp-ai"
-version = "1.3.1"
+version = "1.4.0"
 description = "BlueLamp AI: 日本語対応AIエージェントシステム - オーケストレーターと拡張マネージャー（最新版）"
 readme = "README_PUBLIC.md"
 authors = [ "BlueLamp Team" ]
