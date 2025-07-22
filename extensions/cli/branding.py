@@ -7,7 +7,8 @@ BlueLamp ブランディング定義モジュール
 
 import os
 # Version information
-__version__ = "1.3.1"
+# Import version from central location
+from core.version import __version__
 
 # BlueLamp ASCIIアート
 BLUELAMP_BANNER = """

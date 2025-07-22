@@ -372,7 +372,21 @@ async def run_setup_flow(config: OpenHandsConfig, settings_store: FileSettingsSt
         HTML('<grey>No settings found. Starting initial setup...</grey>\n'),
     )
 
-    # Use the existing settings modification function for basic setup
+    # 簡略化認証フローを試行
+    try:
+        from extensions.cli.simplified_auth_flow import run_simplified_auth_flow
+        success = await run_simplified_auth_flow(config, settings_store)
+        if success:
+            return
+    except Exception as e:
+        print_formatted_text(
+            HTML(f'<yellow>Simplified flow failed: {e}</yellow>\n'),
+        )
+        print_formatted_text(
+            HTML('<grey>Falling back to manual setup...</grey>\n'),
+        )
+
+    # フォールバック: 既存の手動設定
     await modify_llm_settings_basic(config, settings_store)
 
 

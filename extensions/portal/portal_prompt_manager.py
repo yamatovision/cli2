@@ -94,7 +94,9 @@ class PortalPromptManager(PromptManager):
                     login_success = await authenticator.prompt_for_login()
                     if not login_success:
                         logger.warning("ログインがキャンセルされました")
-                        return None
+                        logger.error("認証に失敗したため、処理を中断します")
+                        import sys
+                        sys.exit(1)
                 else:
                     # APIキー検証（自動再認証機能付き）
                     try:
@@ -109,7 +111,9 @@ class PortalPromptManager(PromptManager):
                             login_success = await authenticator.prompt_for_login()
                             if not login_success:
                                 logger.warning("ログインがキャンセルされました")
-                                return None
+                                logger.error("認証に失敗したため、処理を中断します")
+                                import sys
+                                sys.exit(1)
                         else:
                             logger.error(f"認証エラー: {e}")
                             return None

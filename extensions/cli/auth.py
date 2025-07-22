@@ -304,8 +304,20 @@ class PortalAuthenticator:
         
         async with aiohttp.ClientSession() as session:
             try:
+                # ログイン試行の詳細ログ
+                logger.info(f"Attempting login to: {url}")
+                logger.info(f"Login email: {email}")
+                
                 async with session.post(url, json=payload) as response:
-                    data = await response.json()
+                    response_text = await response.text()
+                    logger.info(f"Raw response: {response_text[:500]}")  # 最初の500文字のみ
+                    
+                    try:
+                        data = await response.json()
+                    except Exception as json_error:
+                        logger.error(f"Failed to parse JSON response: {json_error}")
+                        logger.error(f"Response text: {response_text}")
+                        raise ValueError(f"Invalid JSON response from server: {response_text[:200]}")
                     
                     # デバッグ用ログ
                     logger.info(f"Login response status: {response.status}")
@@ -352,16 +364,31 @@ class PortalAuthenticator:
                             
                     elif response.status == 401:
                         error_msg = data.get("message", "Invalid email or password")
-                        logger.error(f"Login failed: {error_msg}")
-                        raise ValueError(f"Login failed: {error_msg}")
+                        logger.error(f"Login failed (401): {error_msg}")
+                        logger.error(f"Full error response: {data}")
+                        
+                        # より詳細なエラーメッセージを表示
+                        if "メールアドレスまたはパスワードが正しくありません" in error_msg:
+                            print("\n❌ エラー: メールアドレスまたはパスワードが正しくありません")
+                            print("   入力した情報を確認してください:")
+                            print(f"   - Email: {email}")
+                            print("   - Password: [表示されません]")
+                            print(f"   - Portal URL: {self.base_url}")
+                        
+                        raise ValueError(error_msg)
                         
                     else:
                         error_msg = data.get("message", f"Unexpected response status: {response.status}")
-                        logger.error(f"Login error: {error_msg}")
+                        logger.error(f"Login error (Status {response.status}): {error_msg}")
+                        logger.error(f"Full error response: {data}")
                         raise ValueError(f"Login error: {error_msg}")
                         
             except aiohttp.ClientError as e:
                 logger.error(f"Network error during login: {e}")
+                logger.error(f"Failed to connect to: {url}")
+                print(f"\n❌ ネットワークエラー: Portalサーバーに接続できません")
+                print(f"   - URL: {url}")
+                print(f"   - エラー: {e}")
                 raise
     
     async def prompt_for_login(self) -> bool:

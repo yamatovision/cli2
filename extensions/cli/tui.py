@@ -27,8 +27,8 @@ from prompt_toolkit.shortcuts import print_container
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import Frame, TextArea
 
-# Version information
-__version__ = "1.3.1"
+# Import version from central location
+from core.version import __version__
 from extensions.cli.branding import COLORS, STYLE_DICT, MESSAGES, COMMAND_DESCRIPTIONS, get_message
 from core.config import OpenHandsConfig
 from core.exceptions import UserCancelledError

@@ -14,8 +14,8 @@ import toml
 from dotenv import load_dotenv
 from pydantic import BaseModel, SecretStr, ValidationError
 
-# Version information
-__version__ = "1.3.1"
+# Import version from central location
+from core.version import __version__
 from core import logger
 from core.config.agent_config import AgentConfig
 from core.config.condenser_config import (
@@ -722,7 +722,7 @@ def parse_arguments() -> argparse.Namespace:
     args = parser.parse_args()
 
     if args.version:
-        print(f'OpenHands version: {__version__}')
+        print(f'BlueLamp version: {__version__}')
         sys.exit(0)
 
     return args

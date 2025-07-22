@@ -1,18 +1,18 @@
 # OpenHands Configuration
 [llm]
 model = "claude-3-5-sonnet-20241022"
-api_key = "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"
+api_key = ""
 temperature = 0.0
 
 # 評価用のLLM設定
 [llm.eval_claude]
 model = "claude-3-5-sonnet-20241022"
-api_key = "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"
+api_key = ""
 temperature = 0.0
 
 [llm.eval_claude_fast]
 model = "claude-3-5-haiku-20241022"
-api_key = "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"
+api_key = ""
 temperature = 0.0
 
 # エージェント設定

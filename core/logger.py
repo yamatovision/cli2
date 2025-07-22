@@ -382,8 +382,8 @@ openhands_logger.propagate = False
 openhands_logger.debug('Logging initialized')
 
 LOG_DIR = os.path.join(
-    # parent dir of openhands/core (i.e., root of the repo)
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    # cli2/logs directory (within the cli2 project)
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     'logs',
 )
 
