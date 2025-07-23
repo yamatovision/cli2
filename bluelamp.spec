@@ -1,33 +1,32 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import collect_all
-
-datas = [('resources', 'resources'), ('core/config', 'core/config'), ('extensions', 'extensions')]
-binaries = []
-hiddenimports = ['tiktoken_ext.openai_public', 'tiktoken_ext', 'PyGithub', 'github', 'frontmatter', 'jwt', 'google.protobuf']
-tmp_ret = collect_all('litellm')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('tiktoken')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
-tmp_ret = collect_all('tiktoken_ext')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['test_binary.py'],
+    ['extensions/cli/main_session/__main__.py'],
     pathex=[],
-    binaries=binaries,
-    datas=datas,
-    hiddenimports=hiddenimports,
+    binaries=[],
+    datas=[
+        ('extensions', 'extensions'), 
+        ('core', 'core'), 
+        ('pyproject.toml', '.'),
+        # tiktoken encoding files
+        ('/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/bluelamp-ai-G_wghGLI-py3.12/lib/python3.12/site-packages/tiktoken_ext', 'tiktoken_ext'),
+        # litellm data files
+        ('/Users/tatsuya/Library/Caches/pypoetry/virtualenvs/bluelamp-ai-G_wghGLI-py3.12/lib/python3.12/site-packages/litellm', 'litellm')
+    ],
+    hiddenimports=[
+        'extensions', 
+        'extensions.cli', 
+        'extensions.cli.main_session',
+        'tiktoken_ext.openai_public',
+        'tiktoken_ext'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[
-        # 安全な除外のみ（GUI関連のみ）
-        'matplotlib', 'jupyter', 'notebook',
-        'IPython', 'qtconsole', 'PyQt5', 'PyQt6', 'tkinter',
-    ],
+    excludes=[],
     noarchive=False,
-    optimize=2,  # 最適化レベルを上げる
+    optimize=0,
 )
 pyz = PYZ(a.pure)
 

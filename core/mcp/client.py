@@ -1,7 +1,27 @@
 from typing import Optional
 
-from fastmcp import Client
-from fastmcp.client.transports import SSETransport, StreamableHttpTransport
+# Conditional import for fastmcp to handle PyInstaller binary compatibility
+try:
+    from fastmcp import Client
+    from fastmcp.client.transports import SSETransport, StreamableHttpTransport
+    FASTMCP_AVAILABLE = True
+except ImportError as e:
+    # Handle PyInstaller binary execution where fastmcp metadata is missing
+    FASTMCP_AVAILABLE = False
+    
+    # Create dummy classes for type compatibility
+    class Client:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("MCP functionality is not available in this binary build")
+    
+    class SSETransport:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("MCP functionality is not available in this binary build")
+    
+    class StreamableHttpTransport:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("MCP functionality is not available in this binary build")
+
 from mcp import McpError
 from mcp.types import CallToolResult
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,6 +43,10 @@ class MCPClient(BaseModel):
 
     async def _initialize_and_list_tools(self) -> None:
         """Initialize session and populate tool map."""
+        if not FASTMCP_AVAILABLE:
+            logger.warning("MCP functionality is not available in this binary build")
+            return
+            
         if not self.client:
             raise RuntimeError('Session not initialized.')
 
@@ -52,6 +76,10 @@ class MCPClient(BaseModel):
         timeout: float = 30.0,
     ):
         """Connect to MCP server using SHTTP or SSE transport."""
+        if not FASTMCP_AVAILABLE:
+            logger.warning("MCP functionality is not available in this binary build")
+            return
+            
         server_url = server.url
         api_key = server.api_key
 
@@ -97,6 +125,9 @@ class MCPClient(BaseModel):
 
     async def call_tool(self, tool_name: str, args: dict) -> CallToolResult:
         """Call a tool on the MCP server."""
+        if not FASTMCP_AVAILABLE:
+            raise RuntimeError("MCP functionality is not available in this binary build")
+            
         if tool_name not in self.tool_map:
             raise ValueError(f'Tool {tool_name} not found.')
         # The MCPClientTool is primarily for metadata; use the session to call the actual tool.

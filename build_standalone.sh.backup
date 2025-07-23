@@ -7,13 +7,13 @@ echo "BlueLamp実行ファイルをビルドします..."
 poetry run pyinstaller \
     --name bluelamp \
     --onefile \
-    --add-data "extensions:extensions" \
-    --add-data "core:core" \
+    --add-data "openhands:openhands" \
+    --add-data "config.toml:." \
     --add-data "pyproject.toml:." \
-    --hidden-import extensions \
-    --hidden-import extensions.cli \
-    --hidden-import extensions.cli.main_session \
-    extensions/cli/main_session/__main__.py
+    --hidden-import openhands \
+    --hidden-import openhands.cli \
+    --hidden-import openhands.cli.main_session \
+    openhands/cli/main_session/__main__.py
 
 echo "ビルド完了！"
 echo "実行ファイル: dist/bluelamp"

@@ -4,6 +4,11 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from core.agents.agent import Agent
 
+# Check if fastmcp is available
+try:
+    from core.mcp.client import FASTMCP_AVAILABLE
+except ImportError:
+    FASTMCP_AVAILABLE = False
 
 from core.config.mcp_config import (
     MCPConfig,
@@ -29,6 +34,10 @@ def convert_mcp_clients_to_tools(mcp_clients: list[MCPClient] | None) -> list[di
     Returns:
         List of dicts of tools ready to be used by CodeActAgent
     """
+    if not FASTMCP_AVAILABLE:
+        logger.warning("MCP functionality is not available in this binary build - convert_mcp_clients_to_tools disabled")
+        return []
+        
     if mcp_clients is None:
         logger.warning('mcp_clients is None, returning empty list')
         return []
@@ -52,6 +61,11 @@ async def create_mcp_clients(
     shttp_servers: list[MCPSHTTPServerConfig],
     conversation_id: str | None = None,
 ) -> list[MCPClient]:
+    # Check if fastmcp is available
+    if not FASTMCP_AVAILABLE:
+        logger.warning("MCP functionality is not available in this binary build - create_mcp_clients disabled")
+        return []
+        
     import sys
 
     # Skip MCP clients on Windows
@@ -101,6 +115,11 @@ async def fetch_mcp_tools_from_config(
     Returns:
         A list of tool dictionaries. Returns an empty list if no connections could be established.
     """
+    # Check if fastmcp is available
+    if not FASTMCP_AVAILABLE:
+        logger.warning("MCP functionality is not available in this binary build - fetch_mcp_tools_from_config disabled")
+        return []
+        
     import sys
 
     # Skip MCP tools on Windows
@@ -142,6 +161,12 @@ async def call_tool_mcp(mcp_clients: list[MCPClient], action: MCPAction) -> Obse
     Returns:
         The observation from the MCP server
     """
+    # Check if fastmcp is available
+    if not FASTMCP_AVAILABLE:
+        from core.events.observation import ErrorObservation
+        logger.warning("MCP functionality is not available in this binary build - call_tool_mcp disabled")
+        return ErrorObservation('MCP functionality is not available in this binary build')
+        
     import sys
 
     from core.events.observation import ErrorObservation
@@ -185,6 +210,12 @@ async def call_tool_mcp(mcp_clients: list[MCPClient], action: MCPAction) -> Obse
 
 async def add_mcp_tools_to_agent(agent: 'Agent', runtime: Runtime, memory: 'Memory'):
     """Add MCP tools to an agent."""
+    # Check if fastmcp is available
+    if not FASTMCP_AVAILABLE:
+        logger.warning("MCP functionality is not available in this binary build - add_mcp_tools_to_agent disabled")
+        agent.set_mcp_tools([])
+        return
+        
     import sys
 
     # Skip MCP tools on Windows
