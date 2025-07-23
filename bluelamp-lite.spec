@@ -15,7 +15,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['matplotlib', 'pandas', 'numpy', 'PIL', 'Pillow', 'cv2', 'opencv-python', 'opencv-python-headless', 'scipy', 'sklearn', 'torch', 'tensorflow', 'jupyter', 'notebook', 'IPython', 'qtconsole', 'PyQt5', 'PyQt6', 'tkinter', 'wx', 'gtk', 'plotly', 'seaborn', 'bokeh', 'dash', 'streamlit', 'gradio', 'flask', 'django', 'fastapi.staticfiles', 'uvicorn.main', 'speech_recognition', 'pydub', 'moviepy', 'ffmpeg', 'imageio', 'reportlab', 'openpyxl', 'xlsxwriter', 'xlrd', 'pyodbc', 'psycopg2', 'pymongo', 'redis', 'celery', 'gevent'],
+    excludes=['matplotlib', 'pandas', 'numpy', 'PIL', 'Pillow', 'cv2', 'opencv-python', 'opencv-python-headless', 'scipy', 'sklearn', 'torch', 'tensorflow', 'jupyter', 'notebook', 'IPython', 'qtconsole', 'PyQt5', 'PyQt6', 'tkinter', 'wx', 'gtk', 'plotly', 'seaborn', 'bokeh', 'dash', 'streamlit', 'gradio', 'flask', 'django', 'fastapi.staticfiles', 'speech_recognition', 'pydub', 'moviepy', 'ffmpeg', 'imageio', 'reportlab', 'openpyxl', 'xlsxwriter', 'xlrd', 'pyodbc', 'psycopg2', 'pymongo', 'redis', 'celery', 'gevent'],
     noarchive=False,
     optimize=2,
 )
