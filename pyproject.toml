@@ -43,7 +43,6 @@ google-auth-oauthlib = "*"                         # For Google Sheets OAuth
 termcolor = "*"
 toml = "*"
 types-toml = "*"
-numpy = "*"
 json-repair = "*"
 
 html2text = "*"
@@ -76,7 +75,7 @@ fastmcp = "^2.5.2"
 python-frontmatter = "^1.1.0"
 # Runtime dependencies moved to separate group
 bashlex = "^0.18"
-openhands_aci = "0.3.0"
+openhands_aci = {path = "./openhands_aci_custom", develop = true}
 
 # Cloud integrations moved to separate group
 pyyaml = "^6.0.2"
@@ -130,7 +129,6 @@ pytest-asyncio = "*"
 pytest-forked = "*"
 pytest-xdist = "*"
 openai = "*"
-pandas = "*"
 reportlab = "*"
 gevent = ">=24.2.1,<26.0.0"
 
