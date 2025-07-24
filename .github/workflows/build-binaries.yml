@@ -1,4 +1,4 @@
-name: Build Cross-Platform Binaries
+name: Build BlueLamp Binaries
 
 on:
   push:
@@ -55,6 +55,9 @@ jobs:
 
     - name: Install project
       run: poetry install --no-interaction
+
+    - name: Install PyInstaller
+      run: poetry add pyinstaller --group dev
 
     - name: Build binary with PyInstaller
       run: |
