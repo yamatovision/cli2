@@ -54,18 +54,21 @@ jobs:
       run: poetry install --no-interaction --no-root
 
     - name: Install project
-      run: poetry install --no-interaction
-
-    - name: Install PyInstaller
-      run: poetry add pyinstaller --group dev
+      run: poetry install --no-interaction --with dev
 
     - name: Build binary with PyInstaller
       run: |
         poetry run pyinstaller ${{ matrix.spec }} --clean
 
-    - name: Test binary
+    - name: Test binary (Unix)
+      if: runner.os != 'Windows'
       run: |
         ./dist/${{ matrix.binary }} --version
+    
+    - name: Test binary (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        .\dist\${{ matrix.binary }} --version
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

@@ -33,7 +33,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.12,<4.0"
+python = ">=3.12,<3.14"
 litellm = "^1.60.0, !=1.64.4, !=1.67.*"            # avoid 1.64.4 (known bug) & 1.67.* (known bug #10272)
 aiohttp = ">=3.9.0,!=3.11.13"                      # Pin to avoid yanked version 3.11.13
 google-generativeai = "*"                          # To use litellm with Gemini Pro API
@@ -75,7 +75,7 @@ fastmcp = "^2.5.2"
 python-frontmatter = "^1.1.0"
 # Runtime dependencies moved to separate group
 bashlex = "^0.18"
-openhands_aci = {path = "./openhands_aci_custom", develop = true}
+openhands_aci = "0.3.0"
 
 # Cloud integrations moved to separate group
 pyyaml = "^6.0.2"
@@ -90,6 +90,7 @@ pre-commit = "4.2.0"
 build = "*"
 types-setuptools = "*"
 pytest = "^8.4.0"
+pyinstaller = "^6.14.0"
 
 # Document processing dependencies (optional)
 vulture = "^2.14"
