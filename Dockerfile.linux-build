@@ -1,0 +1,35 @@
+FROM python:3.12-slim
+
+# 必要なパッケージをインストール
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Poetry をインストール
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# PATH に Poetry を追加
+ENV PATH="/root/.local/bin:$PATH"
+
+# 作業ディレクトリを設定
+WORKDIR /app
+
+# プロジェクトファイルをコピー
+COPY pyproject.toml poetry.lock ./
+COPY core/ ./core/
+COPY extensions/ ./extensions/
+COPY openhands_aci_custom/ ./openhands_aci_custom/
+COPY openhands_aci_local/ ./openhands_aci_local/
+COPY bluelamp-linux.spec ./
+
+# 依存関係をインストール
+RUN poetry config virtualenvs.create false && \
+    poetry install --no-interaction --no-ansi
+
+# PyInstaller でビルド
+RUN pyinstaller bluelamp-linux.spec --clean
+
+# ビルドされたバイナリを取り出せるようにする
+CMD ["cp", "/app/dist/bluelamp", "/output/"]
