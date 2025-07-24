@@ -49,3 +49,15 @@ dmypy.json
 workspace/
 .openhands/
 openhands_workspace_*/
+
+# Binary files
+bluelamp-linux-x64
+bluelamp-macos-x64
+bluelamp-windows-x64.exe
+bluelamp-linux/
+bluelamp-macos/
+bluelamp-windows/
+
+# Embedded repositories
+openhands_aci_custom/
+openhands_aci_local/
