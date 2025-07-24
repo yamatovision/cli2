@@ -76,6 +76,7 @@ python-frontmatter = "^1.1.0"
 # Runtime dependencies moved to separate group
 bashlex = "^0.18"
 openhands_aci = "0.3.0"
+tiktoken = "^0.8.0"
 
 # Cloud integrations moved to separate group
 pyyaml = "^6.0.2"

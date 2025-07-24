@@ -26,6 +26,9 @@ jobs:
             artifact: bluelamp-macos
 
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - uses: actions/checkout@v4
@@ -41,6 +44,7 @@ jobs:
         version: latest
         virtualenvs-create: true
         virtualenvs-in-project: true
+        installer-parallel: true
 
     - name: Load cached venv
       id: cached-poetry-dependencies
@@ -60,15 +64,13 @@ jobs:
       run: |
         poetry run pyinstaller ${{ matrix.spec }} --clean
 
-    - name: Test binary (Unix)
-      if: runner.os != 'Windows'
+    - name: Test binary
       run: |
-        ./dist/${{ matrix.binary }} --version
-    
-    - name: Test binary (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        .\dist\${{ matrix.binary }} --version
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          ./dist/${{ matrix.binary }} --version
+        else
+          ./dist/${{ matrix.binary }} --version
+        fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
