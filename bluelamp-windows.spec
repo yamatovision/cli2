@@ -70,5 +70,4 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='bluelamp.ico'  # Windows用にアイコンを追加可能
 )
