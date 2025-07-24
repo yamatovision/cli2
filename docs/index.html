@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BlueLamp CLI - 日本語対応AIエージェントシステム</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="hero">
+            <div class="hero-content">
+                <div class="logo">
+                    <i class="fas fa-lightbulb"></i>
+                    <h1>BlueLamp CLI</h1>
+                </div>
+                <p class="tagline">日本語対応AIエージェントシステム</p>
+                <p class="description">完全日本語対応のAI対話、プロジェクト設計と統括管理、実装と機能拡張を提供</p>
+            </div>
+        </header>
+
+        <main class="download-section">
+            <div class="os-detection">
+                <div class="detected-os">
+                    <i class="fas fa-desktop"></i>
+                    <span id="os-text">OSを検出中...</span>
+                </div>
+            </div>
+
+            <div class="download-card" id="recommended-download">
+                <div class="card-header">
+                    <h2><i class="fas fa-star"></i> 推奨ダウンロード</h2>
+                </div>
+                <div class="card-content">
+                    <div class="download-info">
+                        <div class="file-info">
+                            <span class="file-name" id="recommended-file">検出中...</span>
+                            <span class="file-size" id="recommended-size">-</span>
+                        </div>
+                        <button class="download-btn primary" id="primary-download" disabled>
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </button>
+                    </div>
+                    <div class="install-instructions" id="install-instructions">
+                        <h3><i class="fas fa-terminal"></i> インストール手順</h3>
+                        <div class="code-block" id="install-code">
+                            検出中...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="all-downloads">
+                <h2><i class="fas fa-list"></i> 全プラットフォーム</h2>
+                <div class="download-grid">
+                    <div class="download-item">
+                        <div class="platform">
+                            <i class="fab fa-windows"></i>
+                            <span>Windows</span>
+                        </div>
+                        <div class="download-details">
+                            <span class="file-name">bluelamp-windows-x64.exe</span>
+                            <span class="file-size">~153MB</span>
+                        </div>
+                        <button class="download-btn" onclick="downloadFile('windows')">
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </button>
+                    </div>
+
+                    <div class="download-item">
+                        <div class="platform">
+                            <i class="fab fa-apple"></i>
+                            <span>macOS</span>
+                        </div>
+                        <div class="download-details">
+                            <span class="file-name">bluelamp-macos-x64</span>
+                            <span class="file-size">~141MB</span>
+                        </div>
+                        <button class="download-btn" onclick="downloadFile('macos')">
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </button>
+                    </div>
+
+                    <div class="download-item">
+                        <div class="platform">
+                            <i class="fab fa-linux"></i>
+                            <span>Linux</span>
+                        </div>
+                        <div class="download-details">
+                            <span class="file-name">bluelamp-linux-x64</span>
+                            <span class="file-size">~161MB</span>
+                        </div>
+                        <button class="download-btn" onclick="downloadFile('linux')">
+                            <i class="fas fa-download"></i>
+                            ダウンロード
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="usage-section">
+                <h2><i class="fas fa-rocket"></i> 使用方法</h2>
+                <div class="usage-grid">
+                    <div class="usage-card">
+                        <div class="usage-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>オーケストレーター</h3>
+                        <p>プロジェクト設計・統括管理</p>
+                        <div class="code-block">
+                            <span id="orchestrator-command">./bluelamp</span>
+                        </div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-icon">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3>拡張マネージャー</h3>
+                        <p>実装・機能拡張</p>
+                        <div class="code-block">
+                            <span id="extension-command">./bluelamp --extension</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2><i class="fas fa-star"></i> 主な機能</h2>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-language"></i>
+                        <h3>完全日本語対応</h3>
+                        <p>自然な日本語でのAI対話</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-project-diagram"></i>
+                        <h3>プロジェクト設計</h3>
+                        <p>統括管理と設計支援</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-code"></i>
+                        <h3>実装支援</h3>
+                        <p>機能拡張と実装サポート</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-link"></i>
+                        <h3>エージェント連携</h3>
+                        <p>シームレスな連携機能</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notes-section">
+                <h2><i class="fas fa-info-circle"></i> 注意事項</h2>
+                <div class="notes-content">
+                    <div class="note-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <strong>macOS セキュリティ:</strong> 初回実行時にセキュリティ警告が出た場合は「システム環境設定 > セキュリティとプライバシー > このまま開く」
+                    </div>
+                    <div class="note-item">
+                        <i class="fas fa-key"></i>
+                        <strong>APIキー:</strong> Claude、OpenAI等のAPIキー設定が必要です
+                    </div>
+                    <div class="note-item">
+                        <i class="fas fa-code-branch"></i>
+                        <strong>安定性:</strong> 全てのバイナリは安定性を重視してビルドされています
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="https://github.com/yamatovision/cli2" target="_blank">
+                        <i class="fab fa-github"></i> GitHub
+                    </a>
+                    <a href="https://github.com/yamatovision/cli2/releases" target="_blank">
+                        <i class="fas fa-tags"></i> Releases
+                    </a>
+                    <a href="https://github.com/yamatovision/cli2/issues" target="_blank">
+                        <i class="fas fa-bug"></i> Issues
+                    </a>
+                </div>
+                <p>&copy; 2024 BlueLamp CLI. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
