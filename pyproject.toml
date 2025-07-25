@@ -61,7 +61,7 @@ whatthepatch = "^1.0.6"
 protobuf = "^5.0.0,<6.0.0"                         # Updated to support newer opentelemetry
 opentelemetry-api = "^1.33.1"
 opentelemetry-exporter-otlp-proto-grpc = "^1.33.1"
-libtmux = ">=0.37,<0.40"
+libtmux = ">=0.37,<0.47"
 pygithub = "^2.5.0"
 joblib = "*"
 sse-starlette = "^2.1.3"
@@ -75,8 +75,8 @@ fastmcp = "^2.5.2"
 python-frontmatter = "^1.1.0"
 # Runtime dependencies moved to separate group
 bashlex = "^0.18"
-openhands_aci = "0.3.0"
-tiktoken = "^0.8.0"
+openhands_aci = "0.3.1"
+tiktoken = ">=0.8,<0.10"
 
 # Cloud integrations moved to separate group
 pyyaml = "^6.0.2"
@@ -85,8 +85,8 @@ pyyaml = "^6.0.2"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-ruff = "0.12.0"
-mypy = "1.16.1"
+ruff = "0.12.5"
+mypy = "1.17.0"
 pre-commit = "4.2.0"
 build = "*"
 types-setuptools = "*"
@@ -114,7 +114,7 @@ optional = true
 [tool.poetry.group.integrations.dependencies]
 redis = ">=5.2,<7.0"
 minio = "^7.2.8"
-daytona = "0.21.1"
+daytona = "0.24.2"
 stripe = ">=11.5,<13.0"
 google-cloud-aiplatform = "*"
 anthropic = { extras = [ "vertex" ], version = "*" }
