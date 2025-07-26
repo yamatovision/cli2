@@ -6,6 +6,7 @@ BlueLamp Public CLI - Orchestrator Agent
 
 import os
 import sys
+import threading
 
 def main():
     """ブルーランプ（オーケストレーター）のメインエントリーポイント"""
@@ -27,6 +28,11 @@ def main():
     print("🔵エージェント：オーケストレーター")
     print("ブルーランプを起動しています...")
     print("")
+    
+    # バックグラウンドでバージョンチェックを実行
+    from extensions.cli.version_check import run_version_check_in_background
+    version_thread = threading.Thread(target=run_version_check_in_background, daemon=True)
+    version_thread.start()
     
     # main_sessionモジュールをインポートして実行
     from extensions.cli.main_session.main import main as session_main

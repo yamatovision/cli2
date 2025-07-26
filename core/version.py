@@ -8,13 +8,12 @@ def get_version() -> str:
     
     Returns:
         str: The version string from the installed package metadata.
+    
+    Raises:
+        importlib.metadata.PackageNotFoundError: If the package is not installed
     """
-    try:
-        # Try to get version from installed package
-        return importlib.metadata.version("bluelamp-ai")
-    except importlib.metadata.PackageNotFoundError:
-        # Fallback to development version if package is not installed
-        return "1.4.1-dev"
+    # Try to get version from installed package - no fallback
+    return importlib.metadata.version("bluelamp-ai")
 
 
 # Package version

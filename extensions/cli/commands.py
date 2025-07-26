@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from pathlib import Path
 
 from prompt_toolkit import print_formatted_text
@@ -24,6 +25,7 @@ from extensions.cli.utils import (
     read_file,
     write_to_file,
 )
+from prompt_toolkit.formatted_text import HTML
 from core.config import (
     OpenHandsConfig,
 )
@@ -49,30 +51,58 @@ async def handle_commands(
     close_repl = False
     new_session_requested = False
 
-    if command == '/exit':
-        close_repl = handle_exit_command(
-            event_stream,
-            usage_metrics,
-            sid,
-        )
-    elif command == '/help':
-        handle_help_command(config.default_agent)
-    elif command == '/init':
-        close_repl = await handle_init_command(
-            config, event_stream, current_dir,
-        )
-    elif command == '/status':
-        handle_status_command(usage_metrics, sid)
-    elif command == '/new':
-        close_repl, new_session_requested = handle_new_command(
-            event_stream, usage_metrics, sid,
-        )
-    elif command == '/settings':
-        await handle_settings_command(config, settings_store)
-    elif command == '/resume':
-        close_repl, new_session_requested = await handle_resume_command(event_stream)
-    # /switchコマンドは削除（CodeActAgent2ではマイクロエージェントが自動発動）
+    # コマンドの前後の空白を削除
+    command = command.strip()
+    
+    # /だけの場合はコマンドメニューを表示
+    if command == '/':
+        display_command_menu()
+        return False, False
+    
+    # 先頭が/で始まる場合のみコマンドとして処理
+    elif command.startswith('/'):
+        # スペースで分割して最初の部分（コマンド名）を取得
+        command_parts = command.split(maxsplit=1)
+        command_name = command_parts[0] if command_parts else command
+        
+        # 既知のコマンドをチェック
+        if command_name == '/exit':
+            close_repl = handle_exit_command(
+                event_stream,
+                usage_metrics,
+                sid,
+            )
+        elif command_name == '/help':
+            handle_help_command(config.default_agent)
+            # helpコマンドの後はプロンプトに戻る
+            close_repl = False
+        elif command_name == '/init':
+            close_repl = await handle_init_command(
+                config, event_stream, current_dir,
+            )
+        elif command_name == '/status':
+            handle_status_command(usage_metrics, sid)
+            # statusコマンドの後はプロンプトに戻る
+            close_repl = False
+        elif command_name == '/new':
+            close_repl, new_session_requested = handle_new_command(
+                event_stream, usage_metrics, sid,
+            )
+        elif command_name == '/settings':
+            await handle_settings_command(config, settings_store)
+            # settingsコマンドの後はプロンプトに戻る
+            close_repl = False
+        elif command_name == '/resume':
+            close_repl, new_session_requested = await handle_resume_command(event_stream)
+        elif command_name == '/logout':
+            close_repl = await handle_logout_command(event_stream)
+        else:
+            # 認識されないコマンドの場合は、通常のメッセージとして処理
+            close_repl = True
+            action = MessageAction(content=command)
+            event_stream.add_event(action, EventSource.USER)
     else:
+        # /で始まらない場合は通常のメッセージとして処理
         close_repl = True
         action = MessageAction(content=command)
         event_stream.add_event(action, EventSource.USER)
@@ -186,6 +216,72 @@ async def handle_resume_command(
     return close_repl, new_session_requested
 
 
+
+
+async def handle_logout_command(event_stream: EventStream | None = None) -> bool:
+    """
+    ログアウトコマンドの処理
+    
+    Args:
+        event_stream: イベントストリーム（エージェント停止用）
+    
+    Returns:
+        bool: 常にTrue（REPLを閉じる）
+    """
+    from extensions.cli.auth import get_authenticator
+    import sys
+    
+    try:
+        # 確認プロンプトを表示
+        confirm_logout = (
+            cli_confirm('\nログアウトしますか？', ['はい、ログアウト', 'いいえ、続ける']) == 0
+        )
+        
+        if confirm_logout:
+            authenticator = get_authenticator()
+            # 非同期ログアウトを実行
+            await authenticator.logout_async()
+            print_formatted_text('\n✅ ログアウトしました\n')
+            print_formatted_text('👋 またのご利用をお待ちしています！\n')
+            
+            # エージェントを停止
+            if event_stream:
+                event_stream.add_event(
+                    ChangeAgentStateAction(AgentState.STOPPED),
+                    EventSource.ENVIRONMENT,
+                )
+            
+            # CLIを強制終了
+            sys.exit(0)
+        else:
+            print_formatted_text('\nログアウトをキャンセルしました。\n')
+            return False
+            
+    except Exception as e:
+        print_formatted_text(f'\n❌ ログアウト中にエラーが発生しました: {e}\n')
+        return False
+
+
+def display_command_menu() -> None:
+    """コマンドメニューを表示"""
+    print_formatted_text('\n📦 使用可能なコマンド:')
+    print_formatted_text(HTML('<grey>────────────────────────────────────────</grey>'))
+    
+    commands = [
+        ('/help', 'ヘルプを表示'),
+        ('/status', '現在の状態を表示'),
+        ('/settings', '設定画面を開く'),
+        ('/new', '新しい会話を開始'),
+        ('/resume', 'エージェントを再開'),
+        ('/logout', 'ログアウトして認証情報をクリア'),
+        ('/exit', 'BlueLamp CLIを終了'),
+    ]
+    
+    for cmd, desc in commands:
+        print_formatted_text(HTML(f'<cyan>{cmd:<15}</cyan> <grey>{desc}</grey>'))
+    
+    print_formatted_text(HTML('<grey>────────────────────────────────────────</grey>'))
+    print_formatted_text('')
 
 
 def check_folder_security_agreement(config: OpenHandsConfig, current_dir: str) -> bool:

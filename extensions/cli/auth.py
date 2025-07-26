@@ -153,6 +153,7 @@ class PortalAuthenticator:
                     
                     if response.status == 200 and data.get("success"):
                         response_data = data.get("data", {})
+                        
                         # ユーザー情報を保存（新しいレスポンス形式に対応）
                         self.user_info = {
                             "id": response_data.get("userId"),
@@ -160,6 +161,7 @@ class PortalAuthenticator:
                             "name": response_data.get("userName"),
                             "role": response_data.get("userRole")
                         }
+                        
                         self._last_check = datetime.now()
                         logger.info(f"Authentication successful for user: {self.user_info.get('name')}")
                         return data
@@ -242,9 +244,42 @@ class PortalAuthenticator:
         """
         return self.user_info
     
+    async def _get_email_input_async(self) -> str:
+        """
+        メールアドレス入力のヘルパーメソッド（非同期処理）
+        """
+        try:
+            from prompt_toolkit import PromptSession
+            from prompt_toolkit.patch_stdout import patch_stdout
+            
+            session = PromptSession()
+            with patch_stdout():
+                email = await session.prompt_async("Email: ")
+            return email.strip()
+        except (EOFError, KeyboardInterrupt):
+            return ""
+    
+    async def _get_password_input_async(self) -> str:
+        """
+        パスワード入力のヘルパーメソッド（非同期処理）
+        パスワードを表示して入力（ユーザビリティ優先）
+        """
+        try:
+            from prompt_toolkit import PromptSession
+            from prompt_toolkit.patch_stdout import patch_stdout
+            
+            session = PromptSession()
+            with patch_stdout():
+                # is_password=Falseで平文表示（ユーザビリティ優先）
+                password = await session.prompt_async("Password: ", is_password=False)
+            return password.strip()
+        except (EOFError, KeyboardInterrupt):
+            print()  # 改行を追加
+            return ""
+    
     def _get_email_input(self) -> str:
         """
-        メールアドレス入力のヘルパーメソッド（同期処理）
+        メールアドレス入力のヘルパーメソッド（同期処理、フォールバック）
         """
         try:
             email = input("Email: ").strip()
@@ -254,11 +289,9 @@ class PortalAuthenticator:
     
     def _get_password_input(self) -> str:
         """
-        パスワード入力のヘルパーメソッド（同期処理）
-        パスワードを表示して入力（ユーザビリティ優先）
+        パスワード入力のヘルパーメソッド（同期処理、フォールバック）
         """
         try:
-            # 普通のinputを使用（パスワードが表示される）
             password = input("Password: ").strip()
             return password
         except (EOFError, KeyboardInterrupt):
@@ -280,15 +313,15 @@ class PortalAuthenticator:
             aiohttp.ClientError: ネットワークエラー
             ValueError: 認証エラー
         """
-        # メールアドレスの入力（同期処理）
+        # メールアドレスの入力（非同期処理）
         if email is None:
-            email = self._get_email_input()
+            email = await self._get_email_input_async()
             if not email:
                 raise ValueError("Email is required")
         
-        # パスワードの入力（同期処理）
+        # パスワードの入力（非同期処理）
         if password is None:
-            password = self._get_password_input()
+            password = await self._get_password_input_async()
             if not password:
                 raise ValueError("Password is required")
         

@@ -79,6 +79,21 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     args = parse_arguments()
 
     logger.setLevel(logging.WARNING)
+    
+    # 認証チェックと初期ユーザー情報取得
+    from extensions.cli.auth import get_authenticator
+    authenticator = get_authenticator()
+    
+    # APIキーが存在する場合は、ユーザー情報を取得
+    api_key = authenticator.load_api_key()
+    if api_key and api_key.startswith('cli_'):
+        try:
+            # ユーザー情報を取得してキャッシュ
+            result = await authenticator.verify_api_key()
+            if result.get("success"):
+                logger.info(f"User authenticated: {authenticator.get_user_info()}")
+        except Exception as e:
+            logger.warning(f"Failed to fetch user info on startup: {e}")
 
     # Load config from toml and override with command line arguments
     config: OpenHandsConfig = setup_config_from_args(args)

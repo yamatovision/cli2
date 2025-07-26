@@ -372,22 +372,126 @@ async def run_setup_flow(config: OpenHandsConfig, settings_store: FileSettingsSt
         HTML('<grey>No settings found. Starting initial setup...</grey>\n'),
     )
 
-    # 簡略化認証フローを試行
-    try:
-        from extensions.cli.simplified_auth_flow import run_simplified_auth_flow
-        success = await run_simplified_auth_flow(config, settings_store)
-        if success:
-            return
-    except Exception as e:
+    # 簡略化認証フローを実行
+    from extensions.cli.simplified_auth_flow import run_simplified_auth_flow
+    success = await run_simplified_auth_flow(config, settings_store)
+    if not success:
         print_formatted_text(
-            HTML(f'<yellow>Simplified flow failed: {e}</yellow>\n'),
+            HTML('<ansired>❌ セットアップに失敗しました。</ansired>\n'),
         )
-        print_formatted_text(
-            HTML('<grey>Falling back to manual setup...</grey>\n'),
-        )
+        return
 
-    # フォールバック: 既存の手動設定
-    await modify_llm_settings_basic(config, settings_store)
+
+async def check_authentication_before_start() -> bool:
+    """
+    CLI起動前の認証チェック
+    未ログインの場合はログインフローに誘導してCLI起動を停止
+    
+    Returns:
+        bool: 認証済みの場合True、未ログインの場合False
+    """
+    from extensions.cli.auth import get_authenticator
+    from extensions.cli.simplified_auth_flow import SimplifiedAuthFlow
+    from prompt_toolkit.shortcuts import clear
+    import aiohttp
+    import os
+    
+    try:
+        # 認証状態をチェック
+        authenticator = get_authenticator()
+        
+        # APIキーの存在確認
+        api_key = authenticator.load_api_key()
+        if not api_key:
+            # 未ログイン状態の処理
+            clear()
+            print_formatted_text(HTML('<red>🚫 ログインが必要です</red>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<yellow>BlueLamp CLIを使用するには、ポータルサイトでの認証が必要です。</yellow>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<cyan>📋 ログイン手順：</cyan>'))
+            print_formatted_text(HTML('<grey>1. ポータルサイトにアクセス: https://bluelamp-235426778039.asia-northeast1.run.app</grey>'))
+            print_formatted_text(HTML('<grey>2. ログイン後、設定画面でCLIトークンを生成</grey>'))
+            print_formatted_text(HTML('<grey>3. 以下のコマンドでトークンを設定:</grey>'))
+            print_formatted_text(HTML('<green>   bluelamp --set-api-key YOUR_CLI_TOKEN</green>'))
+            print_formatted_text(HTML('<grey>4. 再度CLIを起動</grey>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<red>認証完了まではCLIを使用できません。</red>'))
+            return False
+        
+        # APIキーの有効性を簡易チェック（形式チェック）
+        if not (api_key.startswith('cli_') or api_key.startswith('CLI_')):
+            clear()
+            print_formatted_text(HTML('<red>🚫 無効なAPIキーが設定されています</red>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<yellow>設定されているAPIキーの形式が正しくありません。</yellow>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<cyan>📋 修正手順：</cyan>'))
+            print_formatted_text(HTML('<grey>1. ポータルサイトで新しいCLIトークンを生成</grey>'))
+            print_formatted_text(HTML('<grey>2. 以下のコマンドで正しいトークンを設定:</grey>'))
+            print_formatted_text(HTML('<green>   bluelamp --set-api-key YOUR_CLI_TOKEN</green>'))
+            print_formatted_text('')
+            return False
+        
+        # ユーザー情報を取得してみる（サーバー側の認証確認）
+        try:
+            # verify_api_keyを使ってユーザー情報も取得
+            auth_result = await authenticator.verify_api_key()
+            auth_response = auth_result.get("success", False)
+        except Exception:
+            auth_response = False
+            
+        if not auth_response:
+            clear()
+            print_formatted_text(HTML('<red>🚫 認証エラー</red>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<yellow>APIキーが無効か期限切れです。再度ログインしてください。</yellow>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<cyan>📋 ログイン手順：</cyan>'))
+            print_formatted_text(HTML('<grey>1. ターミナルで以下のコマンドを実行:</grey>'))
+            print_formatted_text(HTML('<green>   bluelamp --login</green>'))
+            print_formatted_text('')
+            return False
+        
+        # Claude APIキーの確認と設定
+        print_formatted_text(HTML('<cyan>🔍 Claude APIキーを確認中...</cyan>'))
+        
+        # SimplifiedAuthFlowを使ってClaude APIキーを取得・設定
+        flow = SimplifiedAuthFlow()
+        claude_api_key = await flow._fetch_claude_api_key_from_portal()
+        
+        if not claude_api_key:
+            # Claude APIキーが未設定の場合
+            clear()
+            print_formatted_text(HTML('<yellow>⚠️ Claude APIキーが未設定です</yellow>'))
+            print_formatted_text('')
+            print_formatted_text(HTML('<cyan>Claude APIキーを設定してください:</cyan>'))
+            print_formatted_text(HTML('<grey>(Anthropic Console: https://console.anthropic.com/)</grey>'))
+            print_formatted_text('')
+            
+            claude_api_key = await flow._prompt_and_save_claude_api_key()
+            if not claude_api_key:
+                print_formatted_text(HTML('<red>❌ Claude APIキーの設定がキャンセルされました</red>'))
+                return False
+        else:
+            # Claude APIキーが取得できた場合
+            masked_key = f"sk-...{claude_api_key[-4:]}" if len(claude_api_key) > 4 else "sk-..."
+            print_formatted_text(HTML(f'<green>✅ Claude APIキー取得済み: {masked_key}</green>'))
+        
+        # 環境変数にClaude APIキーを設定
+        os.environ['ANTHROPIC_API_KEY'] = claude_api_key
+        
+        # 認証済み
+        return True
+        
+    except Exception as e:
+        # エラーが発生した場合も未ログイン扱い
+        clear()
+        print_formatted_text(HTML('<red>🚫 認証チェックでエラーが発生しました</red>'))
+        print_formatted_text(HTML(f'<grey>エラー詳細: {str(e)}</grey>'))
+        print_formatted_text('')
+        print_formatted_text(HTML('<yellow>ログイン状態を確認できませんでした。再度ログインしてください。</yellow>'))
+        return False
 
 
 async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
@@ -395,6 +499,10 @@ async def main_with_loop(loop: asyncio.AbstractEventLoop) -> None:
     args = parse_arguments()
 
     logger.setLevel(logging.WARNING)
+
+    # 認証チェック（CLI起動前の必須チェック）
+    if not await check_authentication_before_start():
+        return  # 未ログインの場合はCLIを起動せずに終了
 
     # Load config from toml and override with command line arguments
     config: OpenHandsConfig = setup_config_from_args(args)

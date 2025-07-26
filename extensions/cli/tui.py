@@ -136,34 +136,78 @@ def display_initialization_animation(text: str, is_loaded: asyncio.Event) -> Non
 
 
 def get_bluelamp_version() -> str:
-    """pyproject.tomlからバージョンを取得"""
+    """パッケージからバージョンを取得（開発時はpyproject.tomlを優先）"""
+    import importlib.metadata
     import os
-    import re
+    import toml
     
     try:
-        # pyproject.tomlのパスを取得
+        # まず、ローカルのpyproject.tomlから取得を試行（開発時用）
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        # cli/tui.py から cli2/ ディレクトリのpyproject.tomlを探す
-        pyproject_path = os.path.join(current_dir, '..', '..', 'pyproject.toml')
+        # extensions/cli/tui.py から cli/ ディレクトリまで遡る
+        project_root = os.path.dirname(os.path.dirname(current_dir))
+        pyproject_path = os.path.join(project_root, 'pyproject.toml')
         
         if os.path.exists(pyproject_path):
             with open(pyproject_path, 'r', encoding='utf-8') as f:
-                content = f.read()
-                # 正規表現でバージョンを抽出
-                version_match = re.search(r'version = "([^"]+)"', content)
-                if version_match:
-                    return version_match.group(1)
-        
-        # パッケージとしてインストールされている場合
-        try:
-            import importlib.metadata
-            return importlib.metadata.version('bluelamp-ai')
-        except:
-            pass
-            
-        return 'unknown'
+                pyproject_data = toml.load(f)
+                local_version = pyproject_data.get('tool', {}).get('poetry', {}).get('version')
+                if local_version:
+                    return f"{local_version} (dev)"
     except Exception:
-        return 'unknown'
+        # ローカル取得に失敗した場合は続行
+        pass
+    
+    try:
+        # フォールバック: パッケージとしてインストールされているバージョンを取得
+        return importlib.metadata.version('bluelamp-ai')
+    except importlib.metadata.PackageNotFoundError as e:
+        # エラーを明確に表示
+        return f"ERROR: Package not found - {e}"
+    except Exception as e:
+        # その他のエラーも明確に表示
+        return f"ERROR: {type(e).__name__} - {e}"
+
+
+def get_portal_user_info() -> str | None:
+    """
+    ポータル認証済みユーザー情報を取得
+    
+    Returns:
+        str | None: 認証済みの場合はユーザー情報、未認証の場合はNone
+    """
+    try:
+        from extensions.cli.auth import get_authenticator
+        import asyncio
+        
+        authenticator = get_authenticator()
+        api_key = authenticator.load_api_key()
+        
+        if not api_key:
+            return None
+        
+        # APIキーの形式チェック
+        if not (api_key.startswith('cli_') or api_key.startswith('CLI_')):
+            return None
+        
+        # ユーザー情報がキャッシュされているか確認
+        user_info = authenticator.get_user_info()
+        
+        # ユーザー情報がある場合は正常に表示
+        if user_info and user_info.get('name'):
+            name = user_info.get('name', 'Unknown')
+            role = user_info.get('role', '')
+            if role:
+                return f"{name} ({role})"
+            else:
+                return name
+        
+        # APIキーの一部を表示（後方互換性）
+        masked_key = f"cli_***{api_key[-4:]}"
+        return f"認証済み ({masked_key})"
+        
+    except Exception:
+        return None
 
 
 def display_banner(session_id: str) -> None:
@@ -192,7 +236,12 @@ def display_banner(session_id: str) -> None:
     else:
         # フォールバック: 現在のディレクトリ
         current_dir = os.getcwd()
-    current_user = getpass.getuser()
+    # ポータル認証済みユーザー情報を取得
+    portal_user = get_portal_user_info()
+    if portal_user:
+        user_display = f'<cyan>{portal_user}</cyan>'
+    else:
+        user_display = '<red>未ログイン</red>'
     
     # コマンド名に基づいてモードを動的に決定
     command_name = os.environ.get('BLUELAMP_COMMAND', '')
@@ -202,7 +251,7 @@ def display_banner(session_id: str) -> None:
         mode_display = '新規プロジェクト'
     
     print_formatted_text(HTML(f'<grey>セッションディレクトリ：</grey><yellow>{current_dir}</yellow>'))
-    print_formatted_text(HTML(f'<grey>ログインユーザー：</grey><cyan>{current_user}</cyan>'))
+    print_formatted_text(HTML(f'<grey>ログインユーザー：</grey>{user_display}'))
     print_formatted_text(HTML(f'<grey>モード：</grey><green>{mode_display}</green>'))
     print_formatted_text('')
 
@@ -533,10 +582,31 @@ class CommandCompleter(Completer):
     def get_completions(
         self, document: Document, complete_event: CompleteEvent,
     ) -> Generator[Completion, None, None]:
-        # コマンド補完機能を無効化
-        # ファイルパス入力時のエラーを防ぐため、補完候補を返さない
-        return
-        yield  # unreachable code to satisfy generator type
+        text = document.text_before_cursor.lstrip()
+        if text.startswith('/'):
+            # BlueLampのコマンド一覧
+            available_commands = {
+                '/help': 'ヘルプを表示',
+                '/status': '現在の状態を表示',
+                '/settings': '設定画面を開く',
+                '/new': '新しい会話を開始',
+                '/resume': 'エージェントを再開',
+                '/logout': 'ログアウトして認証情報をクリア',
+                '/exit': 'BlueLamp CLIを終了',
+            }
+            
+            # PAUSED状態でない場合は/resumeを除外
+            if self.agent_state != AgentState.PAUSED:
+                available_commands.pop('/resume', None)
+
+            for command, description in available_commands.items():
+                if command.startswith(text):
+                    yield Completion(
+                        command,
+                        start_position=-len(text),
+                        display_meta=description,
+                        style='bg:ansidarkgray fg:#00AAFF',  # BlueLampカラー
+                    )
 
 
 def create_prompt_session() -> PromptSession[str]:

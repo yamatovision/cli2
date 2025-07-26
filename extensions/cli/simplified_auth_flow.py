@@ -87,6 +87,7 @@ class SimplifiedAuthFlow:
                 return claude_api_key
             else:
                 print("⚠️ Claude APIキーが未登録です")
+                print("Claude APIキーを登録してください")
                 return await self._prompt_and_save_claude_api_key()
                 
         except Exception as e:
@@ -100,7 +101,7 @@ class SimplifiedAuthFlow:
         if not self.portal_auth.api_key:
             return None
             
-        url = f"{self.portal_auth.base_url}/api/cli/claude-api-key"
+        url = f"{self.portal_auth.base_url}/cli/claude-api-key"
         headers = {"X-CLI-Token": self.portal_auth.api_key}
         
         try:
@@ -144,7 +145,7 @@ class SimplifiedAuthFlow:
         if not self.portal_auth.api_key:
             return False
             
-        url = f"{self.portal_auth.base_url}/api/cli/claude-api-key"
+        url = f"{self.portal_auth.base_url}/cli/claude-api-key"
         headers = {"X-CLI-Token": self.portal_auth.api_key}
         payload = {"claudeApiKey": api_key}
         

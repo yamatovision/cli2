@@ -6,7 +6,7 @@ requires = [
 
 [tool.poetry]
 name = "bluelamp-ai"
-version = "1.4.1"
+version = "1.4.8"
 description = "BlueLamp AI: 日本語対応AIエージェントシステム - オーケストレーターと拡張マネージャー（最新版）"
 readme = "README_PUBLIC.md"
 authors = [ "BlueLamp Team" ]
@@ -137,11 +137,7 @@ gevent = ">=24.2.1,<26.0.0"
 
 
 [tool.poetry.scripts]
-# 開発用内部コマンド（一般配布では非表示）
-openhands = "extensions.cli.main:main"
-openhands2 = "extensions.cli.main_delegation:main"
-openhands3 = "extensions.cli.main_session:main"
-# 一般公開用日本語コマンド
+# BlueLamp AI 実行コマンド
 "ブルーランプ" = "extensions.cli.bluelamp_public:main"
 "ブルーランプ拡張" = "extensions.cli.bluelamp_extension_public:main"
 
